@@ -1,25 +1,9 @@
 #!/bin/bash
 
-# This is Cenote-Taker for Biowulf
-# This version requires nucleotide fasta file of spades-assembled contigs as input. 
-# Cenote-Taker does, in order: 
-# (1) Removes contigs smaller than 1000bp 
-# (2) Predicts which contigs are circular
-# (3) Determines if circular contig has any ORFs of 100AA or larger 
-# (4) Uses BLASTN against GenBank 'nt' to disregard any circular sequences that are >90% identical to known sequences 
-# (5) Rotates circular contigs so that a non-intragenic start codon of one of the ORFs will be the wrap point
-# (6) Uses BLASTX against a custom virus + plasmid database to guess taxonomy of each circular sequence
-# (7) Translates each ORF of 100AA or larger
-# (8) Uses RPS-BLAST to predict function of each ORF by aligning to known 'Conserved Domains'
-# (9) Generates a tbl file of RPS-BLAST results
-# (10) Takes ORFs without RPS-BLAST hits and queries the genbank viral database (predicted viruses) or nr database (predicted plasmids) with BLASTP
-# (11) Generates a tbl file of BLASTP results
-# (12) Takes ORFs without any BLASTP hits and tries to find structural homology to known proteins using HHsearch
-# (13) Generates a tbl file of HHsearch results
-# (14) Combines all tbl files into a master tbl file
-# (15) Generates a name for each virus/plasmid based on taxonomic results and nature of sample
-# (16) Generates properly formatted fsa and tbl files in a separate directory
-# (17) Uses tbl2asn to make gbf, val, and sqn files
+# This is Cenote-Taker2 for Biowulf.
+# See README for inputs. 
+# See schematic for how Cenote-Taker2 processes data.
+
 
 # Cenote-Taker Logo
 echo "$(tput setaf 2)00000000000000000000000000"
