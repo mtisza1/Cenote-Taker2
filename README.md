@@ -1,7 +1,7 @@
 # Cenote-Taker2
 Cenote-Taker2
 
-![alt text](https://github.com/mtisza1/Cenote-Taker2/blob/master/cenote-taker2_schematic_190920.pdf)
+![alt text](https://github.com/mtisza1/Cenote-Taker2/blob/master/cenote-taker2_schematic_190920.png)
 
 
 Cenote-Taker2 arguments required, 190916	
