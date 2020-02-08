@@ -61,10 +61,10 @@ while (@contigs) {
     print SEQ $block;
     close SEQ;
     print "formatting LAST db ... ";
-    $command = "$opt_c/lastdb temp.apc temp.apc.fa";  # format lastdb for current contig
+    $command = "$opt_c/last-1047/src/lastdb temp.apc temp.apc.fa";  # format lastdb for current contig
     system($command);
     print "running LAST self-alignment ... ";
-    $command = "$opt_c/lastal -s 1 -x 300 -f 0 -T 1 temp.apc temp.apc.fa > temp.apc.lastal";  # self align current contig
+    $command = "$opt_c/last-1047/src/lastal -s 1 -x 300 -f 0 -T 1 temp.apc temp.apc.fa > temp.apc.lastal";  # self align current contig
     system($command);
     print "done\n";
     # pull in output of current contig's LAST self-alignment
