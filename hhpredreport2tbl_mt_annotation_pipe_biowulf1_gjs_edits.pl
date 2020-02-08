@@ -56,7 +56,7 @@ foreach my$HHPredReport (@HHPredOutput){
       		my $nextline = <MYFILE>;
       		if($nextline =~ m/^\s*$/){
 			print OUTPUT "\n\t\t\tproduct\thypothetical protein";
-      print OUTPUT "\n\t\t\tnote\tNo HHBLITS hits";
+      print OUTPUT "\n\t\t\tnote\tNo HHsearch hits";
 
       }
 		}

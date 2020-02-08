@@ -1,0 +1,23 @@
+name: Cenote-Taker2
+channels:
+  - defaults
+  - bioconda
+dependencies:
+  - python=3.5.5
+  - prodigal=2.6.3
+  - BWA=0.7.17
+  - last=v1021
+  - samtools=1.3
+  - mummer=3.23
+  - circlator=1.5.5
+  - blast=2.9.0
+  - hhsuite=3.2.0
+  - bioawk=1.0
+  - entrez-direct=13.3
+  - krona=2.7.1
+  - hmmer=3.3
+  - bowtie2=2.3.5
+  - trnascan-se=2.0.5
+  - bbtools=37.62
+  - tbl2asn=25.7
+  - emboss=6.6.0

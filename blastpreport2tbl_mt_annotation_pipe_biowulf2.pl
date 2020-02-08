@@ -33,7 +33,7 @@ foreach my$BlastPReport (@BlastOutput){
 			print OUTPUT "\n\t\t\tproduct\thypothetical protein";
 			print OUTPUT "\n\t\t\tnote\tNo BLASTP hit";			
 		}
-		elsif($line =~ m/\>(.+\.\d) (.+) \[/){
+		elsif($line =~ m/\>(.+\.\d) (.+) (\[|\.|\n)/){
 			print OUTPUT "\n\t\t\tproduct\t$2";
 			print OUTPUT "\n\t\t\tinference\tsimilar to AA sequence:INSD:$1";			
 
