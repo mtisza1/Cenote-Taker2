@@ -2,6 +2,7 @@ name: Cenote-Taker2
 channels:
   - defaults
   - bioconda
+  - AgBiome
 dependencies:
   - python=3.5.5
   - prodigal=2.6.3
