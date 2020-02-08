@@ -4,13 +4,12 @@ channels:
   - bioconda
   - AgBiome
 dependencies:
-  - python=3.5.5
+  - python=3.6
   - prodigal=2.6.3
   - BWA=0.7.17
-  - last
   - samtools=1.3
   - mummer=3.23
-  - circlator=1.5.5
+  - circlator=1.5.5_py36
   - blast=2.9.0
   - hhsuite=3.2.0
   - bioawk=1.0
