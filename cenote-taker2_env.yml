@@ -6,7 +6,7 @@ dependencies:
   - python=3.5.5
   - prodigal=2.6.3
   - BWA=0.7.17
-  - last=v1021
+  - last
   - samtools=1.3
   - mummer=3.23
   - circlator=1.5.5
@@ -18,6 +18,6 @@ dependencies:
   - hmmer=3.3
   - bowtie2=2.3.5
   - trnascan-se=2.0.5
-  - bbtools=37.62
+  - bbtools
   - tbl2asn=25.7
   - emboss=6.6.0
