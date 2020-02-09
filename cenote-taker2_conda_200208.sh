@@ -110,7 +110,7 @@ echo "@@@@@@@@@@@@@@@@@@@@@@@@@"
 if [ "${SCRATCH_DIR}" == "none" ] ; then
 	echo "scratch space will not be used in this run"
 	CD_HHSUITE="${CENOTE_SCRIPT_DIR}/NCBI_CD/NCBI_CD"
-	PFAM_HHSUITE="${CENOTE_SCRIPT_DIR}/pfam_31_db/pfam"
+	PFAM_HHSUITE="${CENOTE_SCRIPT_DIR}/pfam_32_db/pfam"
 	PDB_HHSUITE="${CENOTE_SCRIPT_DIR}/pdb70/pdb70"
 	echo $CD_HHSUITE
 	echo $PFAM_HHSUITE
@@ -122,16 +122,16 @@ elif [ -d ${SCRATCH_DIR}/ ] ; then
 		mkdir ${SCRATCH_DIR}/NCBI_CD
 		cp ${CENOTE_SCRIPT_DIR}/NCBI_CD/NCBI_CD* ${SCRATCH_DIR}/NCBI_CD/
 	fi
-	if [ ! -s ${SCRATCH_DIR}/pfam_31_db/pfam_a3m.ffdata ] ; then	
-		mkdir ${SCRATCH_DIR}/pfam_31_db
-		cp ${CENOTE_SCRIPT_DIR}/pfam_31_db/pfam* ${SCRATCH_DIR}/pfam_31_db/
+	if [ ! -s ${SCRATCH_DIR}/pfam_32_db/pfam_a3m.ffdata ] ; then	
+		mkdir ${SCRATCH_DIR}/pfam_32_db
+		cp ${CENOTE_SCRIPT_DIR}/pfam_32_db/pfam* ${SCRATCH_DIR}/pfam_32_db/
 	fi
 	if [ ! -s ${SCRATCH_DIR}/pdb70/pdb70_a3m.ffdata ] ; then		
 		mkdir ${SCRATCH_DIR}/pdb70
 		cp ${CENOTE_SCRIPT_DIR}/pdb70/pdb70* ${SCRATCH_DIR}/pdb70/
 	fi
 	CD_HHSUITE="${SCRATCH_DIR}/NCBI_CD/NCBI_CD"
-	PFAM_HHSUITE="${SCRATCH_DIR}/pfam_31_db/pfam"
+	PFAM_HHSUITE="${SCRATCH_DIR}/pfam_32_db/pfam"
 	PDB_HHSUITE="${SCRATCH_DIR}/pdb70/pdb70"
 #	mkdir /lscratch/$SLURM_JOB_ID/viral
 #	cp /fdb/blastdb/viral.* /lscratch/$SLURM_JOB_ID/viral/
@@ -143,8 +143,8 @@ MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: loading modules: " $MDYT
 
 # Loading all the modules and environments for biowulf
-source /data/tiszamj/conda/etc/profile.d/conda.sh
-conda activate cenote_taker1
+#source /data/tiszamj/conda/etc/profile.d/conda.sh
+#conda activate cenote_taker1
 #### how do i handle conda environment?
 module load samtools || echo "$(tput setaf 4)unable to load samtools module $(tput sgr 0)"
 module load mummer || echo "$(tput setaf 4)unable to load mummer module $(tput sgr 0)"
@@ -284,7 +284,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 	for NONCIR in $CONTIGS_NON_CIRCULAR ; do
 		LEN_CHECKQ=$( cat $NONCIR | bioawk -c fastx '{ if(length($seq) > 4000) { print $name }}' ) ; 
 		if [ ! -z "$LEN_CHECKQ" ] ; then
-			${CENOTE_SCRIPT_DIR}/irf307.linux.exe $NONCIR 2 3 5 80 10 40 500000 10000 -d -h
+			irf $NONCIR 2 3 5 80 10 40 500000 10000 -d -h
 			#### put irf in script directory 
 		fi
 	done
@@ -1552,9 +1552,9 @@ done
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: running tbl2asn " $MDYT
 if [[ $DATA_SOURCE = "tpa_assembly" ]] ;then
-	${CENOTE_SCRIPT_DIR}/linux64.tbl2asn -V vb -j "[keyword=TPA:assembly]" -t $base_directory/$template_file -X C -p sequin_directory/ ;
+	tbl2asn -V vb -j "[keyword=TPA:assembly]" -t $base_directory/$template_file -X C -p sequin_directory/ ;
 else
-	${CENOTE_SCRIPT_DIR}/linux64.tbl2asn -V vb -t $base_directory/$template_file -X C -p sequin_directory/ ;
+	tbl2asn -V vb -t $base_directory/$template_file -X C -p sequin_directory/ ;
 fi
 
 # Script for annotating complete circular viruses of known species

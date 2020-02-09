@@ -11,7 +11,7 @@ dependencies:
   - mummer=3.23
   - circlator=1.5.5
   - blast=2.9.0
-  - hhsuite=3.2.0
+#  - hhsuite=3.2.0
   - bioawk=1.0
   - entrez-direct=13.3
   - krona=2.7.1
@@ -21,3 +21,4 @@ dependencies:
   - bbtools
   - tbl2asn=25.7
   - emboss=6.6.0
+  - cmake
