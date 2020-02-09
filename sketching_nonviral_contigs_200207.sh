@@ -20,7 +20,7 @@ else
 
 	NUCL_FILES_LIST=$( ls *.fasta )
 	for NUCL_FILES in $NUCL_FILES_LIST ; do
-		/data/tiszamj/mike_tisza/EMBOSS-6.6.0/emboss/getorf -circular -find 1 -minsize 240 -sequence $NUCL_FILES -outseq ${NUCL_FILES%.fasta}.AA.fasta ;
+		getorf -circular -find 1 -minsize 240 -sequence $NUCL_FILES -outseq ${NUCL_FILES%.fasta}.AA.fasta ;
 	done
 
 
@@ -112,9 +112,9 @@ else
 
 
 	if [[ $DATA_SOURCE = "tpa_assembly" ]] ;then
-		${CENOTE_SCRIPT_DIR}/linux64.tbl2asn -V vb -j "[keyword=TPA:assembly]" -t $base_directory/$template_file -X C -p sequin_directory/ ;
+		tbl2asn -V vb -j "[keyword=TPA:assembly]" -t $base_directory/$template_file -X C -p sequin_directory/ ;
 	else
-		${CENOTE_SCRIPT_DIR}/linux64.tbl2asn -V vb -t $base_directory/$template_file -X C -p sequin_directory/ ;
+		tbl2asn -V vb -t $base_directory/$template_file -X C -p sequin_directory/ ;
 	fi
 fi
 

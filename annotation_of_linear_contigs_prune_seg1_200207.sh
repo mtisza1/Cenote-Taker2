@@ -290,7 +290,7 @@ for NO_END in $virus_seg_fastas ; do
 
 		${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o ${NO_END%.fna}.phan.fasta $NO_END ; 
 		sed 's/ /@/g' ${NO_END%.fna}.phan.fasta | bioawk -c fastx '{ print }' | awk '{ if ($2 ~ /^[ATCG]TG/) { print ">"$1 ; print $2 }}' | sed 's/@/ /g' > ${NO_END%.fna}.phan.sort.fasta
-		/data/tiszamj/mike_tisza/EMBOSS-6.6.0/emboss/transeq -frame 1 -table 11 -sequence ${NO_END%.fna}.phan.sort.fasta -outseq ${NO_END%.fna}.trans.fasta ; 
+		transeq -frame 1 -table 11 -sequence ${NO_END%.fna}.phan.sort.fasta -outseq ${NO_END%.fna}.trans.fasta ; 
 		COUNTER=0 ;
 		bioawk -c fastx '{print}' ${NO_END%.fna}.trans.fasta | while read LINE ; do 
 			START_BASE=$( echo $LINE | sed 's/.*START=\(.*\)\] \[.*/\1/' ) ; 
@@ -1035,9 +1035,9 @@ done
 echo "$(tput setaf 5)Running tbl2asn for non-circular/non-ITR contigs with viral domains $(tput sgr 0)" ; 
 
 if [[ $DATA_SOURCE = "tpa_assembly" ]] ;then
-	${CENOTE_SCRIPT_DIR}/linux64.tbl2asn -V vb -j "[keyword=TPA:assembly]" -t $base_directory/$template_file -X C -p sequin_directory/ ;
+	tbl2asn -V vb -j "[keyword=TPA:assembly]" -t $base_directory/$template_file -X C -p sequin_directory/ ;
 else
-	${CENOTE_SCRIPT_DIR}/linux64.tbl2asn -V vb -t $base_directory/$template_file -X C -p sequin_directory/ ;
+	tbl2asn -V vb -t $base_directory/$template_file -X C -p sequin_directory/ ;
 fi
 
 #rm *.virus_signal.tab *.used_positions.txt *.phan.fasta *.phan.sort.fasta
