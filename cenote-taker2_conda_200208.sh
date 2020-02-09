@@ -139,6 +139,14 @@ else
 	echo "CAN'T FIND SCRATCH FOLDER. Specify correct folder or don't use scratch space. Exiting."
 	exit
 fi
+
+if [[ ":$PATH:" == *":${CENOTE_SCRIPT_DIR}/hh-suite/build/scripts:"* ]] && [[ ":$PATH:" == *":${CENOTE_SCRIPT_DIR}/hh-suite/build/bin:"* ]] ; then 
+	echo "hhsuite is in path" 
+else 
+	export PATH="${CENOTE_SCRIPT_DIR}/hh-suite/build/bin:${CENOTE_SCRIPT_DIR}/hh-suite/build/scripts:$PATH" 
+fi
+
+
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: loading modules: " $MDYT
 

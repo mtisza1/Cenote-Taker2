@@ -14,9 +14,13 @@ make
 #### set apc script to call last correctly
 
 conda env create --file cenote-taker2_env.yml
+
+#need a way to run updatetaxonomy for krona
+#/gpfs/gsfs7/users/tiszamj/python/env/Cenote-Taker2/opt/krona/updateTaxonomy.sh
+
 conda activate Cenote-Taker2
 # git hhsuite
-#### i may want to "branch" PHANOTATE and hhsuite
+#### i may want to "fork" PHANOTATE and hhsuite
 #wget hmmer DBs
 wget https://zenodo.org/record/3660539/files/hmmscan_DBs.tgz
 tar -xvf hmmscan_DBs.tgz
