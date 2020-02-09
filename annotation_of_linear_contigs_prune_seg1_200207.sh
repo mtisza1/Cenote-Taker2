@@ -230,7 +230,7 @@ for vd_fa in $virus_seg_fastas ; do
 			echo "$(tput setaf 4)"$vd_fa" is not a novel species (>90% identical to sequence in nt database).$(tput sgr 0)"
 			ktClassifyBLAST -o ${vd_fa%.fna}.tax_guide.blastn.tab ${circle%.fasta}.blastn.notnew.out
 			taxid=$( tail -n1 ${vd_fa%.fna}.tax_guide.blastn.tab | cut -f2 )
-			efetch -db taxonomy -id $taxid -format xml | ${CENOTE_SCRIPT_DIR}/xtract.Linux -pattern Taxon -element Lineage > ${vd_fa%.fna}.tax_guide.blastn.out
+			efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage > ${vd_fa%.fna}.tax_guide.blastn.out
 			sleep 2s
 			if [ !  -z "${vd_fa%.fna}.tax_guide.blastn.out" ] ; then
 				awk '{ print "; "$3 }' ${vd_fa%.fna}.blastn.notnew.out | sed 's/-/ /g; s/, complete genome//g' >> ${vd_fa%.fna}.tax_guide.blastn.out
@@ -266,7 +266,7 @@ for vd_fa in $virus_seg_fastas ; do
 		echo "$(tput setaf 5)"$vd_fa" likely represents a novel virus or plasmid. Getting hierarchical taxonomy info.$(tput sgr 0)"
 		ktClassifyBLAST -o ${vd_fa%.fna}.tax_guide.blastx.tab ${vd_fa%.fna}.tax_guide.blastx.out
 		taxid=$( tail -n1 ${vd_fa%.fna}.tax_guide.blastx.tab | cut -f2 )
-		efetch -db taxonomy -id $taxid -format xml | ${CENOTE_SCRIPT_DIR}/xtract.Linux -pattern Taxon -element Lineage >> ${vd_fa%.fna}.tax_guide.blastx.out	
+		efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${vd_fa%.fna}.tax_guide.blastx.out	
 		fi
 	elif grep -q "virophage" ${vd_fa%.fna}.tax_guide.blastx.out ; then
 		echo "Virophage" >> ${vd_fa%.fna}.tax_guide.blastx.out
@@ -278,7 +278,7 @@ for vd_fa in $virus_seg_fastas ; do
 		echo "$(tput setaf 5)"$vd_fa" likely represents a novel virus or plasmid. Getting hierarchical taxonomy info.$(tput sgr 0)"
 		ktClassifyBLAST -o ${vd_fa%.fna}.tax_guide.blastx.tab ${vd_fa%.fna}.tax_guide.blastx.out
 		taxid=$( tail -n1 ${vd_fa%.fna}.tax_guide.blastx.tab | cut -f2 )
-		efetch -db taxonomy -id $taxid -format xml | ${CENOTE_SCRIPT_DIR}/xtract.Linux -pattern Taxon -element Lineage >> ${vd_fa%.fna}.tax_guide.blastx.out
+		efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${vd_fa%.fna}.tax_guide.blastx.out
 	fi
 done
 
@@ -302,7 +302,7 @@ for NO_END in $virus_seg_fastas ; do
 			echo ">"${ORF_NAME}"_"${COUNTER} "["$START_BASE" - "$END_BASE"]" $ORIG_CONTIG ; echo $AA_SEQ ; 
 		done > ${NO_END%.fna}.AA.fasta
 	else
-		/data/tiszamj/mike_tisza/EMBOSS-6.6.0/emboss/getorf -circular -find 1 -minsize 150 -sequence $NO_END -outseq ${NO_END%.fna}.AA.fasta ;
+		getorf -circular -find 1 -minsize 150 -sequence $NO_END -outseq ${NO_END%.fna}.AA.fasta ;
 	fi
 	hmmscan --tblout ${NO_END%.fna}.AA.hmmscan2.out --cpu $CPU -E 1e-6 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a ${NO_END%.fna}.AA.fasta
 	grep -v "^#" ${NO_END%.fna}.AA.hmmscan2.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${NO_END%.fna}.AA.hmmscan2.sort.out
@@ -615,7 +615,7 @@ for feat_tbl2 in *_vs[0-9].comb3.tbl ; do
 			else
 				ktClassifyBLAST -o ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 				taxid=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab | cut -f2 )
-				efetch -db taxonomy -id $taxid -format xml | ${CENOTE_SCRIPT_DIR}/xtract.Linux -pattern Taxon -element Lineage >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 			fi
 		fi
 done

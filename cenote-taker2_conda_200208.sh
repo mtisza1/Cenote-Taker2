@@ -146,20 +146,7 @@ echo "time update: loading modules: " $MDYT
 #source /data/tiszamj/conda/etc/profile.d/conda.sh
 #conda activate cenote_taker1
 #### how do i handle conda environment?
-module load samtools || echo "$(tput setaf 4)unable to load samtools module $(tput sgr 0)"
-module load mummer || echo "$(tput setaf 4)unable to load mummer module $(tput sgr 0)"
-module load prodigal || echo "$(tput setaf 4)unable to load prodigal module $(tput sgr 0)" 
-module load bioawk || echo "$(tput setaf 4)unable to load bioawk module $(tput sgr 0)"
-module load blast || echo "$(tput setaf 4)unable to load blast module $(tput sgr 0)" 
-module load hhsuite || echo "$(tput setaf 4)unable to load hhsuite module $(tput sgr 0)"
-module load bwa || echo "$(tput setaf 4)unable to load BWA module $(tput sgr 0)"
-module load edirect || echo "$(tput setaf 4)unable to load edirect module $(tput sgr 0)"
-module load kronatools || echo "$(tput setaf 4)unable to load kronatools module $(tput sgr 0)"
-module load hmmer || echo "$(tput setaf 4)unable to load hmmer module $(tput sgr 0)"
-module load trnascan-se || echo "$(tput setaf 4)unable to load trnascan-se module $(tput sgr 0)"
-module load bowtie || echo "$(tput setaf 4)unable to load bowtie2 module $(tput sgr 0)"
-module load bbtools || echo "$(tput setaf 4)unable to load bbtools module $(tput sgr 0)"
-#### how do I handle all the dependencies
+
 
 if [ -s ${base_directory}/${template_file} ] ; then 
 	echo ${base_directory}/${template_file} ; 
@@ -406,7 +393,7 @@ if [ ! -z "$CIRCLES_AND_ITRS" ] ; then
 		else
 			echo "$(tput setaf 5)rotating "$nucl_fa" to put an ORF at beginning of sequence so that no ORFs overlap the breakpoint $(tput sgr 0)"
 			#### for docker, I think the entire emboss suite will be required
-			/data/tiszamj/mike_tisza/EMBOSS-6.6.0/emboss/getorf -circular -minsize 240 -table 11 -find 3 -sequence $nucl_fa -outseq ${nucl_fa%.fasta}.nucl_orfs.fa ; 
+			getorf -circular -minsize 240 -table 11 -find 3 -sequence $nucl_fa -outseq ${nucl_fa%.fasta}.nucl_orfs.fa ; 
 
 			grep ">" ${nucl_fa%.fasta}.nucl_orfs.fa > ${nucl_fa%.fasta}.nucl_orfs.txt
 			cat "${nucl_fa%.fasta}.nucl_orfs.txt" | while read liner ; do
@@ -467,7 +454,7 @@ if [ -s "${nucl_fa%.fasta}.rotate.fasta" ]; then
 			echo "$(tput setaf 5)"$nucl_fa" likely represents a novel virus or plasmid. Getting hierarchical taxonomy info.$(tput sgr 0)"
 			ktClassifyBLAST -o ${nucl_fa%.fasta}.tax_guide.blastx.tab ${nucl_fa%.fasta}.tax_guide.blastx.out
 			taxid=$( tail -n1 ${nucl_fa%.fasta}.tax_guide.blastx.tab | cut -f2 )
-			efetch -db taxonomy -id $taxid -format xml | ${CENOTE_SCRIPT_DIR}/xtract.Linux -pattern Taxon -element Lineage >> ${nucl_fa%.fasta}.tax_guide.blastx.out	
+			efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fasta}.tax_guide.blastx.out	
 		fi
 	elif grep -q "virophage" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
 		echo "Virophage" >> ${nucl_fa%.fasta}.tax_guide.blastx.out
@@ -479,7 +466,7 @@ if [ -s "${nucl_fa%.fasta}.rotate.fasta" ]; then
 		echo "$(tput setaf 5)"$nucl_fa" likely represents a novel virus or plasmid. Getting hierarchical taxonomy info.$(tput sgr 0)"
 		ktClassifyBLAST -o ${nucl_fa%.fasta}.tax_guide.blastx.tab ${nucl_fa%.fasta}.tax_guide.blastx.out
 		taxid=$( tail -n1 ${nucl_fa%.fasta}.tax_guide.blastx.tab | cut -f2 )
-		efetch -db taxonomy -id $taxid -format xml | ${CENOTE_SCRIPT_DIR}/xtract.Linux -pattern Taxon -element Lineage >> ${nucl_fa%.fasta}.tax_guide.blastx.out
+		efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fasta}.tax_guide.blastx.out
 	fi
 else
 	echo "$(tput setaf 4)"$nucl_fa" could not be rotated. Likely there were no ORFs of at least 100AA.$(tput sgr 0)" 
@@ -500,7 +487,7 @@ if [ -s "${nucl_fa%.fasta}.rotate.fasta" ]; then
 
 			${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o ${nucl_fa%.fasta}.phan.fasta ${nucl_fa%.fasta}.rotate.fasta ; 
 			sed 's/ /@/g' ${nucl_fa%.fasta}.phan.fasta | bioawk -c fastx '{ print }' | awk '{ if ($2 ~ /^[ATCG]TG/) { print ">"$1 ; print $2 }}' | sed 's/@/ /g' > ${nucl_fa%.fasta}.phan.sort.fasta
-			/data/tiszamj/mike_tisza/EMBOSS-6.6.0/emboss/transeq -frame 1 -table 11 -sequence ${nucl_fa%.fasta}.phan.sort.fasta -outseq ${nucl_fa%.fasta}.trans.fasta ;
+			transeq -frame 1 -table 11 -sequence ${nucl_fa%.fasta}.phan.sort.fasta -outseq ${nucl_fa%.fasta}.trans.fasta ;
 			# put emboss transeq in directory 
 			COUNTER=0 ;  
 			bioawk -c fastx '{print}' ${nucl_fa%.fasta}.trans.fasta | while read LINE ; do 
@@ -514,14 +501,14 @@ if [ -s "${nucl_fa%.fasta}.rotate.fasta" ]; then
 			done > ${nucl_fa%.fasta}.rotate.AA.fasta
 
 		else
-			/data/tiszamj/mike_tisza/EMBOSS-6.6.0/emboss/getorf -find 1 -minsize 150 -sequence ${nucl_fa%.fasta}.rotate.fasta -outseq ${nucl_fa%.fasta}.rotate.AA.fasta ;
+			getorf -find 1 -minsize 150 -sequence ${nucl_fa%.fasta}.rotate.fasta -outseq ${nucl_fa%.fasta}.rotate.AA.fasta ;
 		fi
 	else
 		if grep -i -q "Caudovir\|Ackermannvir\|Herellevir\|Corticovir\|Levivir\|Tectivir\|crAss-like virus\|CrAssphage\|Cyanophage\|Microvir\microphage\|Siphoviridae\|Myoviridae\|phage\|Podovir\|Halovir\|sphaerolipovir\|pleolipovir\|plasmid\|Inovir\|Ampullavir\|Bicaudavir\|Fusellovir\|Guttavir\|Ligamenvir\|Plasmavir\|Salterprovir\|Cystovir" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
 
 			${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o ${nucl_fa%.fasta}.phan.fasta ${nucl_fa%.fasta}.rotate.fasta ; 
 			sed 's/ /@/g' ${nucl_fa%.fasta}.phan.fasta | bioawk -c fastx '{ print }' | awk '{ if ($2 ~ /^[ATCG]TG/) { print ">"$1 ; print $2 }}' | sed 's/@/ /g' > ${nucl_fa%.fasta}.phan.sort.fasta
-			/data/tiszamj/mike_tisza/EMBOSS-6.6.0/emboss/transeq -frame 1 -table 11 -sequence ${nucl_fa%.fasta}.phan.sort.fasta -outseq ${nucl_fa%.fasta}.trans.fasta ; 
+			transeq -frame 1 -table 11 -sequence ${nucl_fa%.fasta}.phan.sort.fasta -outseq ${nucl_fa%.fasta}.trans.fasta ; 
 			COUNTER=0 ; 
 			bioawk -c fastx '{print}' ${nucl_fa%.fasta}.trans.fasta | while read LINE ; do 
 				START_BASE=$( echo $LINE | sed 's/.*START=\(.*\)\] \[.*/\1/' ) ; 
@@ -533,7 +520,7 @@ if [ -s "${nucl_fa%.fasta}.rotate.fasta" ]; then
 				echo ">"${ORF_NAME}"_"${COUNTER} "["$START_BASE" - "$END_BASE"]" $ORIG_CONTIG  ; echo $AA_SEQ ; 
 			done > ${nucl_fa%.fasta}.rotate.AA.fasta
 		else
-			/data/tiszamj/mike_tisza/EMBOSS-6.6.0/emboss/getorf -circular -find 1 -minsize 150 -sequence ${nucl_fa%.fasta}.rotate.fasta -outseq ${nucl_fa%.fasta}.rotate.AA.fasta ;
+			getorf -circular -find 1 -minsize 150 -sequence ${nucl_fa%.fasta}.rotate.fasta -outseq ${nucl_fa%.fasta}.rotate.AA.fasta ;
 		fi
 	fi
 	bioawk -c fastx '{FS="\t"; OFS=" "} {print ">"$name $3, $4, $5, $6, $7; print $seq}' ${nucl_fa%.fasta}.rotate.AA.fasta > ${nucl_fa%.fasta}.rotate.AA.sorted.fasta ;
@@ -660,7 +647,7 @@ if [[ "$BLASTN_LIST" -gt 1 ]] || [[ "$BLASTN_LIST" == 1 ]] ;then
 					echo "$(tput setaf 4)"$circle" is not a novel species (>90% identical to sequence in GenBank nt database).$(tput sgr 0)"
 					ktClassifyBLAST -o ${circle%.fasta}.tax_guide.blastn.tab ${circle%.fasta}.blastn.notnew.out
 					taxid=$( tail -n1 ${circle%.fasta}.tax_guide.blastn.tab | cut -f2 )
-					efetch -db taxonomy -id $taxid -format xml | ${CENOTE_SCRIPT_DIR}/xtract.Linux -pattern Taxon -element Lineage > ${circle%.fasta}.tax_guide.blastn.out
+					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage > ${circle%.fasta}.tax_guide.blastn.out
 					sleep 2s
 					if [ !  -z "${circle%.fasta}.tax_guide.blastn.out" ] ; then
 						awk '{ print "; "$3 }' ${circle%.fasta}.blastn.notnew.out | sed 's/-/ /g; s/, complete genome//g' >> ${circle%.fasta}.tax_guide.blastn.out
@@ -1083,7 +1070,7 @@ for feat_tbl2 in *.comb3.tbl ; do
 			else
 				ktClassifyBLAST -o ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 				taxid=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab | cut -f2 )
-				efetch -db taxonomy -id $taxid -format xml | ${CENOTE_SCRIPT_DIR}/xtract.Linux -pattern Taxon -element Lineage >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 			fi
 		fi
 done
