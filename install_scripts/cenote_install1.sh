@@ -17,7 +17,8 @@ cd last-1047/
 make
 cd ..
 
-conda init bash
+CONDA_BASE=$( conda info --base )
+source ${CONDA_BASE}/etc/profile.d/conda.sh
 conda env create --file cenote-taker2_env.yml
 #conda create -n Cenote-Taker2 -c defaults -c bioconda -c AgBiome --no-channel-priority python=3.6 prodigal=2.6.3 BWA=0.7.17 samtools=1.3 mummer=3.23 circlator=1.5.5 blast=2.9.0 bioawk=1.0 entrez-direct=13.3 krona=2.7.1 hmmer=3.3 bowtie2=2.3.5 trnascan-se=2.0.5 bbtools tbl2asn=25.7 emboss=6.6.0 cmake numpy pandas matplotlib 
 conda activate Cenote-Taker2
