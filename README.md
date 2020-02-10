@@ -7,7 +7,10 @@ The code is currently under construction.
 AFAIK, this will only work in Linux. 
 Using a HPC with at least 16 CPUs and 16g of dedicated memory is strongly recommended. 
 I usually use 32 CPUs and 80 GB of memory for medium and large metagenomes.
-
+```diff
+- ALERT *** Because Cenote-Taker2 needs large high-quality sequence databases to work correctly, installation will take \~2 hours AND require about 100GB of storage space. 
+ALERT ***
+```
 1. Change to the directory you'd like to be the parent to the install directory
 2. Ensure Conda is installed and working
 ```
@@ -17,7 +20,12 @@ conda -V
 ```
 wget  https://raw.githubusercontent.com/mtisza1/Cenote-Taker2/master/install_scripts/cenote_install1.sh
 ```
-4. run the install script
+4. Run the install script. 
+```diff
+- ALERT *** Because Cenote-Taker2 needs large high-quality sequence databases to work correctly, running this script will take \~2 hours AND require about 100GB of storage space. 
+ALERT ***
+```
+
 ```
 bash cenote_install1.sh
 ```
@@ -27,12 +35,12 @@ bash cenote_install1.sh
 ![alt text](https://github.com/mtisza1/Cenote-Taker2/blob/master/cenote-taker2_schematic_190920.png)
 
 # Running Cenote-Taker2
-Cenote-Taker2 currently runs in a python wrapper. If you are operating 
-1. Activate the Conda environment
+Cenote-Taker2 currently runs in a python wrapper. 
+1. Activate the Conda environment.
 ```
 conda activate Cenote-Taker2
 ```
-2. Run the python script (see options below)
+2. Run the python script (see options below).
 ```
 python /path/to/Cenote-Taker2/run_cenote-taker2_200207.py
 ```
