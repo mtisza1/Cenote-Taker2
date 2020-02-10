@@ -33,6 +33,13 @@ cd ..
 
 conda activate Cenote-Taker2
 
+conda info --envs | sed 's/ \+/ /g' | if grep -q "Cenote-Taker2 \*" ; then 
+	echo "Cenote-Taker2 loaded" ; 
+else 
+	echo "Cenote-Taker2 not loaded correctly" ;
+	exit 
+fi
+
 KRONA_DIRE=$( which python | sed 's/bin\/python/opt\/krona/g' )
 . ${KRONA_DIRE}/updateTaxonomy.sh
 . ${KRONA_DIRE}/updateAccessions.sh
