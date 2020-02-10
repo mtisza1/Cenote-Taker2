@@ -7,19 +7,18 @@ The code is currently under construction.
 
 1. Change to the directory you'd like to be the parent to the install directory
 2. Ensure Conda is installed and working
-'''
-conda -V
-'''
+
+'conda -V'
+
 3. Download the two scripts in the \'install_scripts\' directory of this github repo into your current directory. (i.e. cenote_install1.sh and cenote-taker2_env.yml).
 4. run the install script
-'''
-bash cenote_install1.sh
-'''
+'bash cenote_install1.sh'
+
 
 
 ![alt text](https://github.com/mtisza1/Cenote-Taker2/blob/master/cenote-taker2_schematic_190920.png)
 
-'''
+
 usage: run_cenote-taker2_200207.py [-h] --contigs ORIGINAL_CONTIGS --run_title
                                    RUN_TITLE --template_file TEMPLATE_FILE
                                    --prune_prophage PROPHAGE --mem MEM --cpu
@@ -211,5 +210,4 @@ optional arguments:
                         databases will be copied to (100GB of scratch space
                         are required for the databases)
 
-'''
 
