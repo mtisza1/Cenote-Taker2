@@ -15,7 +15,7 @@ conda -V
 ```
 3. Download the two scripts in the \'install_scripts\' directory of this github repo into your current directory. (i.e. cenote_install1.sh and cenote-taker2_env.yml).
 ```
-wget https://github.com/mtisza1/Cenote-Taker2/blob/master/install_scripts/cenote-taker2_env.yml https://github.com/mtisza1/Cenote-Taker2/blob/master/install_scripts/cenote_install1.sh
+wget https://raw.githubusercontent.com/mtisza1/Cenote-Taker2/master/install_scripts/cenote-taker2_env.yml https://raw.githubusercontent.com/mtisza1/Cenote-Taker2/master/install_scripts/cenote_install1.sh
 ```
 4. run the install script
 ```
