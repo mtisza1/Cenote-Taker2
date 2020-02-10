@@ -14,6 +14,9 @@ I usually use 32 CPUs and 80 GB of memory for medium and large metagenomes.
 conda -V
 ```
 3. Download the two scripts in the \'install_scripts\' directory of this github repo into your current directory. (i.e. cenote_install1.sh and cenote-taker2_env.yml).
+```
+wget https://github.com/mtisza1/Cenote-Taker2/blob/master/install_scripts/cenote-taker2_env.yml https://github.com/mtisza1/Cenote-Taker2/blob/master/install_scripts/cenote_install1.sh
+```
 4. run the install script
 ```
 bash cenote_install1.sh
