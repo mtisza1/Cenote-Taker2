@@ -279,7 +279,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 	for NONCIR in $CONTIGS_NON_CIRCULAR ; do
 		LEN_CHECKQ=$( cat $NONCIR | bioawk -c fastx '{ if(length($seq) > 4000) { print $name }}' ) ; 
 		if [ ! -z "$LEN_CHECKQ" ] ; then
-			irf $NONCIR 2 3 5 80 10 40 500000 10000 -d -h
+			${CENOTE_SCRIPT_DIR}/irf307.linux.exe $NONCIR 2 3 5 80 10 40 500000 10000 -d -h
 			#### put irf in script directory 
 		fi
 	done

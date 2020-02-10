@@ -3,24 +3,38 @@
 git clone https://github.com/mtisza1/Cenote-Taker2.git
 
 cd Cenote-Taker2
-#chmod +x irf?
+chmod +x irf307.linux.exe
+# cloning PHANOTATE
 git clone --recursive https://github.com/deprekate/PHANOTATE.git
-cd PHANOTATE; make
+cd PHANOTATE; # git checkout version from feb 8 2020
+make
 cd ..
+
+
 wget http://last.cbrc.jp/last-1047.zip
 unzip last-1047.zip
 cd last-1047/
 make
-#### set apc script to call last correctly
 
 conda env create --file cenote-taker2_env.yml
+#conda create -n Cenote-Taker2 -c defaults -c bioconda -c AgBiome --no-channel-priority python=3.6 prodigal=2.6.3 BWA=0.7.17 samtools=1.3 mummer=3.23 circlator=1.5.5 blast=2.9.0 bioawk=1.0 entrez-direct=13.3 krona=2.7.1 hmmer=3.3 bowtie2=2.3.5 trnascan-se=2.0.5 bbtools tbl2asn=25.7 emboss=6.6.0 cmake numpy pandas matplotlib 
 
-#need a way to run updatetaxonomy for krona
-#/gpfs/gsfs7/users/tiszamj/python/env/Cenote-Taker2/opt/krona/updateTaxonomy.sh
+# getting hh-suite from github. The anaconda package of hh-suite causes conflicts
+git clone https://github.com/soedinglab/hh-suite.git
+cd hh-suite # git checkout version from feb 8 2020
+mkdir -p build && cd build
+cmake -DCMAKE_INSTALL_PREFIX=. ..
+make -j 4 && make install
+export PATH="$(pwd)/bin:$(pwd)/scripts:$PATH"
+cd ..
+cd ..
 
 conda activate Cenote-Taker2
-# git hhsuite
-#### i may want to "fork" PHANOTATE and hhsuite
+
+KRONA_DIRE=$( which python | sed 's/bin\/python/opt\/krona/g' )
+. ${KRONA_DIRE}/updateTaxonomy.sh
+. ${KRONA_DIRE}/updateAccessions.sh
+
 #wget hmmer DBs
 wget https://zenodo.org/record/3660539/files/hmmscan_DBs.tgz
 tar -xvf hmmscan_DBs.tgz
@@ -52,8 +66,7 @@ wget ftp://ftp.ncbi.nih.gov/pub/mmdb/cdd/little_endian/Cdd_LE.tar.gz
 tar -xvf Cdd_LE.tar.gz
 rm Cdd_LE.tar.gz
 
-#format DBs?
-
+echo "Cenote-Taker2 should now run. Use \'python /path/to/Cenote-Taker2/run_cenote-taker2_200207.py\'"
 #python setup.py build; python setup.py install
 
 #Cenote-Taker2 -h
