@@ -3,7 +3,7 @@
 git clone https://github.com/mtisza1/Cenote-Taker2.git
 
 cd Cenote-Taker2
-chmod +x irf307.linux.exe
+#chmod +x irf307.linux.exe
 # cloning PHANOTATE
 git clone --recursive https://github.com/deprekate/PHANOTATE.git
 cd PHANOTATE; # git checkout version from feb 8 2020
