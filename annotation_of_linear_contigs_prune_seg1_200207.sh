@@ -531,9 +531,7 @@ echo "$(tput setaf 5) Parsing ORFs for HHsearch ; non-circular/non-ITR contigs w
 
 for blastp_tbl1 in *_vs[0-9].int2.tbl ; do
 	grep -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Uncharacterized conserved protein' -e 'unknown' -e 'Uncharacterised protein' -e 'product	gp' -B2 $blastp_tbl1 | grep "^[0-9]" | awk '{print $1 " - " $2}' > ${blastp_tbl1%.int2.tbl}.for_hhpred.txt ;
-	if [ $BLASTP == "conduct_blastp" ] ; then
-		grep -f ${blastp_tbl1%.int2.tbl}.for_hhpred.txt -A1 ${blastp_tbl1%.int2.tbl}.rps_nohits.fasta | sed '/--/d' > ${blastp_tbl1%.int2.tbl}.blast_hypo.fasta ;
-	fi
+	grep -f ${blastp_tbl1%.int2.tbl}.for_hhpred.txt -A1 ${blastp_tbl1%.int2.tbl}.rps_nohits.fasta | sed '/--/d' > ${blastp_tbl1%.int2.tbl}.blast_hypo.fasta ;
 	csplit -z ${blastp_tbl1%.int2.tbl}.blast_hypo.fasta '/>/' '{*}' --prefix=${blastp_tbl1%.int2.tbl}. --suffix-format=%02d.for_hhpred.fasta; 
 done
 
