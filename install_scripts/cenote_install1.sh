@@ -45,6 +45,7 @@ CT2_DIRE=$PWD
 KRONA_DIRE=$( which python | sed 's/bin\/python/opt\/krona/g' )
 cd ${KRONA_DIRE}
 sh updateTaxonomy.sh
+cd ${KRONA_DIRE}
 sh updateAccessions.sh
 cd ${CT2_DIRE}
 
