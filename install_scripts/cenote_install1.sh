@@ -44,8 +44,8 @@ cd ..
 CT2_DIRE=$PWD
 KRONA_DIRE=$( which python | sed 's/bin\/python/opt\/krona/g' )
 cd ${KRONA_DIRE}
-. updateTaxonomy.sh
-. updateAccessions.sh
+sh updateTaxonomy.sh
+sh updateAccessions.sh
 cd ${CT2_DIRE}
 
 #wget hmmer DBs
