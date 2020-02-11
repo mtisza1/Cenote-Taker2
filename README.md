@@ -1,6 +1,6 @@
 # Cenote-Taker2
 Cenote-Taker2 is a pipeline for divergent virus discovery and annotation. See schematic.
-The code is currently under construction.
+The code is currently functional.
 
 # Install Using Conda
 
@@ -11,6 +11,8 @@ I usually use 32 CPUs and 32 to 80 GB of memory for medium and large metagenomes
 - ALERT *** Because Cenote-Taker2 needs large high-quality 
 - sequence databases to work correctly, installation will take ~2 hours 
 - AND require about 130GB of storage space. 
+- Also part of the install requires 4 CPUs to work. 
+- Therefore, you may need to be in an interactive job on an HPC
 ```
 1. Change to the directory you'd like to be the parent to the install directory
 2. Ensure Conda is installed and working
@@ -27,6 +29,8 @@ The conda environment itself requires 32GB of space mostly due to the krona taxo
 - ALERT *** Because Cenote-Taker2 needs large high-quality 
 - sequence databases to work correctly, running this script will take ~2 hours 
 - AND require about 130GB of storage space. 
+- Also part of the install requires 4 CPUs to work. 
+- Therefore, you may need to be in an interactive job on an HPC
 ```
 
 ```
