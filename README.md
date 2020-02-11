@@ -4,12 +4,12 @@ The code is currently under construction.
 
 # Install Using Conda
 
-AFAIK, this will only work in Linux. 
+Likely, this will only work in Linux. 
 Using a HPC with at least 16 CPUs and 16g of dedicated memory is strongly recommended. 
-I usually use 32 CPUs and 80 GB of memory for medium and large metagenomes.
+I usually use 32 CPUs and 32 to 80 GB of memory for medium and large metagenomes.
 ```diff
 - ALERT *** Because Cenote-Taker2 needs large high-quality 
-- sequence databases to work correctly, installation will take \~2 hours 
+- sequence databases to work correctly, installation will take ~2 hours 
 - AND require about 130GB of storage space. 
 ```
 1. Change to the directory you'd like to be the parent to the install directory
@@ -17,7 +17,7 @@ I usually use 32 CPUs and 80 GB of memory for medium and large metagenomes.
 ```
 conda -V
 ```
-3. Download the script in the \'install_scripts\' directory of this github repo into your current directory. (i.e. cenote_install1.sh).
+3. Download the script in the \'install_scripts\' directory of this github repo into your current directory. (i.e. cenote_install1.sh). (remove any older versions of cenote_install1.sh first, if applicable)
 ```
 wget  https://raw.githubusercontent.com/mtisza1/Cenote-Taker2/master/install_scripts/cenote_install1.sh
 ```
@@ -25,7 +25,7 @@ wget  https://raw.githubusercontent.com/mtisza1/Cenote-Taker2/master/install_scr
 The conda environment itself requires 32GB of space mostly due to the krona taxonomy database. Some HPC users have installed their Conda in their /home directory which typically has little space. The other 100GB consists of sequence databases and will be put within the current directory
 ```diff
 - ALERT *** Because Cenote-Taker2 needs large high-quality 
-- sequence databases to work correctly, running this script will take \~2 hours 
+- sequence databases to work correctly, running this script will take ~2 hours 
 - AND require about 130GB of storage space. 
 ```
 
@@ -45,10 +45,10 @@ Cenote-Taker2 currently runs in a python wrapper.
 1. Activate the Conda environment.
 ```
 Default:
-conda activate Cenote-Taker2
+conda activate cenote-taker2_env
 
 Or if you've put your conda environment in a custom location:
-conda activate /path/to/better/directory/Cenote-Taker2
+conda activate /path/to/better/directory/cenote-taker2_env
 ```
 2. Run the python script (see options below).
 ```
