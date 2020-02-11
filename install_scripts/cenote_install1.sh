@@ -65,6 +65,7 @@ else
 		echo "Cenote-Taker2 not loaded correctly" ;
 		exit 
 	fi
+fi
 # getting hh-suite from github. The anaconda package of hh-suite causes conflicts
 if [ -s hh-suite/README.md ] ; then
 	echo "hh-suite already present"
