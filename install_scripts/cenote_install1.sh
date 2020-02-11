@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# provide exactly 1 argument. Either 'default' or an absolute path to the desired conda environment setup directory
 if [ -s Cenote-Taker2/run_cenote-taker2_200207.py ] ; then
 	cd Cenote-Taker2
 	git pull
@@ -31,19 +32,39 @@ else
 fi
 
 eval "$(conda shell.bash hook)"
-conda info --envs | if grep -q "Cenote-Taker2" ; then
-	conda env remove --name Cenote-Taker2
+if [ "$1" == "default" ] ; then
+	conda info --envs | if grep -q "Cenote-Taker2" ; then
+		conda env remove --name Cenote-Taker2
+	fi
+	conda env create --file cenote-taker2_env.yml
+	conda activate Cenote-Taker2
+elif [ -d "$1" ] ; then
+	conda info --envs | if grep -q "${1}\/Cenote-Taker2" ; then
+		conda env remove -p ${1}/Cenote-Taker2
+	fi
+	conda create -p ${1}/Cenote-Taker2 -c defaults -c bioconda -c AgBiome python=3.6 prodigal=2.6.3 BWA=0.7.17 samtools=1.3 mummer=3.23 circlator=1.5.5 blast=2.9.0 bioawk=1.0 entrez-direct=13.3 krona=2.7.1 hmmer=3.3 bowtie2=2.3.5 trnascan-se=2.0.5 bbtools=37.62 tbl2asn=25.7 emboss=6.6.0 cmake=3.14.0 numpy=1.18.1 pandas=1.0.0 matplotlib=3.1.3
+	conda activate ${1}/Cenote-Taker2
+else
+	echo "no proper option given for conda environment directory. Exiting."
+	exit
 fi
-conda env create --file cenote-taker2_env.yml
-#conda create -n Cenote-Taker2 -c defaults -c bioconda -c AgBiome --no-channel-priority python=3.6 prodigal=2.6.3 BWA=0.7.17 samtools=1.3 mummer=3.23 circlator=1.5.5 blast=2.9.0 bioawk=1.0 entrez-direct=13.3 krona=2.7.1 hmmer=3.3 bowtie2=2.3.5 trnascan-se=2.0.5 bbtools tbl2asn=25.7 emboss=6.6.0 cmake numpy pandas matplotlib 
-conda activate Cenote-Taker2
 
-conda info --envs | sed 's/ \+/ /g' | if grep -q "Cenote-Taker2 \*" ; then 
-	echo "Cenote-Taker2 loaded" ; 
-else 
-	echo "Cenote-Taker2 not loaded correctly" ;
-	exit 
-fi
+#conda create -n Cenote-Taker2 -c defaults -c bioconda -c AgBiome python=3.6 prodigal=2.6.3 BWA=0.7.17 samtools=1.3 mummer=3.23 circlator=1.5.5 blast=2.9.0 bioawk=1.0 entrez-direct=13.3 krona=2.7.1 hmmer=3.3 bowtie2=2.3.5 trnascan-se=2.0.5 bbtools=37.62 tbl2asn=25.7 emboss=6.6.0 cmake=3.14.0 numpy=1.18.1 pandas=1.0.0 matplotlib=3.1.3 
+
+if [ "$1" == "default" ] ; then
+	conda info --envs | sed 's/ \+/ /g' | if grep -q "Cenote-Taker2 \*" ; then 
+		echo "Cenote-Taker2 loaded" ; 
+	else 
+		echo "Cenote-Taker2 not loaded correctly" ;
+		exit 
+	fi
+else
+	conda info --envs | sed 's/ \+/ /g' | if grep -q "\* ${1}\/Cenote-Taker2" ; then 
+		echo "Cenote-Taker2 loaded" ; 
+	else 
+		echo "Cenote-Taker2 not loaded correctly" ;
+		exit 
+	fi
 # getting hh-suite from github. The anaconda package of hh-suite causes conflicts
 if [ -s hh-suite/README.md ] ; then
 	echo "hh-suite already present"

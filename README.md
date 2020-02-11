@@ -10,7 +10,7 @@ I usually use 32 CPUs and 80 GB of memory for medium and large metagenomes.
 ```diff
 - ALERT *** Because Cenote-Taker2 needs large high-quality 
 - sequence databases to work correctly, installation will take \~2 hours 
-- AND require about 100GB of storage space. 
+- AND require about 130GB of storage space. 
 ```
 1. Change to the directory you'd like to be the parent to the install directory
 2. Ensure Conda is installed and working
@@ -21,17 +21,21 @@ conda -V
 ```
 wget  https://raw.githubusercontent.com/mtisza1/Cenote-Taker2/master/install_scripts/cenote_install1.sh
 ```
-4. Run the install script. 
+4. Run the install script. Give exactly one argument in the script: 'default' - OR - a path to the desired conda environment setup directory. 
+The conda environment itself requires 32GB of space mostly due to the krona taxonomy database. Some HPC users have installed their Conda in their /home directory which typically has little space. The other 100GB consists of sequence databases and will be put within the current directory
 ```diff
 - ALERT *** Because Cenote-Taker2 needs large high-quality 
 - sequence databases to work correctly, running this script will take \~2 hours 
-- AND require about 100GB of storage space. 
+- AND require about 130GB of storage space. 
 ```
 
 ```
-bash cenote_install1.sh
-```
+If there is enough space in your default conda environment directory:
+bash cenote_install1.sh default
 
+Otherwise specify an absolute path to a directory with >32GB of storage:
+bash cenote_install1.sh /path/to/better/directory
+```
 
 
 ![alt text](https://github.com/mtisza1/Cenote-Taker2/blob/master/cenote-taker2_schematic_190920.png)
@@ -40,7 +44,11 @@ bash cenote_install1.sh
 Cenote-Taker2 currently runs in a python wrapper. 
 1. Activate the Conda environment.
 ```
+Default:
 conda activate Cenote-Taker2
+
+Or if you've put your conda environment in a custom location:
+conda activate /path/to/better/directory/Cenote-Taker2
 ```
 2. Run the python script (see options below).
 ```
