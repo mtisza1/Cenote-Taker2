@@ -1,4 +1,4 @@
-name: Cenote-Taker2
+name: cenote-taker2_env
 channels:
   - defaults
   - bioconda
