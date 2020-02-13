@@ -55,6 +55,107 @@ optional_args.add_argument("--scratch_directory", dest="SCRATCH_DIR", type=str, 
 
 args = parser.parse_args()
 
+def is_tool(name):
+	"""Check whether `name` is on PATH."""
+	from distutils.spawn import find_executable
+	return find_executable(name) is not None
+
+if is_tool("prodigal") :
+	print ("prodigal found")
+else:
+	print ("prodigal is not found. Exiting.")
+	quit()
+if is_tool("bwa") :
+	print ("BWA found")
+else:
+	print ("BWA is not found. Exiting.")
+	quit()
+if is_tool("samtools") :
+	print ("samtools found")
+else:
+	print ("samtools is not found. Exiting.")
+	quit()
+if is_tool("mummer") :
+	print ("mummer found")
+else:
+	print ("mummer is not found. Exiting.")
+	quit()
+if is_tool("circlator") :
+	print ("circlator found")
+else:
+	print ("circlator is not found. Exiting.")
+	quit()
+if is_tool("blastp") :
+	print ("blastp found")
+else:
+	print ("blastp is not found. Exiting.")
+	quit()
+if is_tool("blastn") :
+	print ("blastn found")
+else:
+	print ("blastn is not found. Exiting.")
+	quit()
+if is_tool("blastx") :
+	print ("blastx found")
+else:
+	print ("blastx is not found. Exiting.")
+	quit()
+if is_tool("rpsblast") :
+	print ("rpsblast found")
+else:
+	print ("rpsblast is not found. Exiting.")
+	quit()
+if is_tool("bioawk") :
+	print ("bioawk found")
+else:
+	print ("bioawk is not found. Exiting.")
+	quit()
+if is_tool("efetch") :
+	print ("efetch found")
+else:
+	print ("efetch is not found. Exiting.")
+	quit()
+if is_tool("ktClassifyBLAST") :
+	print ("ktClassifyBLAST found")
+else:
+	print ("ktClassifyBLAST is not found. Exiting.")
+	quit()
+if is_tool("hmmscan") :
+	print ("hmmscan found")
+else:
+	print ("hmmscan is not found. Exiting.")
+	quit()
+if is_tool("bowtie2") :
+	print ("bowtie2 found")
+else:
+	print ("bowtie2 is not found. Exiting.")
+	quit()
+if is_tool("tRNAscan-SE") :
+	print ("tRNAscan-SE found")
+else:
+	print ("tRNAscan-SE is not found. Exiting.")
+	quit()
+if is_tool("pileup.sh") :
+	print ("pileup.sh found")
+else:
+	print ("pileup.sh is not found. Exiting.")
+	quit()
+if is_tool("tbl2asn") :
+	print ("tbl2asn found")
+else:
+	print ("tbl2asn is not found. Exiting.")
+	quit()
+if is_tool("getorf") :
+	print ("getorf found")
+else:
+	print ("getorf is not found. Exiting.")
+	quit()
+if is_tool("transeq") :
+	print ("transeq found")
+else:
+	print ("transeq is not found. Exiting.")
+	quit()
+
 
 subprocess.call(['bash', str(cenote_script_path) + '/cenote-taker2_conda_200211.sh', str(args.original_contigs), str(args.F_READS), str(args.R_READS), str(args.run_title), str(args.isolation_source), str(args.collection_date), str(args.metagenome_type), str(args.srr_number), str(args.srx_number), str(args.biosample), str(args.bioproject),  str(args.template_file), str(args.handle_nonviral), str(args.circ_length_cutoff), str(args.linear_length_cutoff), str(args.virus_domain_db), str(args.LIN_MINIMUM_DOMAINS), str(args.handle_knowns), str(args.ASSEMBLER), str(args.MOLECULE_TYPE), str(args.HHSUITE_TOOL), str(args.DATA_SOURCE), str(args.BLASTP), str(args.PROPHAGE), str(args.FILTER_PLASMIDS), str(args.BLASTN_DB), str(cenote_script_path), str(args.CIRC_MINIMUM_DOMAINS), str(args.SCRATCH_DIR), str(args.MEM), str(args.CPU), str(args.ENFORCE_START_CODON)])
 
