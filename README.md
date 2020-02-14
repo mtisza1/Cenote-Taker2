@@ -56,38 +56,44 @@ conda activate /path/to/better/directory/cenote-taker2_env
 ```
 2. Run the python script (see options below).
 ```
-python /path/to/Cenote-Taker2/run_cenote-taker2_200207.py
+python /path/to/Cenote-Taker2/run_cenote-taker2_200211.py
 ```
 
 
 ```
-usage: run_cenote-taker2_200207.py [-h] --contigs ORIGINAL_CONTIGS --run_title
-                                   RUN_TITLE --template_file TEMPLATE_FILE
-                                   --prune_prophage PROPHAGE --mem MEM --cpu
-                                   CPU [--reads1 F_READS] [--reads2 R_READS]
-                                   [--isolation_source ISOLATION_SOURCE]
-                                   [--Environmental_sample ENVIRONMENTAL_SAMPLE]
-                                   [--collection_date COLLECTION_DATE]
-                                   [--metagenome_type METAGENOME_TYPE]
-                                   [--srr_number SRR_NUMBER]
-                                   [--srx_number SRX_NUMBER]
-                                   [--biosample BIOSAMPLE]
-                                   [--bioproject BIOPROJECT]
-                                   [--handle_contigs_without_hallmark HANDLE_NONVIRAL]
-                                   [--minimum_length_circular CIRC_LENGTH_CUTOFF]
-                                   [--minimum_length_linear LINEAR_LENGTH_CUTOFF]
-                                   [--virus_domain_db VIRUS_DOMAIN_DB]
-                                   [--lin_minimum_hallmark_genes LIN_MINIMUM_DOMAINS]
-                                   [--circ_minimum_hallmark_genes CIRC_MINIMUM_DOMAINS]
-                                   [--known_strains HANDLE_KNOWNS]
-                                   [--blastn_db BLASTN_DB]
-                                   [--assembler ASSEMBLER]
-                                   [--molecule_type MOLECULE_TYPE]
-                                   [--hhsuite_tool HHSUITE_TOOL]
-                                   [--data_source DATA_SOURCE]
-                                   [--filter_out_plasmids FILTER_PLASMIDS]
-                                   [--blastp BLASTP]
-                                   [--scratch_directory SCRATCH_DIR]
+usage: run_cenote-taker2_200211.py [-h] 
+                             --contigs ORIGINAL_CONTIGS 
+                             --run_title RUN_TITLE 
+                             --template_file TEMPLATE_FILE
+                             --prune_prophage PROPHAGE 
+                             --mem MEM 
+                             --cpu CPU 
+                             [--reads1 F_READS] 
+                             [--reads2 R_READS]
+                             [--isolation_source ISOLATION_SOURCE]
+                             [--Environmental_sample ENVIRONMENTAL_SAMPLE]
+                             [--collection_date COLLECTION_DATE]
+                             [--metagenome_type METAGENOME_TYPE]
+                             [--srr_number SRR_NUMBER]
+                             [--srx_number SRX_NUMBER]
+                             [--biosample BIOSAMPLE]
+                             [--bioproject BIOPROJECT]
+                             [--handle_contigs_without_hallmark HANDLE_NONVIRAL]
+                             [--minimum_length_circular CIRC_LENGTH_CUTOFF]
+                             [--minimum_length_linear LINEAR_LENGTH_CUTOFF]
+                             [--virus_domain_db VIRUS_DOMAIN_DB]
+                             [--lin_minimum_hallmark_genes LIN_MINIMUM_DOMAINS]
+                             [--circ_minimum_hallmark_genes CIRC_MINIMUM_DOMAINS]
+                             [--known_strains HANDLE_KNOWNS]
+                             [--blastn_db BLASTN_DB]
+                             [--assembler ASSEMBLER]
+                             [--molecule_type MOLECULE_TYPE]
+                             [--hhsuite_tool HHSUITE_TOOL]
+                             [--data_source DATA_SOURCE]
+                             [--filter_out_plasmids FILTER_PLASMIDS]
+                             [--blastp BLASTP]
+                             [--enforce_start_codon ENFORCE_START_CODON]
+                             [--scratch_directory SCRATCH_DIR]
 
 Cenote-Taker2 is a pipeline for virus discovery and thorough annotation of
 viral contigs and genomes.
@@ -244,6 +250,14 @@ optional arguments:
                         hallmark gene parameters. If False, hallmark genes of
                         plasmids will count.
   --blastp BLASTP       Do BLASTP?
+  --enforce_start_codon ENFORCE_START_CODON
+                        Default: True For final genome maps, require ORFs to
+                        be initiated by a typical start codon? GenBank
+                        submissions containing ORFs without start codons can
+                        be rejected. However, if True, important but
+                        incomplete genes could be culled from the final
+                        output. This is relevant mainly to contigs of
+                        incomplete genomes
   --scratch_directory SCRATCH_DIR
                         Default: none When running many instances of Cenote-
                         Taker2, it seems to run more quickly if you copy the

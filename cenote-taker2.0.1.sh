@@ -43,7 +43,6 @@ F_READS=$2
 R_READS=$3
 run_title=$4
 isolation_source=$5
-#### add environmental-source
 collection_date=$6
 metagenome_type=$7
 srr_number=$8
@@ -151,12 +150,6 @@ fi
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: loading modules: " $MDYT
 
-# Loading all the modules and environments for biowulf
-#source /data/tiszamj/conda/etc/profile.d/conda.sh
-#conda activate cenote_taker1
-#### how do i handle conda environment?
-
-
 if [ -s ${base_directory}/${template_file} ] ; then 
 	echo ${base_directory}/${template_file} ; 
 else  
@@ -172,12 +165,22 @@ else
 	mkdir "$run_title"
 fi 
 
+if [ ${original_contigs: -3} == ".fa" ]; then
+	echo "renaming $original_contigs to ${original_contigs}sta"
+	mv $original_contigs ${original_contigs}sta
+	original_contigs=${original_contigs}sta
+fi
+if [ ${original_contigs: -3} == ".fna" ]; then
+	echo "renaming $original_contigs to ${original_contigs%fna}fasta"
+	mv $original_contigs ${original_contigs%fna}fasta
+	original_contigs=${original_contigs%fna}fasta
+fi
+
 # Removing contigs under $circ_length_cutoff nts and detecting circular contigs
 if [ ${original_contigs: -6} == ".fasta" ]; then
 	echo "$(tput setaf 5)File with .fasta extension detected, attempting to keep contigs over $circ_length_cutoff nt and find circular sequences with apc.pl$(tput sgr 0)"
 	bioawk -v run_var="$run_title" -v contig_cutoff="$circ_length_cutoff" -c fastx '{ if(length($seq) > contig_cutoff) { print ">"run_var NR" "$name; print $seq }}' $original_contigs > ${original_contigs%.fasta}.over_${circ_length_cutoff}nt.fasta ;
 	cd $run_title
-	#### need to format lastdb and lastal for apc
 	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fasta}.over_${circ_length_cutoff}nt.fasta ;
 	rm apc_aln*
 	for fa1 in $run_title*.fa ; do 
@@ -633,6 +636,7 @@ if [ -n "$CIRCLES_AND_ITRS" ]; then
 	done
 fi
 
+cat *.no_baits.fna >> noncircular_contigs/noncircular_non_viral_domains_contigs.fna
 # 5 blastn
 
 
@@ -1580,13 +1584,13 @@ LIST_OF_VIRAL_DOMAIN_CONTIGS=$( ls no_end_contigs_with_viral_domain/ | grep ".fn
 if [ ! -z "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ;then
 	echo "$(tput setaf 3) Starting annotation of contigs with viral domains but are neither circular nor have ITRs $(tput sgr 0)"
 
-	. ${CENOTE_SCRIPT_DIR}/annotation_of_linear_contigs_prune_seg1_200211.sh
+	. ${CENOTE_SCRIPT_DIR}/annotation_of_linear_contigs_prune_seg2.0.1.sh
 fi
 
 # script for sketching contigs without detectable virus domains or circularity or ITRs with RPS-BLAST
 if  [[ $handle_nonviral = "sketch_all" ]] ; then
 	echo "$(tput setaf 3) Sketching contigs without detectable virus domains or circularity or ITRs with RPS-BLAST $(tput sgr 0)"
-	. ${CENOTE_SCRIPT_DIR}/sketching_nonviral_contigs_200207.sh
+	. ${CENOTE_SCRIPT_DIR}/sketching_nonviral_contigs_2.0.1.sh
 elif [[ $handle_nonviral = "no_sketch_domainless" ]]; then
 	echo "$(tput setaf 3) The -no_sketch option was used, contigs without detectable virus domains or circularity or ITRs will not be sketched $(tput sgr 0)"
 #elif [[ $handle_nonviral = "full_annotate_all" ]]; then

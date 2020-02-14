@@ -1,6 +1,25 @@
 #!/bin/bash
 
 # provide exactly 1 argument. Either 'default' or an absolute path to the desired conda environment setup directory
+
+read -p 'Hello! This installation will require 32GB of storage in your Conda environment directory and 100GB of storage in your current directory. Are you confident that you have the available space? (yes or no): ' installrvar
+if [ "$installrvar" == "yes" ] ; then
+	echo " "
+else
+	"You didn't say \"yes\". Exiting"
+	exit
+fi
+read -p 'This installation will download and format large databases. It could take up to 2 hours. Are you ready to begin? (yes or no): ' timervar
+if [ "$timervar" == "yes" ] ; then
+	echo " "
+	echo "Beginning install!"
+	sleep 3s
+else
+	"You didn't say \"yes\". Exiting"
+	exit
+fi
+
+
 if [ -s Cenote-Taker2/run_cenote-taker2_200207.py ] ; then
 	cd Cenote-Taker2
 	git pull
