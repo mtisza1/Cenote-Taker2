@@ -4,6 +4,13 @@ The code is currently functional.
 
 # Install Using Conda
 
+**The Five Commandments**
+**1. Know where your default conda environment install space is.**
+**2. Ensure you have space for all 130GB of files.**
+**3. Don't install without checking conda first.**
+**4. Only install on an HPC unless your personal computer has sick specs.**
+**5. Don't let your computer fall asleep during the install**
+
 Likely, this will only work in Linux. 
 Using a HPC with at least 16 CPUs and 16g of dedicated memory is strongly recommended. 
 I usually use 32 CPUs and 32 to 80 GB of memory for medium and large metagenomes.
@@ -61,34 +68,39 @@ python /path/to/Cenote-Taker2/run_cenote-taker2.0.1.py
 
 
 ```
-usage: run_cenote-taker2.0.1.py [-h] --contigs ORIGINAL_CONTIGS --run_title
-                                RUN_TITLE --template_file TEMPLATE_FILE
-                                --prune_prophage PROPHAGE --mem MEM --cpu CPU
-                                [--reads1 F_READS] [--reads2 R_READS]
-                                [--isolation_source ISOLATION_SOURCE]
-                                [--Environmental_sample ENVIRONMENTAL_SAMPLE]
-                                [--collection_date COLLECTION_DATE]
-                                [--metagenome_type METAGENOME_TYPE]
-                                [--srr_number SRR_NUMBER]
-                                [--srx_number SRX_NUMBER]
-                                [--biosample BIOSAMPLE]
-                                [--bioproject BIOPROJECT]
-                                [--handle_contigs_without_hallmark HANDLE_NONVIRAL]
-                                [--minimum_length_circular CIRC_LENGTH_CUTOFF]
-                                [--minimum_length_linear LINEAR_LENGTH_CUTOFF]
-                                [--virus_domain_db VIRUS_DOMAIN_DB]
-                                [--lin_minimum_hallmark_genes LIN_MINIMUM_DOMAINS]
-                                [--circ_minimum_hallmark_genes CIRC_MINIMUM_DOMAINS]
-                                [--known_strains HANDLE_KNOWNS]
-                                [--blastn_db BLASTN_DB]
-                                [--assembler ASSEMBLER]
-                                [--molecule_type MOLECULE_TYPE]
-                                [--hhsuite_tool HHSUITE_TOOL]
-                                [--data_source DATA_SOURCE]
-                                [--filter_out_plasmids FILTER_PLASMIDS]
-                                [--blastp BLASTP]
-                                [--enforce_start_codon ENFORCE_START_CODON]
-                                [--scratch_directory SCRATCH_DIR]
+usage: run_cenote-taker2.0.1.py [-h] 
+                          --contigs ORIGINAL_CONTIGS 
+                          --run_title RUN_TITLE 
+                          --template_file TEMPLATE_FILE
+                          --prune_prophage PROPHAGE 
+                          --mem MEM 
+                          --cpu CPU
+                          [--reads1 F_READS] 
+                          [--reads2 R_READS]
+                          [--isolation_source ISOLATION_SOURCE]
+                          [--Environmental_sample ENVIRONMENTAL_SAMPLE]
+                          [--collection_date COLLECTION_DATE]
+                          [--metagenome_type METAGENOME_TYPE]
+                          [--srr_number SRR_NUMBER]
+                          [--srx_number SRX_NUMBER]
+                          [--biosample BIOSAMPLE]
+                          [--bioproject BIOPROJECT]
+                          [--handle_contigs_without_hallmark HANDLE_NONVIRAL]
+                          [--minimum_length_circular CIRC_LENGTH_CUTOFF]
+                          [--minimum_length_linear LINEAR_LENGTH_CUTOFF]
+                          [--virus_domain_db VIRUS_DOMAIN_DB]
+                          [--lin_minimum_hallmark_genes LIN_MINIMUM_DOMAINS]
+                          [--circ_minimum_hallmark_genes CIRC_MINIMUM_DOMAINS]
+                          [--known_strains HANDLE_KNOWNS]
+                          [--blastn_db BLASTN_DB]
+                          [--assembler ASSEMBLER]
+                          [--molecule_type MOLECULE_TYPE]
+                          [--hhsuite_tool HHSUITE_TOOL]
+                          [--data_source DATA_SOURCE]
+                          [--filter_out_plasmids FILTER_PLASMIDS]
+                          [--blastp BLASTP]
+                          [--enforce_start_codon ENFORCE_START_CODON]
+                          [--scratch_directory SCRATCH_DIR]
 
 Cenote-Taker2 is a pipeline for virus discovery and thorough annotation of
 viral contigs and genomes.
