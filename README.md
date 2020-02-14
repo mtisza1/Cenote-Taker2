@@ -56,44 +56,39 @@ conda activate /path/to/better/directory/cenote-taker2_env
 ```
 2. Run the python script (see options below).
 ```
-python /path/to/Cenote-Taker2/run_cenote-taker2_200211.py
+python /path/to/Cenote-Taker2/run_cenote-taker2.0.1.py
 ```
 
 
 ```
-usage: run_cenote-taker2_200211.py [-h] 
-                             --contigs ORIGINAL_CONTIGS 
-                             --run_title RUN_TITLE 
-                             --template_file TEMPLATE_FILE
-                             --prune_prophage PROPHAGE 
-                             --mem MEM 
-                             --cpu CPU 
-                             [--reads1 F_READS] 
-                             [--reads2 R_READS]
-                             [--isolation_source ISOLATION_SOURCE]
-                             [--Environmental_sample ENVIRONMENTAL_SAMPLE]
-                             [--collection_date COLLECTION_DATE]
-                             [--metagenome_type METAGENOME_TYPE]
-                             [--srr_number SRR_NUMBER]
-                             [--srx_number SRX_NUMBER]
-                             [--biosample BIOSAMPLE]
-                             [--bioproject BIOPROJECT]
-                             [--handle_contigs_without_hallmark HANDLE_NONVIRAL]
-                             [--minimum_length_circular CIRC_LENGTH_CUTOFF]
-                             [--minimum_length_linear LINEAR_LENGTH_CUTOFF]
-                             [--virus_domain_db VIRUS_DOMAIN_DB]
-                             [--lin_minimum_hallmark_genes LIN_MINIMUM_DOMAINS]
-                             [--circ_minimum_hallmark_genes CIRC_MINIMUM_DOMAINS]
-                             [--known_strains HANDLE_KNOWNS]
-                             [--blastn_db BLASTN_DB]
-                             [--assembler ASSEMBLER]
-                             [--molecule_type MOLECULE_TYPE]
-                             [--hhsuite_tool HHSUITE_TOOL]
-                             [--data_source DATA_SOURCE]
-                             [--filter_out_plasmids FILTER_PLASMIDS]
-                             [--blastp BLASTP]
-                             [--enforce_start_codon ENFORCE_START_CODON]
-                             [--scratch_directory SCRATCH_DIR]
+usage: run_cenote-taker2.0.1.py [-h] --contigs ORIGINAL_CONTIGS --run_title
+                                RUN_TITLE --template_file TEMPLATE_FILE
+                                --prune_prophage PROPHAGE --mem MEM --cpu CPU
+                                [--reads1 F_READS] [--reads2 R_READS]
+                                [--isolation_source ISOLATION_SOURCE]
+                                [--Environmental_sample ENVIRONMENTAL_SAMPLE]
+                                [--collection_date COLLECTION_DATE]
+                                [--metagenome_type METAGENOME_TYPE]
+                                [--srr_number SRR_NUMBER]
+                                [--srx_number SRX_NUMBER]
+                                [--biosample BIOSAMPLE]
+                                [--bioproject BIOPROJECT]
+                                [--handle_contigs_without_hallmark HANDLE_NONVIRAL]
+                                [--minimum_length_circular CIRC_LENGTH_CUTOFF]
+                                [--minimum_length_linear LINEAR_LENGTH_CUTOFF]
+                                [--virus_domain_db VIRUS_DOMAIN_DB]
+                                [--lin_minimum_hallmark_genes LIN_MINIMUM_DOMAINS]
+                                [--circ_minimum_hallmark_genes CIRC_MINIMUM_DOMAINS]
+                                [--known_strains HANDLE_KNOWNS]
+                                [--blastn_db BLASTN_DB]
+                                [--assembler ASSEMBLER]
+                                [--molecule_type MOLECULE_TYPE]
+                                [--hhsuite_tool HHSUITE_TOOL]
+                                [--data_source DATA_SOURCE]
+                                [--filter_out_plasmids FILTER_PLASMIDS]
+                                [--blastp BLASTP]
+                                [--enforce_start_codon ENFORCE_START_CODON]
+                                [--scratch_directory SCRATCH_DIR]
 
 Cenote-Taker2 is a pipeline for virus discovery and thorough annotation of
 viral contigs and genomes.
@@ -107,27 +102,29 @@ optional arguments:
                         - assembly graph with .fastg extension. Each header
                         must be unique before the first space character
   --run_title RUN_TITLE
-                        Name of this run. Must be unique from older runs or
-                        older run will be deleted. Must be less than 18
-                        characters, using ONLY letters, numbers and
-                        underscores (_)
+                        Name of this run. A directory of this name will be
+                        created. Must be unique from older runs or older run
+                        will be renamed. Must be less than 18 characters,
+                        using ONLY letters, numbers and underscores (_)
   --template_file TEMPLATE_FILE
                         Template file with some metadata. Takes a couple
                         minutes to generate: https://submit.ncbi.nlm.nih.gov/g
                         enbank/template/submission/
   --prune_prophage PROPHAGE
-                        True or False. Attempt to identify prophages
-                        integrated in chromosomal contigs (True is highly
-                        recommended for sequenced material not enriched for
-                        viruses. Virus enriched samples probably should be
-                        False)
-  --mem MEM             Gigabytes of memory available for Cenote-Taker2.
-                        Typically, 32GB to 80GB should be used. Lower memory
-                        will work in theory, but could extend the length of
-                        the run
-  --cpu CPU             Number of CPUs available for Cenote-Taker2. Typically,
-                        32 to 120 CPUs should be used. Fewer CPUs will work in
-                        theory, but could extend the length of the run
+                        True or False. Attempt to identify and remove flanking
+                        chromosomal regions from non-circular contigs with
+                        viral hallmarks (True is highly recommended for
+                        sequenced material not enriched for viruses. Virus
+                        enriched samples probably should be False)
+  --mem MEM             example: 56 Gigabytes of memory available for Cenote-
+                        Taker2. Typically, 32 to 80 should be used. Lower
+                        memory will work in theory, but could extend the
+                        length of the run
+  --cpu CPU             Example: 32 Number of CPUs available for Cenote-
+                        Taker2. Typically, 32 CPUs should be used. For large
+                        datasets, increased performance can be seen up to 120
+                        CPUs. Fewer than 16 CPUs will work in theory, but
+                        could extend the length of the run
 
  OPTIONAL ARGUMENTS for Cenote-Taker2. Most of which are important to consider!!! GenBank typically only accepts genome submission with ample metadata. See https://www.ncbi.nlm.nih.gov/Sequin/sequin.hlp.html#ModifiersPage for more information on GenBank metadata fields:
   --reads1 F_READS      Default: no_reads ILLUMINA READS ONLY: First Read file
@@ -263,7 +260,7 @@ optional arguments:
                         Taker2, it seems to run more quickly if you copy the
                         hhsuite databases to a scratch space temporarily. Use
                         this argument to set a scratch directory that the
-                        databases will be copied to (100GB of scratch space
-                        are required for the databases)
+                        databases will be copied to (at least 100GB of scratch
+                        space are required for copying the databases)
 ```
 
