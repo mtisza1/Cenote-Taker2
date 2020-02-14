@@ -4,12 +4,14 @@ The code is currently functional.
 
 # Install Using Conda
 
-**The Five Commandments**
-**1. Know where your default conda environment install space is.**
-**2. Ensure you have space for all 130GB of files.**
-**3. Don't install without checking conda first.**
-**4. Only install on an HPC unless your personal computer has sick specs.**
-**5. Don't let your computer fall asleep during the install**
+```
+**The Five Commandments
+**1. Know where your default conda environment install space is.
+**2. Ensure you have space for all 130GB of files.
+**3. Don't install without checking conda first.
+**4. Only install on an HPC unless your personal computer has sick specs.
+**5. Don't let your computer fall asleep during the install
+```
 
 Likely, this will only work in Linux. 
 Using a HPC with at least 16 CPUs and 16g of dedicated memory is strongly recommended. 
@@ -22,7 +24,7 @@ I usually use 32 CPUs and 32 to 80 GB of memory for medium and large metagenomes
 - Therefore, you may need to be in an interactive job on an HPC
 ```
 1. Change to the directory you'd like to be the parent to the install directory
-2. Ensure Conda is installed and working
+2. Ensure Conda is installed and working. Use version 4.8.2 or better.
 ```
 conda -V
 ```
