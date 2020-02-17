@@ -549,14 +549,14 @@ for dark_orf in $dark_orf_list ; do
 	if  [[ $HHSUITE_TOOL = "hhsearch" ]] ; then
 
 		echo "$(tput setaf 5)Running HHsearch on "$dark_orf" now.$(tput sgr 0)"
-		hhsearch -i $dark_orf -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o ${dark_orf%.for_hhpred.fasta}.out.hhr -cpu $CPU -maxmem $MEM -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1  ;
+		${CENOTE_SCRIPT_DIR}/hh-suite/build/src/hhsearch -i $dark_orf -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o ${dark_orf%.for_hhpred.fasta}.out.hhr -cpu $CPU -maxmem $MEM -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1  ;
 		cat ${dark_orf%.for_hhpred.fasta}.out.hhr >> ${dark_orf%.*.for_hhpred.fasta}.rotate.out_all.hhr ;
 		rm ${dark_orf%.for_hhpred.fasta}.out.hhr 
 		cat $dark_orf >> ${dark_orf%.*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
 		rm $dark_orf
 	elif [[ $HHSUITE_TOOL = "hhblits" ]] ; then
 		echo "$(tput setaf 5)Running HHblits on "$dark_orf" now.$(tput sgr 0)"
-		hhblits -i $dark_orf -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o ${dark_orf%.for_hhpred.fasta}.out.hhr -cpu $CPU -maxmem $MEM -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1  ;
+		${CENOTE_SCRIPT_DIR}/hh-suite/build/src/hhblits -i $dark_orf -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o ${dark_orf%.for_hhpred.fasta}.out.hhr -cpu $CPU -maxmem $MEM -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1  ;
 		cat ${dark_orf%.for_hhpred.fasta}.out.hhr >> ${dark_orf%.*.for_hhpred.fasta}.rotate.out_all.hhr ;
 		rm ${dark_orf%.for_hhpred.fasta}.out.hhr 
 		cat $dark_orf >> ${dark_orf%.*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta

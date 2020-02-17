@@ -9,6 +9,13 @@ else
 	"You didn't say \"yes\". Exiting"
 	exit
 fi
+read -p 'This installation will require 4 CPUs. Are you confident that you have 4 CUs available? (yes or no): ' cpurvar
+if [ "$cpurvar" == "yes" ] ; then
+	echo " "
+else
+	"You didn't say \"yes\". Exiting"
+	exit
+fi
 read -p 'This installation will download and format large databases. It could take up to 2 hours. Are you ready to begin? (yes or no): ' timervar
 if [ "$timervar" == "yes" ] ; then
 	echo " "
@@ -18,6 +25,7 @@ else
 	"You didn't say \"yes\". Exiting"
 	exit
 fi
+
 
 
 if [ -s Cenote-Taker2/run_cenote-taker2_200207.py ] ; then
