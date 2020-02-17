@@ -99,7 +99,7 @@ echo "HHsuite tool:                      $HHSUITE_TOOL"
 echo "original or TPA:                   $DATA_SOURCE"
 echo "Do BLASTP?:                        $BLASTP"
 echo "Do Prophage Pruning?:              $PROPHAGE"  
-echo "Filter out plasmids?:              $FOR_PLASMIDS:"
+echo "Filter out plasmids?:              $FOR_PLASMIDS"
 echo "Run BLASTN against nt?             $BLASTN_DB"
 echo "Location of Cenote scripts:        $CENOTE_SCRIPT_DIR"
 echo "Location of scratch directory:     $SCRATCH_DIR"
@@ -276,11 +276,10 @@ echo "$(tput setaf 4)Looking for ITRs in non-circular contigs $(tput sgr 0)"
 
 cd noncircular_contigs
 CONTIGS_NON_CIRCULAR=$( ls *{0..9}.fasta )
-echo "$(tput setaf 4)CONTIGS_NON_CIRCULAR variable $(tput sgr 0)"
-echo $CONTIGS_NON_CIRCULAR
+
 if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 	MDYT=$( date +"%m-%d-%y---%T" )
-	echo "time update: running IRF for ITRs " $MDYT
+	echo "time update: running IRF for ITRs in non-circular contigs" $MDYT
 	for NONCIR in $CONTIGS_NON_CIRCULAR ; do
 		LEN_CHECKQ=$( cat $NONCIR | bioawk -c fastx '{ if(length($seq) > 4000) { print $name }}' ) ; 
 		if [ ! -z "$LEN_CHECKQ" ] ; then
@@ -1567,9 +1566,9 @@ done
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: running tbl2asn " $MDYT
 if [[ $DATA_SOURCE = "tpa_assembly" ]] ;then
-	tbl2asn -V vb -j "[keyword=TPA:assembly]" -t $base_directory/$template_file -X C -p sequin_directory/ ;
+	tbl2asn -V vb -j "[keyword=TPA:assembly]" -t ${base_directory}/${template_file} -X C -p sequin_directory/ ;
 else
-	tbl2asn -V vb -t $base_directory/$template_file -X C -p sequin_directory/ ;
+	tbl2asn -V vb -t ${base_directory}/${template_file} -X C -p sequin_directory/ ;
 fi
 
 # Script for annotating complete circular viruses of known species

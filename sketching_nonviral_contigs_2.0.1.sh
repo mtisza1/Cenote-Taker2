@@ -112,9 +112,9 @@ else
 
 
 	if [[ $DATA_SOURCE = "tpa_assembly" ]] ;then
-		tbl2asn -V vb -j "[keyword=TPA:assembly]" -t $base_directory/$template_file -X C -p sequin_directory/ ;
+		tbl2asn -V vb -j "[keyword=TPA:assembly]" -t ${base_directory}/${template_file} -X C -p sequin_directory/ ;
 	else
-		tbl2asn -V vb -t $base_directory/$template_file -X C -p sequin_directory/ ;
+		tbl2asn -V vb -t ${base_directory}/${template_file} -X C -p sequin_directory/ ;
 	fi
 fi
 

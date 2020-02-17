@@ -1037,12 +1037,12 @@ done
 echo "$(tput setaf 5)Running tbl2asn for non-circular/non-ITR contigs with viral domains $(tput sgr 0)" ; 
 
 if [[ $DATA_SOURCE = "tpa_assembly" ]] ;then
-	tbl2asn -V vb -j "[keyword=TPA:assembly]" -t $base_directory/$template_file -X C -p sequin_directory/ ;
+	tbl2asn -V vb -j "[keyword=TPA:assembly]" -t ${base_directory}/${template_file} -X C -p sequin_directory/ ;
 else
-	tbl2asn -V vb -t $base_directory/$template_file -X C -p sequin_directory/ ;
+	tbl2asn -V vb -t ${base_directory}/${template_file} -X C -p sequin_directory/ ;
 fi
 
-#rm *.virus_signal.tab *.used_positions.txt *.phan.fasta *.phan.sort.fasta
+rm *.virus_signal.tab *.used_positions.txt *.phan.fasta *.phan.sort.fasta
 
 cd ..
 
