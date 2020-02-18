@@ -1070,8 +1070,8 @@ rm *tmp.tbl
 for feat_tbl2 in *.comb3.tbl ; do 
 		if grep -i -q "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 ; then
 			TAX_ORF=$( grep -i -B1 "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
-		elif grep -i -q "dnab\|dna polymerase\|polb" $feat_tbl2 ; then
-			TAX_ORF=$( grep -i -B1 "dnab\|dna polymerase\|polb" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )			
+		elif grep -i -q "dnab\|dna polymerase\|polb\|rdrp\|rna dependent rna polymerase" $feat_tbl2 ; then
+			TAX_ORF=$( grep -i -B1 "dnab\|dna polymerase\|polb\|rdrp\|rna dependent rna polymerase" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )			
 		elif grep -i -q "portal" $feat_tbl2 ; then
 			TAX_ORF=$( grep -i -B1 "portal" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )		
 		elif grep -i -q "rep \|replica\|repa " $feat_tbl2 ; then

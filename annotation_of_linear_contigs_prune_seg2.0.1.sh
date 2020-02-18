@@ -398,7 +398,7 @@ for GENOME_NAME in $virus_seg_fastas ; do
 			TRNA_NUMBER=$( echo $LINE | cut -d " " -f2 ) ; 
 			TRNA_TYPE=$( echo $LINE | cut -d " " -f5 ) ; 
 			TRNA_SCORE=$( echo $LINE | cut -d " " -f9 ) ; 
-			echo -e "$TRNA_START\t""$TRNA_END\t""tRNA\n""\t\t\tgene\t""${GENOME_NAME%.fna}""_tRNA$TRNA_NUMBER\n""\t\t\tproduct\t""tRNA-$TRNA_TYPE\n""\t\t\tinference\t""tRNAscan-SE score:$TRNA_SCORE" >> ${GENOME_NAME%.fna}.trna.tbl; 
+			echo -e "$TRNA_START\t""$TRNA_END\t""tRNA\n""\t\t\tgene\t""${GENOME_NAME%.fna}""_tRNA$TRNA_NUMBER\n""\t\t\tproduct\t""tRNA-$TRNA_TYPE\n""\t\t\tinference\t""tRNAscan-SE score:$TRNA_SCORE" >> ${GENOME_NAME%_vs[0-9].fna}.trna.tbl; 
 		done
 	fi
 done
@@ -592,8 +592,8 @@ done
 for feat_tbl2 in *_vs[0-9].comb3.tbl ; do 
 		if grep -i -q "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 ; then
 			TAX_ORF=$( grep -i -B1 "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
-		elif grep -i -q "dnab\|dna polymerase\|polb" $feat_tbl2 ; then
-			TAX_ORF=$( grep -i -B1 "dnab\|dna polymerase\|polb" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )		
+		elif grep -i -q "dnab\|dna polymerase\|polb\|rdrp\|rna dependent rna polymerase" $feat_tbl2 ; then
+			TAX_ORF=$( grep -i -B1 "dnab\|dna polymerase\|polb\|rdrp\|rna dependent rna polymerase" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )		
 		elif grep -i -q "portal" $feat_tbl2 ; then
 			TAX_ORF=$( grep -i -B1 "portal" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )			
 		elif grep -i -q "rep \|replica\|repa " $feat_tbl2 ; then
