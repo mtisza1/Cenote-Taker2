@@ -10,7 +10,7 @@ vd_fastas=$( ls *.fna )
 if [ $PROPHAGE == "False" ] ; then
 	echo "prophages not being pruned"
 	for NO_END in $vd_fastas ; do
-		mv $NO_END ${NO_END%.fna}_vs1.fna
+		cp $NO_END ${NO_END%.fna}_vs1.fna
 	done
 else
 	for NO_END in $vd_fastas ; do
@@ -200,7 +200,7 @@ else
 			CHUNK_END=$( echo "$LINE" | cut -d "," -f3 )
 			CHUNK_VIR=$( cat ${CHUNKS%.virus_signal.seq_chunk_coordinates.csv}.VIRUS_BAIT_TABLE.txt | while read BAIT_LINE ; do echo "$BAIT_LINE" | awk -v CHUNK_STARTQ="$CHUNK_START" -v CHUNK_ENDQ="$CHUNK_END" '{ if ($3-(($3-$2)/2) >= CHUNK_STARTQ && $3-(($3-$2)/2) <= CHUNK_ENDQ) { print } }' ; done | wc -l ) ;
 			
-			if [[ $CHUNK_VIR -gt 1 ]] ; then 
+			if [[ $CHUNK_VIR -gt $LIN_MINIMUM_DOMAINS ]] || [ $CHUNK_VIR == $LIN_MINIMUM_DOMAINS ] ; then 
 				let VIR_COUNTER=VIR_COUNTER+1 ;
 				CHUNK_LENGTH=$(( ${CHUNK_END}-${CHUNK_START} ))
 				bioawk -v chunk_startq="$CHUNK_START" -v chunk_lengthq="$CHUNK_LENGTH" -v parent="${CHUNKS%.virus_signal.seq_chunk_coordinates.csv}" -c fastx '{ print ">"parent"_putative_virus"NR ; print substr($seq, chunk_startq, chunk_lengthq)}' ${CHUNKS%.virus_signal.seq_chunk_coordinates.csv}.fna > ${CHUNKS%.virus_signal.seq_chunk_coordinates.csv}_vs${VIR_COUNTER}.fna
@@ -1019,7 +1019,6 @@ done
 
 #making cmt file for assembly data
 for nucl_fa in $virus_seg_fastas ; do
-	echo "making cmt file!!!!!!"
 	input_contig_name=$( head -n1 ${nucl_fa%_vs[0-9].fna}.fna | cut -d " " -f1 | sed 's/|.*//g; s/>//g' ) 
 	echo $input_contig_name
 	COVERAGE=$( grep "$input_contig_name	" ../reads_to_all_contigs_over${length_cutoff}nt.coverage.txt | cut -f2 )

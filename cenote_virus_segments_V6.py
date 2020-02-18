@@ -24,6 +24,7 @@ window = 5000
 sliiiiiide_to_the_right = 50
 
 #Let's loop!
+print (glob.glob("*.virus_signal.seq"))
 for file1 in glob.glob("*.virus_signal.seq"):
     with open(file1, 'r') as file:
         print('Running file: '+ file.name)

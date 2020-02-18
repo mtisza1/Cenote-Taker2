@@ -4,6 +4,16 @@ import argparse
 import sys, os
 import subprocess
 
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+        
 pathname = os.path.dirname(sys.argv[0])  
 cenote_script_path = os.path.abspath(pathname)      
 print(cenote_script_path) 
@@ -15,7 +25,7 @@ required_args = parser.add_argument_group(' REQUIRED ARGUMENTS for Cenote-Taker2
 required_args.add_argument("--contigs", dest="original_contigs", type=str, required=True, help='Contig file with .fasta extension in fasta format - OR - assembly graph with .fastg extension. Each header must be unique before the first space character')
 required_args.add_argument("--run_title", dest="run_title", type=str, required=True, help='Name of this run. A directory of this name will be created. Must be unique from older runs or older run will be renamed. Must be less than 18 characters, using ONLY letters, numbers and underscores (_)')
 required_args.add_argument("--template_file", dest="template_file", type=str, required=True, help='Template file with some metadata. Takes a couple minutes to generate: https://submit.ncbi.nlm.nih.gov/genbank/template/submission/ ')
-required_args.add_argument("--prune_prophage", dest="PROPHAGE", type=bool, required=True, help='True or False. Attempt to identify and remove flanking chromosomal regions from non-circular contigs with viral hallmarks (True is highly recommended for sequenced material not enriched for viruses. Virus enriched samples probably should be False) ')
+required_args.add_argument("--prune_prophage", dest="PROPHAGE", type=str2bool, required=True, help='True or False. Attempt to identify and remove flanking chromosomal regions from non-circular contigs with viral hallmarks (True is highly recommended for sequenced material not enriched for viruses. Virus enriched samples probably should be False) ')
 required_args.add_argument("--mem", dest="MEM", type=int, required=True, help='example: 56	Gigabytes of memory available for Cenote-Taker2. Typically, 32 to 80 should be used. Lower memory will work in theory, but could extend the length of the run ')
 required_args.add_argument("--cpu", dest="CPU", type=int, required=True, help='Example: 32	Number of CPUs available for Cenote-Taker2. Typically, 32 CPUs should be used. For large datasets, increased performance can be seen up to 120 CPUs. Fewer than 16 CPUs will work in theory, but could extend the length of the run ')
 
@@ -27,7 +37,7 @@ optional_args = parser.add_argument_group(' OPTIONAL ARGUMENTS for Cenote-Taker2
 optional_args.add_argument("--reads1", dest="F_READS", type=os.path.abspath, default='no_reads', help=' Default: no_reads	ILLUMINA READS ONLY: First Read file in paired read set - OR - read file in unpaired read set - OR - read file of interleaved reads. Used for coverage depth determination.')
 optional_args.add_argument("--reads2", dest="R_READS", type=os.path.abspath, default='no_reads', help='Default: no_reads	ILLUMINA READS ONLY: Second Read file in paired read set. Disregard if not using paired reads. Used for coverage depth determination.')
 optional_args.add_argument("--isolation_source", dest="isolation_source", type=str, default='unknown', help='Default: unknown	Describes the local geographical source of the organism from which the sequence was derived')
-optional_args.add_argument("--Environmental_sample", dest="Environmental_sample", type=bool, default=False, help='Default: False	True or False, Identifies sequence derived by direct molecular isolation from an unidentified organism')
+optional_args.add_argument("--Environmental_sample", dest="Environmental_sample", type=str2bool, default=False, help='Default: False	True or False, Identifies sequence derived by direct molecular isolation from an unidentified organism')
 optional_args.add_argument("--collection_date", dest="collection_date", type=str, default='unknown', help='Default: unknown	Date of collection. this format: 01-Jan-2019, i.e. DD-Mmm-YYYY')
 optional_args.add_argument("--metagenome_type", dest="metagenome_type", type=str, default='unknown', help='Default: unknown	a.k.a. metagenome_source')
 optional_args.add_argument("--srr_number", dest="srr_number", type=str, default='unknown', help='Default: unknown	For read data on SRA, run number, usually beginning with \'SRR\' or \'ERR\' ')
@@ -46,9 +56,9 @@ optional_args.add_argument("--assembler", dest="ASSEMBLER", type=str, default='u
 optional_args.add_argument("--molecule_type", dest="MOLECULE_TYPE", type=str, default='DNA', help='Default: DNA	viable options are DNA - OR - RNA ')
 optional_args.add_argument("--hhsuite_tool", dest="HHSUITE_TOOL", type=str, default='hhblits', help=' default: hhblits	hhblits will query PDB, pfam, and CDD to annotate ORFs escaping identification via upstream methods. \'hhsearch\': hhsearch, a more sensitive tool, will query PDB, pfam, and CDD to annotate ORFs escaping identification via upstream methods. (WARNING: hhsearch takes much, much longer than hhblits and can extend the duration of the run many times over. Do not use on large input contig files). \'no_hhsuite_tool\': forgoes annotation of ORFs with hhsuite. Fastest way to complete a run. ')
 optional_args.add_argument("--data_source", dest="DATA_SOURCE", type=str, default='original', help=' default: original	original data is not taken from other researchers\' public or private database. \'tpa_assembly\': data is taken from other researchers\' public or private database. Please be sure to specify SRA metadata.  ')
-optional_args.add_argument("--filter_out_plasmids", dest="FILTER_PLASMIDS", type=bool, default=True, help='Default: True	True - OR - False. If True, hallmark genes of plasmids will not count toward the minimum hallmark gene parameters. If False, hallmark genes of plasmids will count. ')
+optional_args.add_argument("--filter_out_plasmids", dest="FILTER_PLASMIDS", type=str2bool, default=True, help='Default: True	True - OR - False. If True, hallmark genes of plasmids will not count toward the minimum hallmark gene parameters. If False, hallmark genes of plasmids will count. ')
 optional_args.add_argument("--blastp", dest="BLASTP", type=str, default="no_blastp", help='Do BLASTP? ')
-optional_args.add_argument("--enforce_start_codon", dest="ENFORCE_START_CODON", type=bool, default=True, help='Default: True	For final genome maps, require ORFs to be initiated by a typical start codon? GenBank submissions containing ORFs without start codons can be rejected. However, if True,  important but incomplete genes could be culled from the final output. This is relevant mainly to contigs of incomplete genomes ')
+optional_args.add_argument("--enforce_start_codon", dest="ENFORCE_START_CODON", type=str2bool, default=True, help='Default: True	For final genome maps, require ORFs to be initiated by a typical start codon? GenBank submissions containing ORFs without start codons can be rejected. However, if True,  important but incomplete genes could be culled from the final output. This is relevant mainly to contigs of incomplete genomes ')
 optional_args.add_argument("--scratch_directory", dest="SCRATCH_DIR", type=str, default="none", help='Default: none	When running many instances of Cenote-Taker2, it seems to run more quickly if you copy the hhsuite databases to a scratch space temporarily. Use this argument to set a scratch directory that the databases will be copied to (at least 100GB of scratch space are required for copying the databases)')
 
 
