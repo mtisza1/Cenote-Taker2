@@ -496,51 +496,38 @@ for nucl_fa in $CIRCLES_AND_ITRS ; do
 if [ -s "${nucl_fa%.fasta}.rotate.fasta" ]; then
 	echo "$(tput setaf 5)"$nucl_fa" taxonomy guessed. Continuing to ORF translation...$(tput sgr 0)"
 
-	if [ -s ITR_containing_contigs/$nucl_fa ]; then
-		if grep -i -q "Caudovir\|Ackermannvir\|Herellevir\|Corticovir\|Levivir\|Tectivir\|crAss-like virus\|CrAssphage\|Cyanophage\|Microvir\microphage\|Siphoviridae\|Myoviridae\|phage\|Podovir\|Halovir\|sphaerolipovir\|pleolipovir\|plasmid\|Inovir\|Ampullavir\|Bicaudavir\|Fusellovir\|Guttavir\|Ligamenvir\|Plasmavir\|Salterprovir\|Cystovir" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
+	if grep -i -q "Caudovir\|Ackermannvir\|Herellevir\|Corticovir\|Levivir\|Tectivir\|crAss-like virus\|CrAssphage\|Cyanophage\|Microvir\microphage\|Siphoviridae\|Myoviridae\|phage\|Podovir\|Halovir\|sphaerolipovir\|pleolipovir\|plasmid\|Inovir\|Ampullavir\|Bicaudavir\|Fusellovir\|Guttavir\|Ligamenvir\|Plasmavir\|Salterprovir\|Cystovir" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
 
-			${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o ${nucl_fa%.fasta}.phan.fasta ${nucl_fa%.fasta}.rotate.fasta ; 
-			if [ "$ENFORCE_START_CODON" == "True" ] ; then
-				sed 's/ /@/g' ${nucl_fa%.fasta}.phan.fasta | bioawk -c fastx '{ print }' | awk '{ if ($2 ~ /^[ATCG]TG/) { print ">"$1 ; print $2 }}' | sed 's/@/ /g' > ${nucl_fa%.fasta}.phan.sort.fasta
-			else
-				sed 's/ /@/g' ${nucl_fa%.fasta}.phan.fasta | bioawk -c fastx '{ print }' | awk '{ print ">"$1 ; print $2 }' | sed 's/@/ /g' > ${nucl_fa%.fasta}.phan.sort.fasta
-			fi				
-			transeq -frame 1 -table 11 -sequence ${nucl_fa%.fasta}.phan.sort.fasta -outseq ${nucl_fa%.fasta}.trans.fasta ;
-			# put emboss transeq in directory 
-			COUNTER=0 ;  
-			bioawk -c fastx '{print}' ${nucl_fa%.fasta}.trans.fasta | while read LINE ; do 
-				START_BASE=$( echo $LINE | sed 's/.*START=\(.*\)\] \[.*/\1/' ) ; 
-				ORF_NAME=$( echo $LINE | cut -d " " -f1 | sed 's/\(.*\)\.[0-9].*_1/\1/' ) ; 
-				END_BASE=$( echo $LINE | cut -d " " -f1 | sed 's/.*\(\.[0-9].*_1\)/\1/' | sed 's/_1//g; s/\.//g' ) ; 
-				ORIG_CONTIG=$( grep ">" $nucl_fa | cut -d " " -f2 ) ; 
-				AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ; 
-				let COUNTER=COUNTER+1 ; 
-				echo ">"${ORF_NAME}"_"${COUNTER} "["$START_BASE" - "$END_BASE"]" $ORIG_CONTIG  ; echo $AA_SEQ ; 
-			done > ${nucl_fa%.fasta}.rotate.AA.fasta
-
-		else
-			getorf -find 1 -minsize 150 -sequence ${nucl_fa%.fasta}.rotate.fasta -outseq ${nucl_fa%.fasta}.rotate.AA.fasta ;
-		fi
-	else
-		if grep -i -q "Caudovir\|Ackermannvir\|Herellevir\|Corticovir\|Levivir\|Tectivir\|crAss-like virus\|CrAssphage\|Cyanophage\|Microvir\microphage\|Siphoviridae\|Myoviridae\|phage\|Podovir\|Halovir\|sphaerolipovir\|pleolipovir\|plasmid\|Inovir\|Ampullavir\|Bicaudavir\|Fusellovir\|Guttavir\|Ligamenvir\|Plasmavir\|Salterprovir\|Cystovir" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
-
-			${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o ${nucl_fa%.fasta}.phan.fasta ${nucl_fa%.fasta}.rotate.fasta ; 
+		${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o ${nucl_fa%.fasta}.phan.fasta ${nucl_fa%.fasta}.rotate.fasta ; 
+		if [ "$ENFORCE_START_CODON" == "True" ] ; then
 			sed 's/ /@/g' ${nucl_fa%.fasta}.phan.fasta | bioawk -c fastx '{ print }' | awk '{ if ($2 ~ /^[ATCG]TG/) { print ">"$1 ; print $2 }}' | sed 's/@/ /g' > ${nucl_fa%.fasta}.phan.sort.fasta
-			transeq -frame 1 -table 11 -sequence ${nucl_fa%.fasta}.phan.sort.fasta -outseq ${nucl_fa%.fasta}.trans.fasta ; 
-			COUNTER=0 ; 
-			bioawk -c fastx '{print}' ${nucl_fa%.fasta}.trans.fasta | while read LINE ; do 
-				START_BASE=$( echo $LINE | sed 's/.*START=\(.*\)\] \[.*/\1/' ) ; 
-				ORF_NAME=$( echo $LINE | cut -d " " -f1 | sed 's/\(.*\)\.[0-9].*_1/\1/' ) ; 
-				END_BASE=$( echo $LINE | cut -d " " -f1 | sed 's/.*\(\.[0-9].*_1\)/\1/' | sed 's/_1//g; s/\.//g' ) ; 
-				ORIG_CONTIG=$( grep ">" $nucl_fa | cut -d " " -f2 ) ; 
-				AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ; 
-				let COUNTER=COUNTER+1 ; 
-				echo ">"${ORF_NAME}"_"${COUNTER} "["$START_BASE" - "$END_BASE"]" $ORIG_CONTIG  ; echo $AA_SEQ ; 
-			done > ${nucl_fa%.fasta}.rotate.AA.fasta
 		else
-			getorf -circular -find 1 -minsize 150 -sequence ${nucl_fa%.fasta}.rotate.fasta -outseq ${nucl_fa%.fasta}.rotate.AA.fasta ;
-		fi
+			sed 's/ /@/g' ${nucl_fa%.fasta}.phan.fasta | bioawk -c fastx '{ print }' | awk '{ print ">"$1 ; print $2 }' | sed 's/@/ /g' > ${nucl_fa%.fasta}.phan.sort.fasta
+		fi				
+		transeq -frame 1 -table 11 -sequence ${nucl_fa%.fasta}.phan.sort.fasta -outseq ${nucl_fa%.fasta}.trans.fasta ;
+		# put emboss transeq in directory 
+		COUNTER=0 ;  
+		bioawk -c fastx '{print}' ${nucl_fa%.fasta}.trans.fasta | while read LINE ; do 
+			START_BASE=$( echo $LINE | sed 's/.*START=\(.*\)\] \[.*/\1/' ) ; 
+			ORF_NAME=$( echo $LINE | cut -d " " -f1 | sed 's/\(.*\)\.[0-9].*_1/\1/' ) ; 
+			END_BASE=$( echo $LINE | cut -d " " -f1 | sed 's/.*\(\.[0-9].*_1\)/\1/' | sed 's/_1//g; s/\.//g' ) ; 
+			ORIG_CONTIG=$( grep ">" $nucl_fa | cut -d " " -f2 ) ; 
+			AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ; 
+			let COUNTER=COUNTER+1 ; 
+			echo ">"${ORF_NAME}"_"${COUNTER} "["$START_BASE" - "$END_BASE"]" $ORIG_CONTIG  ; echo $AA_SEQ ; 
+		done > ${nucl_fa%.fasta}.rotate.AA.fasta
+
+	else
+		prodigal -a ${nucl_fa%.fasta}.rotate.prodigal.fasta -i $NO_END -p meta
+		sed 's/ /@/g' ${nucl_fa%.fasta}.rotate.prodigal.fasta | bioawk -c fastx '{print}' | while read LINE ; do 
+			START_BASE=$( echo "$LINE" | cut -d "#" -f 2 | sed 's/@//g' ) ; 
+			END_BASE=$( echo "$LINE" | cut -d "#" -f 3 | sed 's/@//g' ) ; 
+			ORF_NAME=$( echo "$LINE" | cut -d "#" -f 1 | sed 's/@//g; s/\./_/g' ) ; 
+			AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ;
+			echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ; echo $AA_SEQ ; 
+		done > ${nucl_fa%.fasta}.rotate.AA.fasta
 	fi
+
 	bioawk -c fastx '{FS="\t"; OFS=" "} {print ">"$name $3, $4, $5, $6, $7; print $seq}' ${nucl_fa%.fasta}.rotate.AA.fasta > ${nucl_fa%.fasta}.rotate.AA.sorted.fasta ;
 fi
 done
@@ -1682,10 +1669,10 @@ echo "$(tput setaf 3) Summary file made: ${run_title}.tsv $(tput sgr 0)"
 
 echo "removing ancillary files"
 
-rm *.all_start_stop.txt *.bad_starts.txt *.comb.tbl *.comb2.tbl *.good_start_orfs.txt *.hypo_start_stop.txt *.nucl_orfs.fa *.remove_hypo.txt *.log *.promer.contigs_with_ends.fa *.promer.promer *.out.hhr *.starting_orf.txt *.out.hhr *.nucl_orfs.txt *.called_hmmscan.txt *.hmmscan_replicate.out *.hmmscan.out *.rotate.no_hmmscan.fasta *.starting_orf.1.fa *.phan.*fasta
+rm *.all_start_stop.txt *.bad_starts.txt *.comb.tbl *.comb2.tbl *.good_start_orfs.txt *.hypo_start_stop.txt *.nucl_orfs.fa *.remove_hypo.txt *.log *.promer.contigs_with_ends.fa *.promer.promer *.out.hhr *.starting_orf.txt *.out.hhr *.nucl_orfs.txt *.called_hmmscan.txt *.hmmscan_replicate.out *.hmmscan.out *.rotate.no_hmmscan.fasta *.starting_orf.1.fa *.phan.*fasta *prodigal.fasta
 rm -r bt2_indices/
 rm noncircular_contigs/*.AA.fasta noncircular_contigs/*.AA.sorted.fasta noncircular_contigs/*.out noncircular_contigs/*.dat noncircular_contigs/*called_hmmscan.txt 
-rm no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta no_end_contigs_with_viral_domain/*.comb*.tbl
+rm no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta no_end_contigs_with_viral_domain/*.comb*.tbl no_end_contigs_with_viral_domain/*prodigal.fasta
 echo " "
 echo "$(tput setaf 3) "$run_title" $(tput sgr 0)"
 echo "$(tput setaf 3) >>>>>>CENOTE TAKER HAS FINISHED TAKING CENOTES<<<<<< $(tput sgr 0)"

@@ -253,6 +253,7 @@ for vd_fa in $virus_seg_fastas ; do
 	fi
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: BLASTX linear contigs " $MDYT
+	#### make blast database dependent on plasmid option
 	blastx -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_adinto_polinton_prot_190925 -query $vd_fa -out ${vd_fa%.fna}.tax_guide.blastx.out ;
 	if [ ! -s "${vd_fa%.fna}.tax_guide.blastx.out" ]; then
 		echo "No homologues found" > ${vd_fa%.fna}.tax_guide.blastx.out ;
@@ -306,7 +307,14 @@ for NO_END in $virus_seg_fastas ; do
 			echo ">"${ORF_NAME}"_"${COUNTER} "["$START_BASE" - "$END_BASE"]" $ORIG_CONTIG ; echo $AA_SEQ ; 
 		done > ${NO_END%.fna}.AA.fasta
 	else
-		getorf -circular -find 1 -minsize 150 -sequence $NO_END -outseq ${NO_END%.fna}.AA.fasta ;
+		prodigal -a ${NO_END%.fna}.prodigal.fasta -i $NO_END -p meta
+		sed 's/ /@/g' ${NO_END%.fna}.prodigal.fasta | bioawk -c fastx '{print}' | while read LINE ; do 
+			START_BASE=$( echo "$LINE" | cut -d "#" -f 2 | sed 's/@//g' ) ; 
+			END_BASE=$( echo "$LINE" | cut -d "#" -f 3 | sed 's/@//g' ) ; 
+			ORF_NAME=$( echo "$LINE" | cut -d "#" -f 1 | sed 's/@//g; s/\./_/g' ) ; 
+			AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ;
+			echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ; echo $AA_SEQ ; 
+		done > ${NO_END%.fna}.AA.fasta
 	fi
 	hmmscan --tblout ${NO_END%.fna}.AA.hmmscan2.out --cpu $CPU -E 1e-6 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a ${NO_END%.fna}.AA.fasta
 	grep -v "^#" ${NO_END%.fna}.AA.hmmscan2.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${NO_END%.fna}.AA.hmmscan2.sort.out
@@ -390,9 +398,9 @@ echo "time update: running tRNAscan-SE, linear contigs " $MDYT
 for GENOME_NAME in $virus_seg_fastas ; do
 	tRNAscan-SE -Q -G -o $GENOME_NAME.trnascan-se2.txt $GENOME_NAME
 	
-	if grep -q "${GENOME_NAME%.fna}" $GENOME_NAME.trnascan-se2.txt ;then
+	if grep -q "${GENOME_NAME%_vs[0-9].fna}" $GENOME_NAME.trnascan-se2.txt ;then
 
-		grep "${GENOME_NAME%.fna}" $GENOME_NAME.trnascan-se2.txt | while read LINE ; do 
+		grep "${GENOME_NAME%_vs[0-9].fna}" $GENOME_NAME.trnascan-se2.txt | while read LINE ; do 
 			TRNA_START=$( echo $LINE | cut -d " " -f3 ) ; 
 			TRNA_END=$( echo $LINE | cut -d " " -f4 ) ; 
 			TRNA_NUMBER=$( echo $LINE | cut -d " " -f2 ) ; 
@@ -611,6 +619,7 @@ for feat_tbl2 in *_vs[0-9].comb3.tbl ; do
 		else
 
 			grep -A1 "$TAX_ORF " ${feat_tbl2%.comb3.tbl}.AA.fasta | sed '/--/d' > ${feat_tbl2%.comb3.tbl}.tax_orf.fasta
+			### make blast database dependent on plasmid option
 			blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query ${feat_tbl2%.comb3.tbl}.tax_orf.fasta -out ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
 			if [ ! -s "${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out" ]; then
 				echo "unclassified virus" > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
