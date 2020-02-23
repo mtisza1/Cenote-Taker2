@@ -309,8 +309,14 @@ for NO_END in $virus_seg_fastas ; do
 	else
 		prodigal -a ${NO_END%.fna}.prodigal.fasta -i $NO_END -p meta
 		sed 's/ /@/g' ${NO_END%.fna}.prodigal.fasta | bioawk -c fastx '{print}' | while read LINE ; do 
-			START_BASE=$( echo "$LINE" | cut -d "#" -f 2 | sed 's/@//g' ) ; 
-			END_BASE=$( echo "$LINE" | cut -d "#" -f 3 | sed 's/@//g' ) ; 
+			ORIENTATION=$( echo "$LINE" | cut -d "#" -f 4 | sed 's/@//g' ) ;
+			if [[ "$ORIENTATION" == 1 ]] ; then
+				START_BASE=$( echo "$LINE" | cut -d "#" -f 2 | sed 's/@//g' ) ; 
+				END_BASE=$( echo "$LINE" | cut -d "#" -f 3 | sed 's/@//g' ) ; 
+			else
+				START_BASE=$( echo "$LINE" | cut -d "#" -f 3 | sed 's/@//g' ) ; 
+				END_BASE=$( echo "$LINE" | cut -d "#" -f 2 | sed 's/@//g' ) ; 
+			fi				
 			ORF_NAME=$( echo "$LINE" | cut -d "#" -f 1 | sed 's/@//g; s/\./_/g' ) ; 
 			AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ;
 			echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ; echo $AA_SEQ ; 
