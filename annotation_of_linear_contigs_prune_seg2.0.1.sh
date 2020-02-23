@@ -412,7 +412,7 @@ for GENOME_NAME in $virus_seg_fastas ; do
 			TRNA_NUMBER=$( echo $LINE | cut -d " " -f2 ) ; 
 			TRNA_TYPE=$( echo $LINE | cut -d " " -f5 ) ; 
 			TRNA_SCORE=$( echo $LINE | cut -d " " -f9 ) ; 
-			echo -e "$TRNA_START\t""$TRNA_END\t""tRNA\n""\t\t\tgene\t""${GENOME_NAME%.fna}""_tRNA$TRNA_NUMBER\n""\t\t\tproduct\t""tRNA-$TRNA_TYPE\n""\t\t\tinference\t""tRNAscan-SE score:$TRNA_SCORE" >> ${GENOME_NAME%_vs[0-9].fna}.trna.tbl; 
+			echo -e "$TRNA_START\t""$TRNA_END\t""tRNA\n""\t\t\tgene\t""${GENOME_NAME%.fna}""_tRNA$TRNA_NUMBER\n""\t\t\tproduct\t""tRNA-$TRNA_TYPE\n""\t\t\tinference\t""tRNAscan-SE score:$TRNA_SCORE" >> ${GENOME_NAME%.fna}.trna.tbl; 
 		done
 	fi
 done
