@@ -278,3 +278,4 @@ optional arguments:
                         space are required for copying the databases)
 ```
 
+![alt text](https://github.com/mtisza1/Cenote-Taker2/blob/master/cenote-taker2_directory_tree2.png)
