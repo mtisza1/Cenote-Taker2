@@ -28,7 +28,7 @@ fi
 
 
 
-if [ -s Cenote-Taker2/run_cenote-taker2_200207.py ] ; then
+if [ -s Cenote-Taker2/run_cenote-taker2.0.1.py ] ; then
 	cd Cenote-Taker2
 	git pull
 else
@@ -173,7 +173,7 @@ else
 	cd ..
 fi
 
-echo "Cenote-Taker2 should now run. Use: python /path/to/Cenote-Taker2/run_cenote-taker2_200207.py"
+echo "Cenote-Taker2 should now run. Use: python /path/to/Cenote-Taker2/run_cenote-taker2.0.1.py"
 #python setup.py build; python setup.py install
 
 #Cenote-Taker2 -h
