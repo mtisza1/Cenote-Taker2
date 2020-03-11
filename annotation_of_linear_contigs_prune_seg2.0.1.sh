@@ -1013,7 +1013,11 @@ for feat_tbl2 in *_vs[0-9].comb3.tbl ; do
 	tax_guess=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ) ; 
 	perc_id=$( head -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | sed 's/ /-/g' | awk '{FS="\t"; OFS="\t"} {print $2" "$3}' | sed 's/-/ /g' ) ;
 	rand_id=$( head /dev/urandom | tr -dc A-Za-z0-9 | head -c 3 ; echo '' )
-	seq_name1=$( head -n1 ${feat_tbl2%_vs[0-9].comb3.tbl}.fna | sed 's/>//g; s/|.*//g' | cut -d " " -f2 )
+	if [ -s ${feat_tbl2%_vs[0-9].comb3.tbl}.fna ] ; then
+		seq_name1=$( head -n1 ${feat_tbl2%_vs[0-9].comb3.tbl}.fna | sed 's/>//g; s/|.*//g' | cut -d " " -f2 )
+	else
+		seq_name1=$( head -n1 ${feat_tbl2%.comb3.tbl}.fna | sed 's/>//g; s/|.*//g' | cut -d " " -f2 )
+	fi
 
 # Editing and transferring tbl file and fasta (fsa) files to sequin directory
 	echo "$(tput setaf 5) Editing and transferring tbl file and fasta (fsa) files to sequin directory $(tput sgr 0)"
@@ -1029,7 +1033,7 @@ for feat_tbl2 in *_vs[0-9].comb3.tbl ; do
 		elif [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.KNOWN_VIRUS.out ] ; then
 			VIR_HIT=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 )
 			STRAIN_NAME=$( echo $VIR_HIT " strain ct"${rand_id}${file_numbers} )
-			bioawk -v contig_name="$seq_name1" -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core"  -v strainname="$STRAIN_NAME" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note=highly similar to sequence "chrom_info "] [note= "contig_name" ; closest viral relative: " tax_var " " perc_var "] [organism=" strainname "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.fna > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+			bioawk -v contig_name="$seq_name1" -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v strainname="$STRAIN_NAME" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note=highly similar to sequence "chrom_info "] [note= "contig_name" ; closest viral relative: " tax_var " " perc_var "] [organism=" strainname "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.fna > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
 
 		else
 			bioawk -v contig_name="$seq_name1" -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= this contig likely does not represent a complete genome] [note= "contig_name" ; closest relative: " tax_var " " perc_var "] [organism=" headername " ct" rand_var number_var "] [moltype=genomic DNA][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.fna > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
@@ -1054,8 +1058,12 @@ done
 for nucl_fa in $virus_seg_fastas ; do
 	input_contig_name=$( head -n1 ${nucl_fa%_vs[0-9].fna}.fna | cut -d " " -f1 | sed 's/|.*//g; s/>//g' ) 
 	echo $input_contig_name
-	COVERAGE=$( grep "$input_contig_name	" ../reads_to_all_contigs_over${length_cutoff}nt.coverage.txt | cut -f2 )
-	echo $COVERAGE
+	if [ -s ../reads_to_all_contigs_over${circ_length_cutoff}nt.coverage.txt ] ; then
+		COVERAGE=$( grep "$input_contig_name	" ../reads_to_all_contigs_over${length_cutoff}nt.coverage.txt | cut -f2 )
+		echo $COVERAGE
+	else
+		COVERAGE="1"
+	fi		
 	echo "StructuredCommentPrefix	##Genome-Assembly-Data-START##" > sequin_directory/${nucl_fa%.fna}.cmt ;
 	echo "Assembly Method	" $ASSEMBLER >> sequin_directory/${nucl_fa%.fna}.cmt ;
 	echo "Genome Coverage	"$COVERAGE"x" >> sequin_directory/${nucl_fa%.fna}.cmt ;

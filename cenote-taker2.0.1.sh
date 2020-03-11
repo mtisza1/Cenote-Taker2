@@ -1544,8 +1544,12 @@ done
 for nucl_fa in $NEW_FASTAS ; do
 	input_contig_name=$( head -n1 $nucl_fa | cut -d " " -f 1 | sed 's/|.*//g; s/>//g' ) 
 	echo $input_contig_name
-	COVERAGE=$( grep "$input_contig_name	" reads_to_all_contigs_over${circ_length_cutoff}nt.coverage.txt | cut -f2 )
-	echo $COVERAGE
+	if [ -s reads_to_all_contigs_over${circ_length_cutoff}nt.coverage.txt ] ; then
+		COVERAGE=$( grep "$input_contig_name	" reads_to_all_contigs_over${circ_length_cutoff}nt.coverage.txt | cut -f2 )
+		echo $COVERAGE
+	else
+		COVERAGE="1"
+	fi
 	echo "StructuredCommentPrefix	##Genome-Assembly-Data-START##" > sequin_directory/${nucl_fa%.fasta}.cmt ;
 	echo "Assembly Method	" $ASSEMBLER >> sequin_directory/${nucl_fa%.fasta}.cmt ;
 	echo "Genome Coverage	"$COVERAGE"x" >> sequin_directory/${nucl_fa%.fasta}.cmt ;
@@ -1556,7 +1560,7 @@ done
 
 
 for fsa_file in sequin_directory/*.fsa ; do
-	echo "editing fsa file!!!!!!"
+	#echo "editing fsa file!!!!!!"
 	fsa_name2=$( echo ${fsa_file#sequin_directory/} ) ; 
 	fsa_name3=$( echo ${fsa_name2%.fsa} | sed 's/.PLASMID//g' )
 	seq_name1=$( head -n1 $fsa_name3.fasta | sed 's/>//g; s/|.*//g' | cut -d " " -f2 )
