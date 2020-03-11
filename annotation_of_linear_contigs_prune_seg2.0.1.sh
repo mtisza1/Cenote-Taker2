@@ -463,7 +463,10 @@ for nucl_fa in $virus_seg_fastas ; do
 			cat ${nucl_fa%.fna}.trna.tbl >> ${nucl_fa%.fna}.int.tbl
 		fi
 	elif [ -s ${nucl_fa%.fna}.SCAN.tbl ] ; then
-		cat ${nucl_fa%.fna}.SCAN.tbl > ${nucl_fa%.fna}.int.tbl
+		#### insert tbl header!!!
+		echo ">Feature ${nucl_fa%_vs[0-9].fna} Table1" >> ${nucl_fa%.fasta}.int.tbl
+		echo -e "\n" >> ${nucl_fa%.fna}.int.tbl
+		cat ${nucl_fa%.fna}.SCAN.tbl >> ${nucl_fa%.fna}.int.tbl
 		if [ -s ${nucl_fa%.fna}.trna.tbl ] ; then
 			echo -e "\n" >> ${nucl_fa%.fna}.int.tbl
 			cat ${nucl_fa%.fna}.trna.tbl >> ${nucl_fa%.fna}.int.tbl

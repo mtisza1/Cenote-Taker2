@@ -855,7 +855,10 @@ for nucl_fa in $NEW_FASTAS ; do
 			cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
 		fi
 	elif [ -s ${nucl_fa%.fasta}.SCAN.tbl ] ; then
-		cat ${nucl_fa%.fasta}.SCAN.tbl > ${nucl_fa%.fasta}.int.tbl
+		#### insert tbl header!!!
+		echo ">Feature ${nucl_fa%.fasta} Table1" >> ${nucl_fa%.fasta}.int.tbl
+		echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
+		cat ${nucl_fa%.fasta}.SCAN.tbl >> ${nucl_fa%.fasta}.int.tbl
 		if [ -s ${nucl_fa%.fasta}.trna.tbl ] ; then
 			echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
 			cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
