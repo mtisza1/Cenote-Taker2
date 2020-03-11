@@ -347,6 +347,8 @@ for NO_END in $virus_seg_fastas ; do
 	fi
 done
 
+#### insert conjugative transposon search script
+
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: running RPSBLAST, linear contigs " $MDYT
 for vd_fa in $virus_seg_fastas ; do
@@ -694,6 +696,7 @@ echo "time update: making nomeclature and fsa file, linear contigs " $MDYT
 for feat_tbl2 in *_vs[0-9].comb3.tbl ; do 
 	file_core=${feat_tbl2%.comb3.tbl}
 	#echo $file_core
+	#### update file_numbers
 	file_numbers=$( echo ${file_core: -3} | sed 's/[a-z]//g' | sed 's/[A-Z]//g' )
 	#echo $file_numbers
 	tax_info=${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
@@ -968,6 +971,8 @@ for feat_tbl2 in *_vs[0-9].comb3.tbl ; do
 		vir_name=Papillomaviridae ;
 	elif grep -q "Halovir" $tax_info ; then
 		vir_name=Halovirus ;
+	elif grep -q "Conjugative Transposon" $tax_info ; then
+		vir_name="Conjugative Transposon" ;
 	elif grep -q "No homologues found" $tax_info ; then
 		vir_name="genetic element" ;
 	elif grep -q "Circular genetic element" $tax_info ; then

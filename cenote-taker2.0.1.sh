@@ -170,12 +170,16 @@ if [ ${original_contigs: -3} == ".fa" ]; then
 	mv $original_contigs ${original_contigs}sta
 	original_contigs=${original_contigs}sta
 fi
-if [ ${original_contigs: -3} == ".fna" ]; then
+if [ ${original_contigs: -4} == ".fna" ]; then
 	echo "renaming $original_contigs to ${original_contigs%fna}fasta"
 	mv $original_contigs ${original_contigs%fna}fasta
 	original_contigs=${original_contigs%fna}fasta
 fi
-
+if [ ${original_contigs: -4} == ".fsa" ]; then
+	echo "renaming $original_contigs to ${original_contigs%fsa}fasta"
+	mv $original_contigs ${original_contigs%fsa}fasta
+	original_contigs=${original_contigs%fsa}fasta
+fi
 # Removing contigs under $circ_length_cutoff nts and detecting circular contigs
 if [ ${original_contigs: -6} == ".fasta" ]; then
 	echo "$(tput setaf 5)File with .fasta extension detected, attempting to keep contigs over $circ_length_cutoff nt and find circular sequences with apc.pl$(tput sgr 0)"
@@ -214,6 +218,7 @@ else
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: making bowtie2 indices " $MDYT
 	mkdir bt2_indices ; 
+	#### update the script to allow for contigs from other directories
 	bowtie2-build ../${original_contigs%.fasta}.over_${circ_length_cutoff}nt.fasta bt2_indices/${run_title}_bt2_index
 	echo "$(tput setaf 4)Aligning reads to BowTie2 index. $(tput sgr 0)" 
 	MDYT=$( date +"%m-%d-%y---%T" )
@@ -377,7 +382,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 
 			mv ${NO_END%.fasta}.AA.sorted.fasta ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.AA.sorted.fasta
 		else 
-			cat $NO_END >> noncircular_non_viral_domains_contigs.fna
+			cat $NO_END >> non_viral_domains_contigs.fna
 			rm $NO_END
 		fi
 	done
@@ -553,7 +558,7 @@ if [ -n "$CIRCLES_AND_ITRS" ]; then
 	elif [[ $virus_domain_db = "all_common" ]]; then
 		echo "$CIRCLES_AND_ITRS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.rotate.AA.hmmscan.out --cpu 1 -E 1e-8 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.rotate.AA.sorted.fasta
 	else
-		echo "$(tput setaf 5) Incorrect argument given for virus_domain_db variable. Try -standard, -with_rdrp_retro, -all_common as arguments. For this run, no contigs with viral domains but without circularity or ITRs will be detected $(tput sgr 0)"
+		echo "$(tput setaf 5) Incorrect argument given for virus_domain_db variable. Try standard, rna_virus, all_common as arguments. For this run, no contigs with viral domains but without circularity or ITRs will be detected $(tput sgr 0)"
 		rm ./*{0..9}.fasta
 		break
 	fi
@@ -628,7 +633,7 @@ if [ -n "$CIRCLES_AND_ITRS" ]; then
 	done
 fi
 
-cat *.no_baits.fna >> noncircular_contigs/noncircular_non_viral_domains_contigs.fna
+cat *.no_baits.fna >> noncircular_contigs/non_viral_domains_contigs.fna
 # 5 blastn
 
 
@@ -648,8 +653,8 @@ echo " "
 BLASTN_LIST=$( ls ${BLASTN_DB}*.nsq | wc -l )
 if [[ "$BLASTN_LIST" -gt 1 ]] || [[ "$BLASTN_LIST" == 1 ]] ;then 
 	if [ ! -z "$DOMAINED_CIRCLES_AND_ITRS" ] ; then 
-		mkdir circles_of_known_viruses
-		mkdir circles_of_chromosomal_elements
+		#mkdir circles_of_known_viruses
+		#mkdir circles_of_chromosomal_elements
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running BLASTN, circular and ITR contigs " $MDYT
 		for circle in $DOMAINED_CIRCLES_AND_ITRS ; do
@@ -676,18 +681,14 @@ if [[ "$BLASTN_LIST" -gt 1 ]] || [[ "$BLASTN_LIST" == 1 ]] ;then
 					fi
 
 					if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid" ${circle%.fasta}.tax_guide.blastn.out ; then
-						echo $circle "$(tput setaf 4) is closely related to a virus that has already been deposited in GenBank nt and will be annotated with BLASTP only. $(tput sgr 0)"
+						echo $circle "$(tput setaf 4) is closely related to a virus that has already been deposited in GenBank nt. $(tput sgr 0)"
 						cat ${circle%.fasta}.tax_guide.blastn.out
-						mv $circle circles_of_known_viruses/${circle%.fasta}.known_species.fna ;
-						mv ${circle%.fasta}.tax_guide.blastn.out circles_of_known_viruses/${circle%.fasta}.tax_guide.blastn.out
-						mv ${circle%.fasta}.tax_guide.blastn.tab circles_of_known_viruses/${circle%.fasta}.tax_guide.blastn.tab
-						mv ${circle%.fasta}.blastn.notnew.out circles_of_known_viruses/${circle%.fasta}.blastn.notnew.out
-						mv ${circle%.fasta}.blastn.out circles_of_known_viruses/${circle%.fasta}.blastn.out
+						cp ${circle%.fasta}.tax_guide.blastn.out ${circle%.fasta}.tax_guide.KNOWN_VIRUS.out
+
 					else 
 						echo $circle "$(tput setaf 4) is closely related to a chromosomal sequence that has already been deposited in GenBank nt and will be checked for viral and plasmid domains. $(tput sgr 0)"
 						cat ${circle%.fasta}.tax_guide.blastn.out
-						cp $circle circles_of_chromosomal_elements/${circle%.fasta}.provirus.fna
-						cp ${circle%.fasta}.blastn.notnew.out circles_of_chromosomal_elements/${circle%.fasta}.blastn.notnew.out
+						cp ${circle%.fasta}.tax_guide.blastn.out ${circle%.fasta}.tax_guide.CELLULAR.out
 					fi
 				else
 					echo "$(tput setaf 5)"$circle" appears to be a novel sequence (no close (>90% nucleotide) matches to sequences in nt database).$(tput sgr 0)"
@@ -712,6 +713,10 @@ echo " "
 NEW_FASTAS=$( ls | grep "${run_title}[0-9]\{1,6\}.fasta$" )
 
 echo "$NEW_FASTAS"
+
+
+#### insert conjugative transposon hmmer script
+
 # Conducting RPS-BLAST against CDD on translated ORFs
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: running RPSBLAST " $MDYT
@@ -1059,7 +1064,7 @@ done
 
 rm *tmp.tbl
 
-### Insert re-taxonomy for dsDNA prokaryotic contigs by using Terminase, or else major capsid
+#### exclude CRESS viruses from this analysis
 for feat_tbl2 in *.comb3.tbl ; do 
 		if grep -i -q "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 ; then
 			TAX_ORF=$( grep -i -B1 "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
@@ -1414,7 +1419,8 @@ for feat_tbl2 in *.comb3.tbl ; do
 		vir_name=Papillomaviridae ;
 	elif grep -q "Halovir" $tax_info ; then
 		vir_name=Halovirus ;
-
+	elif grep -q "Conjugative Transposon" $tax_info ; then
+		vir_name="Conjugative Transposon" ;
 	elif grep -q "No homologues found" $tax_info ; then
 		if  [ -s ITR_containing_contigs/${feat_tbl2%.comb3.tbl}.fasta ] ; then
 			vir_name="genetic element" ;
@@ -1477,7 +1483,7 @@ for feat_tbl2 in *.comb3.tbl ; do
 			fi
 
 		else
-			if [ -s circles_of_chromosomal_elements/${feat_tbl2%.comb3.tbl}.provirus.fna ] ; then
+			if [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.CELLULAR.out ] ; then
 				CELL_CHROM=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 )
 				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
 					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$CELL_CHROM" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var " ; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [note=highly similar to sequence "chrom_info "; please manually check if this is a transposon especially if there is an annotated reverse transcriptase] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
@@ -1485,6 +1491,16 @@ for feat_tbl2 in *.comb3.tbl ; do
 
 				else
 					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$CELL_CHROM" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [note=highly similar to sequence "chrom_info "; please manually check if this is a transposon especially if there is an annotated reverse transcriptase] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+				fi
+			elif [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.KNOWN_VIRUS.out ] ; then
+				VIR_HIT=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 )
+				STRAIN_NAME=$( echo $vir_name " strain ct"${rand_id}${file_numbers} )
+				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
+					bioawk -v srr_var="$srr_number" -v perc_var="$perc_id" -v strainname="$STRAIN_NAME" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v vir_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= WARNING: no viral/plasmid-specific domains were detected. This may not be a true mobile genetic element.] [note=highly similar to sequence "vir_info "] [organism=" strainname "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+					echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
+
+				else
+					bioawk -v srr_var="$srr_number" -v perc_var="$perc_id" -v strainname="$STRAIN_NAME" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v vir_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note=highly similar to sequence "vir_info "] [organism=" strainname "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
 				fi
 			else
 				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then				
@@ -1508,15 +1524,27 @@ for feat_tbl2 in *.comb3.tbl ; do
 			fi
 
 		else
-			if [ -s circles_of_chromosomal_elements/${feat_tbl2%.comb3.tbl}.provirus.fna ] ; then
+			#####
+			if [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.CELLULAR.out ] ; then
 				CELL_CHROM=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 )
 				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
 					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$CELL_CHROM" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var " ; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [note=highly similar to sequence "chrom_info "; please manually check if this is a transposon especially if there is an annotated reverse transcriptase] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
 					echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
 
 				else
-					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$CELL_CHROM" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [note=highly similar to sequence "chrom_info "; please manually check if this is a transposon especially if there is an annotated reverse transcriptase] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$CELL_CHROM" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [note=highly similar to sequence "chrom_info "; please manually check if this is a transposon especially if there is an annotated reverse transcriptase] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
 				fi
+			elif [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.KNOWN_VIRUS.out ] ; then
+				VIR_HIT=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 )
+				STRAIN_NAME=$( echo $vir_name " strain ct"${rand_id}${file_numbers} )
+				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
+					bioawk -v srr_var="$srr_number" -v perc_var="$perc_id" -v strainname="$STRAIN_NAME" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v vir_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= WARNING: no viral/plasmid-specific domains were detected. This may not be a true mobile genetic element.] [note=highly similar to sequence "vir_info "] [organism=" strainname "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+					echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
+
+				else
+					bioawk -v srr_var="$srr_number" -v perc_var="$perc_id" -v strainname="$STRAIN_NAME" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v vir_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note=highly similar to sequence "vir_info "] [organism=" strainname "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+				fi
+			#####
 			else
 				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then				
 					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
@@ -1565,11 +1593,11 @@ else
 fi
 
 # Script for annotating complete circular viruses of known species
-KNOWN_VIRAL_CIRCLES=$( ls circles_of_known_viruses/ | grep ".fna" )
-if [ ! -z "$KNOWN_VIRAL_CIRCLES" ] ;then
-	echo "$(tput setaf 3) Starting annotation of known circular viruses $(tput sgr 0)"
-	. ${CENOTE_SCRIPT_DIR}/quick_annotation_of_known_seqs1_200207.sh
-fi
+#KNOWN_VIRAL_CIRCLES=$( ls circles_of_known_viruses/ | grep ".fna" )
+#if [ ! -z "$KNOWN_VIRAL_CIRCLES" ] ;then
+#	echo "$(tput setaf 3) Starting annotation of known circular viruses $(tput sgr 0)"
+#	. ${CENOTE_SCRIPT_DIR}/quick_annotation_of_known_seqs1_200207.sh
+#fi
 
 # script for annotating no_end contigs with viral domains
 LIST_OF_VIRAL_DOMAIN_CONTIGS=$( ls no_end_contigs_with_viral_domain/ | grep ".fna" )
@@ -1619,25 +1647,6 @@ for i in sequin_directory/*.fsa ; do
 		DOMAIN_COUNT=$( cat ${j#sequin_directory/}.rotate.AA.called_hmmscan.txt | wc -l )
 		#title=$( cat $site | awk '{print $1}' )
 		echo -e $site "\t""Complete genome (putative)""\t" $df_num "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call >> ${run_title}.tsv
-	fi
-done
-
-for i in circles_of_known_viruses/sequin_directory/*.fsa ; do
-	if [ ! -z "$i" ] ;then
-		site=$( head -n1 $i | sed -e 's/.*isolation_source=\(.*\)\] \[isolate.*/\1/' )
-		echo $site
-		df_num=$( head -n1 $i | sed -e 's/>\(.*[0-9].*\)\ \[note= .*/\1/' )
-		echo $df_num
-		topologyq=$( head -n1 $i | sed -e 's/.*topology=\(.*\)\] \[Bioproject.*/\1/' )
-		echo $topologyq
-		tax_call=$( head -n1 $i | sed -e 's/.*organism=\(.*\)\] \[moltype=.*/\1/; s/;//g' )
-		echo $tax_call
-		blast_call1=$( head -n1 $i | sed -e 's/.*closest relative: \(.*\)\] \[organism=.*/\1/' )
-		blast_call2=$( echo "CLOSE SIMILARITY TO:" $blast_call1 )
-		length=$( bioawk -c fastx '{ print length}' $i )
-		echo $length
-		DOMAIN_COUNT="Not Determined"
-		echo -e $site "\t""Complete genome (putative)""\t" $df_num "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call2 >> ${run_title}.tsv
 	fi
 done
 
