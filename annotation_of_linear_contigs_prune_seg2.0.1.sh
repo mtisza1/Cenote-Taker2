@@ -16,7 +16,7 @@ else
 	for NO_END in $vd_fastas ; do
 		LENGTH_SEQ=$( bioawk -c fastx '{print length($seq)}' $NO_END )
 		if [[ "$LENGTH_SEQ" -lt 10000 ]] ; then 
-			mv $NO_END ${NO_END%.fna}_vs1.fna
+			cp $NO_END ${NO_END%.fna}_vs1.fna
 			echo "$NO_END is too short to prune chromosomal regions"
 		elif [[ "$LENGTH_SEQ" -gt 10000 ]] || [[ "$LENGTH_SEQ" == 10000 ]] ; then
 			MDYT=$( date +"%m-%d-%y---%T" )
@@ -1042,13 +1042,16 @@ for feat_tbl2 in *_vs[0-9].comb3.tbl ; do
 		echo "$(tput setaf 5)tbl file made from: "$feat_tbl2" (viral-domain-containing contig) will be used for sqn generation$(tput sgr 0)" ; 
 		cp $feat_tbl2 sequin_directory/${feat_tbl2%.comb3.tbl}.tbl ; 
 		if [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.CELLULAR.out ] ; then
-				CELL_CHROM=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 )
+			echo "${feat_tbl2%.comb3.tbl} is similar to a chromosomal sequence"
+			CELL_CHROM=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 )
 			bioawk -v contig_name="$seq_name1" -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$CELL_CHROM" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note=highly similar to sequence "chrom_info " ; please manually check if this is a transposon especially if there is an annotated reverse transcriptase ] [note= "contig_name" ; closest viral relative: " tax_var " " perc_var "] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.fna > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
 		elif [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.KNOWN_VIRUS.out ] ; then
+			echo "${feat_tbl2%.comb3.tbl} is similar to a genbank virus"
 			VIR_HIT=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 )
 			STRAIN_NAME=$( echo $VIR_HIT " strain ct"${rand_id}${file_numbers} )
 			bioawk -v contig_name="$seq_name1" -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core"  -v strainname="$STRAIN_NAME" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note=highly similar to sequence "chrom_info "] [note= "contig_name" ; closest viral relative: " tax_var " " perc_var "] [organism=" strainname "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.fna > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
 		else
+			echo "${feat_tbl2%.comb3.tbl} has no high similarity to a known virus"
 			bioawk -v contig_name="$seq_name1" -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= this contig likely does not represent a complete genome] [note= "contig_name" ; closest relative: " tax_var " " perc_var "] [organism=" headername " ct" rand_var number_var "] [moltype=genomic DNA][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.fna > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
 		fi		
 	fi
