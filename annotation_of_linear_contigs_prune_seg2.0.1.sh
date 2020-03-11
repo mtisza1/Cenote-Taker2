@@ -216,7 +216,7 @@ echo "$(tput setaf 5) Trying to classify non-circular/non-ITR contigs with viral
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: running BLASTN, linear contigs " $MDYT
 for vd_fa in $virus_seg_fastas ; do
-	if [[ $handle_knowns = "quick_knowns" ]] ; then
+	if [[ $handle_knowns = "blast_knowns" ]] ; then
 		echo "starting BLASTN of non-circular contigs with viral domain(s)"
 		blastn -db /fdb/blastdb/nt -query $vd_fa -evalue 1e-50 -num_threads $CPU -outfmt "6 qseqid sseqid stitle pident length qlen" -qcov_hsp_perc 50 -num_alignments 3 -out ${vd_fa%.fna}.blastn.out ;
 		cat ${vd_fa%.fna}.blastn.out
