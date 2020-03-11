@@ -15,10 +15,10 @@ if [ $PROPHAGE == "False" ] ; then
 else
 	for NO_END in $vd_fastas ; do
 		LENGTH_SEQ=$( bioawk -c fastx '{print length($seq)}' $NO_END )
-		if [[ "$LENGTH_SEQ" -lt 5000 ]] ; then 
+		if [[ "$LENGTH_SEQ" -lt 10000 ]] ; then 
 			mv $NO_END ${NO_END%.fna}_vs1.fna
 			echo "$NO_END is too short to prune chromosomal regions"
-		elif [[ "$LENGTH_SEQ" -gt 5000 ]] || [[ "$LENGTH_SEQ" == 5000 ]] ; then
+		elif [[ "$LENGTH_SEQ" -gt 10000 ]] || [[ "$LENGTH_SEQ" == 10000 ]] ; then
 			MDYT=$( date +"%m-%d-%y---%T" )
 			echo "Making table files of viral bait outputs" $MDYT
 
@@ -249,7 +249,7 @@ for vd_fa in $virus_seg_fastas ; do
 			echo "$(tput setaf 5)"$vd_fa" appears to be a novel sequence (no close (>90% nucleotide) matches to sequences in nt database).$(tput sgr 0)"
 		fi
 	elif [[ $handle_knowns = "do_not_check_knowns" ]] ; then
-			echo "$(tput setaf 5) Not checking circular seqs against genbank 'nt' database for close matches $(tput sgr 0)"
+			echo "$(tput setaf 5) Not checking seqs against genbank 'nt' database for close matches $(tput sgr 0)"
 	fi
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: BLASTX linear contigs " $MDYT
@@ -464,7 +464,7 @@ for nucl_fa in $virus_seg_fastas ; do
 		fi
 	elif [ -s ${nucl_fa%.fna}.SCAN.tbl ] ; then
 		#### insert tbl header!!!
-		echo ">Feature ${nucl_fa%_vs[0-9].fna} Table1" >> ${nucl_fa%.fasta}.int.tbl
+		echo ">Feature ${nucl_fa%_vs[0-9].fna} Table1" >> ${nucl_fa%.fna}.int.tbl
 		echo -e "\n" >> ${nucl_fa%.fna}.int.tbl
 		cat ${nucl_fa%.fna}.SCAN.tbl >> ${nucl_fa%.fna}.int.tbl
 		if [ -s ${nucl_fa%.fna}.trna.tbl ] ; then
