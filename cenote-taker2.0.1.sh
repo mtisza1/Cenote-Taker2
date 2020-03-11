@@ -1661,7 +1661,7 @@ for i in no_end_contigs_with_viral_domain/sequin_directory/*.fsa ; do
 		length=$( bioawk -c fastx '{ print length}' $i )
 		echo $length
 		j=${i%.fsa} ; 
-		DOMAIN_COUNT=$( cat no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.AA.called_hmmscan.txt | wc -l )
+		DOMAIN_COUNT=$( cat no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.hmmscan.sort.out no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.hmmscan_replicate.sort.out | wc -l )
 		echo -e $site "\t""Partial genome (putative)""\t" $df_num "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call2 >> ${run_title}.tsv
 	fi
 done
