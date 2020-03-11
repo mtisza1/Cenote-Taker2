@@ -1652,8 +1652,8 @@ for i in no_end_contigs_with_viral_domain/sequin_directory/*.fsa ; do
 		tax_call=$( head -n1 $i | sed -e 's/.*organism=\(.*\)\] \[moltype=.*/\1/' )
 		echo $tax_call
 		if grep -q "highly similar to sequence" $i ; then
-			blast_call1=$( head -n1 $i | sed -e 's/note=highly similar to sequence \(.*\); please manually check if this is a transposon especially if there is an annotated reverse transcriptase.*/\1/' )
-			blast_call2=$( echo "CLOSE SIMILARITY TO:" $blast_call1" check if this is a RT transposon" )
+			blast_call1=$( head -n1 $i | sed -e 's/.*note=highly similar to sequence \(.*\)\] \[note= .*/\1/' )
+			blast_call2=$( echo "CLOSE SIMILARITY TO:" $blast_call1 )
 		else
 			blast_call2=$( head -n1 $i | sed -e 's/.*closest relative: \(.*\)\] \[organism=.*/\1/' )
 		fi
