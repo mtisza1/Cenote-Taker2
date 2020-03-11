@@ -190,7 +190,7 @@ cd $run_title
 
 
 
-if [ -s "$F_READS" ] ; then
+if [ ! -s "$F_READS" ] ; then
 	echo "no reads provided"
 else
 	echo "$(tput setaf 4)Aligning provided reads to contigs over cutoff to determine coverage. $(tput sgr 0)" 
@@ -202,7 +202,7 @@ else
 	echo "$(tput setaf 4)Aligning reads to BowTie2 index. $(tput sgr 0)" 
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: aligning reads to bowtie2 indices " $MDYT
-	if [ -s "$R_READS" ] ;then
+	if [ ! -s "$R_READS" ] ;then
 		bowtie2 -q -p${CPU} -x bt2_indices/${run_title}_bt2_index -U $F_READS -S reads_to_all_contigs_over${circ_length_cutoff}nt.sam --very-fast
 	else
 		bowtie2 -q -p${CPU} -x bt2_indices/${run_title}_bt2_index -1 $F_READS -2 $R_READS -S reads_to_all_contigs_over${circ_length_cutoff}nt.sam --very-fast
