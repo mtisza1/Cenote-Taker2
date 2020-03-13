@@ -214,46 +214,49 @@ virus_seg_fastas=$( ls *_vs[0-9].fna )
 echo "$(tput setaf 5) Trying to classify non-circular/non-ITR contigs with viral domains $(tput sgr 0)"
 
 MDYT=$( date +"%m-%d-%y---%T" )
-echo "time update: running BLASTN, linear contigs " $MDYT
+echo "time update: running BLASTN/BLASTX, linear contigs " $MDYT
+
 for vd_fa in $virus_seg_fastas ; do
-	if [[ $handle_knowns = "blast_knowns" ]] ; then
-		echo "starting BLASTN of non-circular contigs with viral domain(s)"
-		blastn -db /fdb/blastdb/nt -query $vd_fa -evalue 1e-50 -num_threads $CPU -outfmt "6 qseqid sseqid stitle pident length qlen" -qcov_hsp_perc 50 -num_alignments 3 -out ${vd_fa%.fna}.blastn.out ;
-		cat ${vd_fa%.fna}.blastn.out
-		if [ -s "${vd_fa%.fna}.blastn.out" ]; then
-			echo ${vd_fa%.fna}.blastn.out" found"
-			sed 's/ /-/g' ${vd_fa%.fna}.blastn.out | awk '{if ($4 > 90) print}' | awk '{if (($5 / $6) > 0.5) print}' > ${vd_fa%.fna}.blastn.notnew.out ;
-		else
-			echo ${vd_fa%.fna}.blastn.out" not found"
-		fi
-		if [ -s "${vd_fa%.fna}.blastn.notnew.out" ]; then
-			echo "$(tput setaf 4)"$vd_fa" is not a novel species (>90% identical to sequence in nt database).$(tput sgr 0)"
-			ktClassifyBLAST -o ${vd_fa%.fna}.tax_guide.blastn.tab ${circle%.fasta}.blastn.notnew.out
-			taxid=$( tail -n1 ${vd_fa%.fna}.tax_guide.blastn.tab | cut -f2 )
-			efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage > ${vd_fa%.fna}.tax_guide.blastn.out
-			sleep 2s
-			if [ !  -z "${vd_fa%.fna}.tax_guide.blastn.out" ] ; then
-				awk '{ print "; "$3 }' ${vd_fa%.fna}.blastn.notnew.out | sed 's/-/ /g; s/, complete genome//g' >> ${vd_fa%.fna}.tax_guide.blastn.out
+	BLASTN_LIST=$( ls ${BLASTN_DB}*.nsq | wc -l )
+	if [[ "$BLASTN_LIST" -gt 1 ]] || [[ "$BLASTN_LIST" == 1 ]] ;then 
+		if [[ $handle_knowns = "blast_knowns" ]] ; then
+			echo "starting BLASTN of non-circular contigs with viral domain(s)"
+			blastn -db ${BLASTN_DB} -query $vd_fa -evalue 1e-50 -num_threads $CPU -outfmt "6 qseqid sseqid stitle pident length qlen" -qcov_hsp_perc 50 -num_alignments 3 -out ${vd_fa%.fna}.blastn.out ;
+			cat ${vd_fa%.fna}.blastn.out
+			if [ -s "${vd_fa%.fna}.blastn.out" ]; then
+				echo ${vd_fa%.fna}.blastn.out" found"
+				sed 's/ /-/g' ${vd_fa%.fna}.blastn.out | awk '{if ($4 > 90) print}' | awk '{if (($5 / $6) > 0.5) print}' > ${vd_fa%.fna}.blastn.notnew.out ;
+			else
+				echo ${vd_fa%.fna}.blastn.out" not found"
 			fi
+			if [ -s "${vd_fa%.fna}.blastn.notnew.out" ]; then
+				echo "$(tput setaf 4)"$vd_fa" is not a novel species (>90% identical to sequence in nt database).$(tput sgr 0)"
+				ktClassifyBLAST -o ${vd_fa%.fna}.tax_guide.blastn.tab ${circle%.fasta}.blastn.notnew.out
+				taxid=$( tail -n1 ${vd_fa%.fna}.tax_guide.blastn.tab | cut -f2 )
+				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage > ${vd_fa%.fna}.tax_guide.blastn.out
+				sleep 2s
+				if [ !  -z "${vd_fa%.fna}.tax_guide.blastn.out" ] ; then
+					awk '{ print "; "$3 }' ${vd_fa%.fna}.blastn.notnew.out | sed 's/-/ /g; s/, complete genome//g' >> ${vd_fa%.fna}.tax_guide.blastn.out
+				fi
 
-			if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid" ${vd_fa%.fna}.tax_guide.blastn.out ; then
-				echo $vd_fa "$(tput setaf 4) is closely related to a virus that has already been deposited in GenBank nt. $(tput sgr 0)"
-				cp ${vd_fa%.fna}.tax_guide.blastn.out ${vd_fa%.fna}.tax_guide.KNOWN_VIRUS.out
+				if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid" ${vd_fa%.fna}.tax_guide.blastn.out ; then
+					echo $vd_fa "$(tput setaf 4) is closely related to a virus that has already been deposited in GenBank nt. $(tput sgr 0)"
+					cp ${vd_fa%.fna}.tax_guide.blastn.out ${vd_fa%.fna}.tax_guide.KNOWN_VIRUS.out
 
-			else 
-				echo $vd_fa "$(tput setaf 4) is closely related to a chromosomal sequence that has already been deposited in GenBank nt. It may be an endogenous virus or transposon $(tput sgr 0)"
-				cat ${vd_fa%.fna}.tax_guide.blastn.out
-				cp ${vd_fa%.fna}.tax_guide.blastn.out ${vd_fa%.fna}.tax_guide.CELLULAR.out
+				else 
+					echo $vd_fa "$(tput setaf 4) is closely related to a chromosomal sequence that has already been deposited in GenBank nt. It may be an endogenous virus or transposon $(tput sgr 0)"
+					cat ${vd_fa%.fna}.tax_guide.blastn.out
+					cp ${vd_fa%.fna}.tax_guide.blastn.out ${vd_fa%.fna}.tax_guide.CELLULAR.out
 
+				fi
+			else
+				echo "$(tput setaf 5)"$vd_fa" appears to be a novel sequence (no close (>90% nucleotide) matches to sequences in nt database).$(tput sgr 0)"
 			fi
-		else
-			echo "$(tput setaf 5)"$vd_fa" appears to be a novel sequence (no close (>90% nucleotide) matches to sequences in nt database).$(tput sgr 0)"
+		elif [[ $handle_knowns = "do_not_check_knowns" ]] ; then
+				echo "$(tput setaf 5) Not checking seqs against genbank 'nt' database for close matches $(tput sgr 0)"
 		fi
-	elif [[ $handle_knowns = "do_not_check_knowns" ]] ; then
-			echo "$(tput setaf 5) Not checking seqs against genbank 'nt' database for close matches $(tput sgr 0)"
 	fi
-	MDYT=$( date +"%m-%d-%y---%T" )
-	echo "time update: BLASTX linear contigs " $MDYT
+
 	#### make blast database dependent on plasmid option
 	blastx -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_adinto_polinton_prot_190925 -query $vd_fa -out ${vd_fa%.fna}.tax_guide.blastx.out ;
 	if [ ! -s "${vd_fa%.fna}.tax_guide.blastx.out" ]; then

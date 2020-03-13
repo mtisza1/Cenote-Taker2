@@ -1048,6 +1048,11 @@ rm *tmp.tbl
 
 #### exclude CRESS viruses from this analysis
 for feat_tbl2 in *.comb3.tbl ; do 
+	if grep -i -q "CRESS\|genomovir\|circovir\|bacilladnavir\|redondovir\|nanovir\|geminivir\|smacovir" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
+		echo ${feat_tbl2%.comb3.tbl}" is a CRESS virus of some kind"
+	elif cat ; then
+		#statements
+	else
 		if grep -i -q "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 ; then
 			TAX_ORF=$( grep -i -B1 "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
 		elif grep -i -q "dnab\|dna polymerase\|polb\|rdrp\|rna dependent rna polymerase" $feat_tbl2 ; then
@@ -1080,6 +1085,7 @@ for feat_tbl2 in *.comb3.tbl ; do
 				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 			fi
 		fi
+	fi
 done
 
 
@@ -1661,7 +1667,7 @@ for i in no_end_contigs_with_viral_domain/sequin_directory/*.fsa ; do
 		length=$( bioawk -c fastx '{ print length}' $i )
 		echo $length
 		j=${i%.fsa} ; 
-		DOMAIN_COUNT=$( cat no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.hmmscan.sort.out no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.hmmscan_replicate.sort.out | wc -l )
+		DOMAIN_COUNT=$( cat no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.AA.hmmscan2.sort.out | wc -l )
 		echo -e $site "\t""Partial genome (putative)""\t" $df_num "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call2 >> ${run_title}.tsv
 	fi
 done
