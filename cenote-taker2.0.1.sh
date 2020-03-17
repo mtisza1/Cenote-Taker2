@@ -507,7 +507,7 @@ if [ -s "${nucl_fa%.fasta}.rotate.fasta" ]; then
 		done > ${nucl_fa%.fasta}.rotate.AA.fasta
 
 	else
-		prodigal -a ${nucl_fa%.fasta}.rotate.prodigal.fasta -i $NO_END -p meta
+		prodigal -a ${nucl_fa%.fasta}.rotate.prodigal.fasta -i $nucl_fa -p meta
 		sed 's/ /@/g' ${nucl_fa%.fasta}.rotate.prodigal.fasta | bioawk -c fastx '{print}' | while read LINE ; do 
 			ORIENTATION=$( echo "$LINE" | cut -d "#" -f 4 | sed 's/@//g' ) ;
 			if [[ "$ORIENTATION" == 1 ]] ; then
