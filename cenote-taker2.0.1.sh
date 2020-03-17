@@ -269,7 +269,7 @@ fi
 echo "$(tput setaf 4)Looking for ITRs in non-circular contigs $(tput sgr 0)" 
 
 cd noncircular_contigs
-CONTIGS_NON_CIRCULAR=$( ls *{0..9}.fasta )
+CONTIGS_NON_CIRCULAR=$( ls *[0-9].fasta )
 
 if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 	MDYT=$( date +"%m-%d-%y---%T" )
@@ -1522,9 +1522,9 @@ for feat_tbl2 in *.comb3.tbl ; do
 				fi
 			elif [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.KNOWN_VIRUS.out ] ; then
 				VIR_HIT=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 )
-				STRAIN_NAME=$( echo $VIR_HIT " strain ct"${rand_id}${file_numbers} )
+				#STRAIN_NAME=$( echo $VIR_HIT " strain ct"${rand_id}${file_numbers} )
 				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
-					bioawk -v srr_var="$srr_number" -v perc_var="$perc_id" -v strainname="$STRAIN_NAME" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v vir_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= WARNING: no viral/plasmid-specific domains were detected. This may not be a true mobile genetic element.] [note=highly similar to sequence "vir_info "] [organism=" strainname "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+					bioawk -v srr_var="$srr_number" -v perc_var="$perc_id" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v vir_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= WARNING: no viral/plasmid-specific domains were detected. This may not be a true mobile genetic element.] [note=highly similar to sequence "vir_info "] [organism=" vir_info " strain ct " rand_var number_var"] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
 					echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
 
 				else
