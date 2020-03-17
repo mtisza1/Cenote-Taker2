@@ -129,11 +129,19 @@ fi
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: loading modules: " $MDYT
 
+# looking for template file and contigs in working directory, or else copying them there
 if [ -s ${base_directory}/${template_file} ] ; then 
 	echo ${base_directory}/${template_file} ; 
 else  
 	cp ${template_file} ${base_directory}/ ; 
 fi
+
+if [ -s ${base_directory}/${original_contigs} ] ; then 
+	echo ${base_directory}/${original_contigs} ; 
+else  
+	cp ${original_contigs} ${base_directory}/ ; 
+fi
+
 # Making output folder
 if [ ! -d "$run_title" ]; then
 	mkdir "$run_title"
