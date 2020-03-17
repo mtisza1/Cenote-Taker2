@@ -133,13 +133,16 @@ echo "time update: loading modules: " $MDYT
 if [ -s ${base_directory}/${template_file} ] ; then 
 	echo ${base_directory}/${template_file} ; 
 else  
-	cp ${template_file} ${base_directory}/ ; 
+	cp ${template_file} ${base_directory}/ ;
+	template_file=$( basename $template_file ) 
 fi
 
 if [ -s ${base_directory}/${original_contigs} ] ; then 
 	echo ${base_directory}/${original_contigs} ; 
 else  
 	cp ${original_contigs} ${base_directory}/ ; 
+	original_contigs=$( basename $original_contigs ) 
+
 fi
 
 # Making output folder
