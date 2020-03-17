@@ -1067,10 +1067,17 @@ for feat_tbl2 in *.comb3.tbl ; do
 		elif [ $TAX_ORF == "Conjugative Transposon" ] ; then
 			echo "${feat_tbl2%.comb3.tbl} looks like a conjugative transposon"
 			echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+		elif [ $TAX_ORF == "Inoviridae" ] ; then
+			echo "${feat_tbl2%.comb3.tbl} looks like an Inovirus"
+			echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 		else
 
 			grep -A1 "$TAX_ORF " ${feat_tbl2%.comb3.tbl}.rotate.AA.sorted.fasta | sed '/--/d' > ${feat_tbl2%.comb3.tbl}.tax_orf.fasta
-			blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query ${feat_tbl2%.comb3.tbl}.tax_orf.fasta -out ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
+			if [[ $STRUCTURAL_COUNT == 1 ]] || [[ $STRUCTURAL_COUNT -gt 1 ]] ; then
+				blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_adinto_polinton_prot_190925 -query ${feat_tbl2%.comb3.tbl}.tax_orf.fasta -out ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
+			else
+				blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query ${feat_tbl2%.comb3.tbl}.tax_orf.fasta -out ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
+			fi
 			if [ ! -s "${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out" ]; then
 				echo "unclassified virus" > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
 			elif grep -q "virophage" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
@@ -1485,7 +1492,7 @@ for feat_tbl2 in *.comb3.tbl ; do
 					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$CELL_CHROM" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [note=highly similar to sequence "chrom_info "; please manually check if this is a transposon especially if there is an annotated reverse transcriptase] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
 				fi
 			elif [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.KNOWN_VIRUS.out ] ; then
-				VIR_HIT=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 )
+				VIR_HIT=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 | sed 's/,-complete-genome//g' )
 				#STRAIN_NAME=$( echo $VIR_HIT " strain ct"${rand_id}${file_numbers} )
 				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
 					#echo "5"
@@ -1535,7 +1542,7 @@ for feat_tbl2 in *.comb3.tbl ; do
 					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$CELL_CHROM" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [note=highly similar to sequence "chrom_info "; please manually check if this is a transposon especially if there is an annotated reverse transcriptase] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
 				fi
 			elif [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.KNOWN_VIRUS.out ] ; then
-				VIR_HIT=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 )
+				VIR_HIT=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 | sed 's/,-complete-genome//g' )
 				#STRAIN_NAME=$( echo $VIR_HIT " strain ct"${rand_id}${file_numbers} )
 				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
 					#echo "13"
