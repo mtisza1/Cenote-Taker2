@@ -257,8 +257,7 @@ for vd_fa in $virus_seg_fastas ; do
 		fi
 	fi
 
-	#### make blast database dependent on plasmid option
-	blastx -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_adinto_polinton_prot_190925 -query $vd_fa -out ${vd_fa%.fna}.tax_guide.blastx.out ;
+	blastx -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query $vd_fa -out ${vd_fa%.fna}.tax_guide.blastx.out ;
 	if [ ! -s "${vd_fa%.fna}.tax_guide.blastx.out" ]; then
 		echo "No homologues found" > ${vd_fa%.fna}.tax_guide.blastx.out ;
 	elif grep -i -q "circovir\|genomovir\|geminivir\|nanovir\|redondovir\|bacilladnavir\|smacovir" ${vd_fa%.fna}.tax_guide.blastx.out ; then 
@@ -351,7 +350,6 @@ for NO_END in $virus_seg_fastas ; do
 	fi
 done
 
-#### insert conjugative transposon search script
 
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: running RPSBLAST, linear contigs " $MDYT
@@ -467,7 +465,6 @@ for nucl_fa in $virus_seg_fastas ; do
 			cat ${nucl_fa%.fna}.trna.tbl >> ${nucl_fa%.fna}.int.tbl
 		fi
 	elif [ -s ${nucl_fa%.fna}.SCAN.tbl ] ; then
-		#### insert tbl header!!!
 		echo ">Feature ${nucl_fa%.fna} Table1" >> ${nucl_fa%.fna}.int.tbl
 		echo -e "\n" >> ${nucl_fa%.fna}.int.tbl
 		cat ${nucl_fa%.fna}.SCAN.tbl >> ${nucl_fa%.fna}.int.tbl
@@ -611,9 +608,16 @@ for feat_tbl4 in *_vs[0-9].int2.tbl ; do
 	fi
 done
 
-### Insert re-taxonomy for dsDNA prokaryotic contigs by using Terminase, or else major capsid
+# re-taxonomy for contigs by using putatively most appropriate gene 
 for feat_tbl2 in *_vs[0-9].comb3.tbl ; do 
-		if grep -i -q "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 ; then
+	if grep -i -q "CRESS\|genomovir\|circovir\|bacilladnavir\|redondovir\|nanovir\|geminivir\|smacovir" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
+		echo ${feat_tbl2%.comb3.tbl}" is a CRESS virus of some kind"
+	else
+		CONJ_COUNT=$( grep -i "virb\|type-IV\|secretion system\|conjuga\|transposon\|tra[a-z] \|trb[b-z]\|pilus" $feat_tbl2 | wc -l )
+		STRUCTURAL_COUNT=$( grep -i "capsid\|terminase\|portal\|baseplate\|base plate\|tail\|collar\|zot\|zonular\|minor coat\|packaging\|	virion protein" $feat_tbl2 | wc -l )
+		if [[ $CONJ_COUNT -gt 0 ]] && [[ $STRUCTURAL_COUNT == 0 ]] ; then
+			TAX_ORF="Conjugative Transposon"
+		elif grep -i -q "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 ; then
 			TAX_ORF=$( grep -i -B1 "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
 		elif grep -i -q "dnab\|dna polymerase\|polb\|rdrp\|rna dependent rna polymerase" $feat_tbl2 ; then
 			TAX_ORF=$( grep -i -B1 "dnab\|dna polymerase\|polb\|rdrp\|rna dependent rna polymerase" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )		
@@ -634,16 +638,22 @@ for feat_tbl2 in *_vs[0-9].comb3.tbl ; do
 		else
 
 			grep -A1 "$TAX_ORF " ${feat_tbl2%.comb3.tbl}.AA.fasta | sed '/--/d' > ${feat_tbl2%.comb3.tbl}.tax_orf.fasta
-			### make blast database dependent on plasmid option
 			blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query ${feat_tbl2%.comb3.tbl}.tax_orf.fasta -out ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
 			if [ ! -s "${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out" ]; then
 				echo "unclassified virus" > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
+			elif grep -q "virophage" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
+				echo "Virophage" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+			elif grep -q "adinto" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
+				echo "Adintovirus" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+			elif grep -i -q "polinton" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
+				echo "Polinton-like virus" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out					
 			else
 				ktClassifyBLAST -o ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 				taxid=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab | cut -f2 )
 				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 			fi
 		fi
+	fi
 done
 
 # .gff file maker
@@ -702,12 +712,9 @@ MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: making nomeclature and fsa file, linear contigs " $MDYT
 for feat_tbl2 in *_vs[0-9].comb3.tbl ; do 
 	file_core=${feat_tbl2%.comb3.tbl}
-	#echo $file_core
-	#### update file_numbers
-	file_numbers=$( echo ${file_core: -3} | sed 's/[a-z]//g' | sed 's/[A-Z]//g' )
-	#echo $file_numbers
+	orig_core=${file_core%_vs[0-9]}
+	file_numbers=$( echo ${orig_core: -3} | sed 's/[a-z]//g' | sed 's/[A-Z]//g' )
 	tax_info=${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
-	#echo $tax_info
 	if grep -q "Anellovir" $tax_info ; then
 		vir_name=Anelloviridae ;
 	elif grep -q "Circovirus-like" $tax_info ; then

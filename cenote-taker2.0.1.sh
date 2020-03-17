@@ -169,7 +169,6 @@ if [ ${original_contigs: -6} == ".fasta" ]; then
 	for fa1 in $run_title*.fa ; do 
 		mv $fa1 $run_title${fa1#$run_title.}sta ; 
 	done 
-	#### find way to get circular but lacking hallmark genes seqs to be annotated
 elif [ ${original_contigs: -6} == ".fastg" ]; then
 	bioawk -v contig_cutoff="$circ_length_cutoff" -c fastx '{ if(length($seq) > contig_cutoff) {print }}' $original_contigs | grep "[a-zA-Z0-9]:\|[a-zA-Z0-9];" | grep -v "':" | awk '{ print ">"$1 ; print $2 }' | sed 's/:.*//g; s/;.*//g' | bioawk -v run_var="$run_title" -c fastx '{ print ">"run_var NR" "$name; print $seq }' > ${original_contigs%.fastg}.over_${circ_length_cutoff}nt.fasta
 	cd $run_title
@@ -191,7 +190,7 @@ cd $run_title
 
 
 if [ ! -s "$F_READS" ] ; then
-	echo "no reads provided"
+	echo "no reads provided or reads not found"
 else
 	echo "$(tput setaf 4)Aligning provided reads to contigs over cutoff to determine coverage. $(tput sgr 0)" 
 	MDYT=$( date +"%m-%d-%y---%T" )
@@ -268,7 +267,6 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 		LEN_CHECKQ=$( cat $NONCIR | bioawk -c fastx '{ if(length($seq) > 4000) { print $name }}' ) ; 
 		if [ ! -z "$LEN_CHECKQ" ] ; then
 			${CENOTE_SCRIPT_DIR}/irf307.linux.exe $NONCIR 2 3 5 80 10 40 500000 10000 -d -h
-			#### put irf in script directory 
 		fi
 	done
 	mkdir ../ITR_containing_contigs
@@ -286,7 +284,6 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 					echo ${DAT%.2.3.5.80.10.40.500000.10000.dat} "contains ITRs:" ; 
 					echo $LENGTH "5-prime ITR:" $LOW_START "3-prime ITR:" $HIGH_END ; 
 					mv ${DAT%.2.3.5.80.10.40.500000.10000.dat} ../ITR_containing_contigs/${DAT%.2.3.5.80.10.40.500000.10000.dat}
-					### MAKE ITR TBL FILE
 					echo "$(tput setaf 4) Making ITR .tbl file $(tput sgr 0)"
 					L_END_A=$( grep "^$LOW_START" $DAT | cut -d " " -f2 )
 					L_START_B=$( grep "^$LOW_START" $DAT | cut -d " " -f4 )
@@ -317,7 +314,6 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 		done > ${NO_END%.fasta}.AA.sorted.fasta
 	done
 		# Taking arguments for "virus specific" database and conducting hmmscan
-		### Make an argument to NOT look at non-ITR and non-circular
 	if  [[ $virus_domain_db = "standard" ]] ; then
 		echo "$CONTIGS_NON_CIRCULAR" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.AA.sorted.fasta
 		echo "$CONTIGS_NON_CIRCULAR" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.AA.sorted.fasta		
@@ -373,7 +369,6 @@ echo "$(tput setaf 4) transferring ITR-containing contigs to the main directory 
 ITR_ELEMENTS=$( ls ITR_containing_contigs/*.fasta | sed 's/ITR_containing_contigs\///g' )
 if [ ! -z "$ITR_ELEMENTS" ] ; then
 	for ITR_CONTIG in $ITR_ELEMENTS ; do
-		### make .tbl extension of inverted repeat features
 		echo $ITR_CONTIG "has ITRs"
 		cp ITR_containing_contigs/$ITR_CONTIG $ITR_CONTIG
 	done
@@ -390,7 +385,6 @@ if [ ! -z "$CIRCLES_AND_ITRS" ] ; then
 			cp $nucl_fa ${nucl_fa%.fasta}.rotate.fasta
 		else
 			echo "$(tput setaf 5)rotating "$nucl_fa" to put an ORF at beginning of sequence so that no ORFs overlap the breakpoint $(tput sgr 0)"
-			#### for docker, I think the entire emboss suite will be required
 			getorf -circular -minsize 240 -table 11 -find 3 -sequence $nucl_fa -outseq ${nucl_fa%.fasta}.nucl_orfs.fa ; 
 
 			grep ">" ${nucl_fa%.fasta}.nucl_orfs.fa > ${nucl_fa%.fasta}.nucl_orfs.txt
@@ -593,7 +587,6 @@ if [ -n "$CIRCLES_AND_ITRS" ]; then
 				cut -f3 ${nucl_fa%.fasta}.rotate.AA.hmmscan2.sort.out | awk '{ print $0" " }' > ${nucl_fa%.fasta}.rotate.AA.called_hmmscan2.txt ; 
 
 				grep -v -f ${nucl_fa%.fasta}.rotate.AA.called_hmmscan2.txt ${nucl_fa%.fasta}.rotate.no_hmmscan.fasta | grep -A1 ">" | sed '/--/d' > ${nucl_fa%.fasta}.rotate.no_hmmscan2.fasta
-				#### this may not be working
 				cat ${nucl_fa%.fasta}.rotate.AA.called_hmmscan2.txt | while read LINE ; do 
 					PROTEIN_INFO=$( grep "$LINE \[" ${nucl_fa%.fasta}.rotate.no_hmmscan.fasta ) ;  
 					START_BASEH=$( echo $PROTEIN_INFO | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
@@ -606,7 +599,6 @@ if [ -n "$CIRCLES_AND_ITRS" ]; then
 			fi
 		else
 			mv $nucl_fa ${nucl_fa%.fasta}.no_baits.fna
-			#### make a concatenated file of circular sequences without enough viral domains
 
 		fi
 	done
@@ -683,18 +675,9 @@ fi
 
 echo " "
 
-
-### chromosomal script goes here
-# I don't think I need this, so I removed it.
-
-
-#NEW_FASTAS=$( ls | grep "[0-9].fasta" | grep -v ".no_hmmscan.\|.AA.\|.rotate.\|all_non_circular\|.dat\|trnascan-se2.txt" )
 NEW_FASTAS=$( ls | grep "${run_title}[0-9]\{1,6\}.fasta$" )
 
 echo "$NEW_FASTAS"
-
-
-#### insert conjugative transposon hmmer script
 
 # Conducting RPS-BLAST against CDD on translated ORFs
 MDYT=$( date +"%m-%d-%y---%T" )
@@ -785,11 +768,6 @@ for GENOME_NAME in $NEW_FASTAS ; do
 	fi
 done
 
-#	if [ -s $GENOME_NAME.trna.tbl ] ; then
-#		cat OTHER_TBL_FILE $GENOME_NAME.trna.tbl > FINAL_TBL_FILE
-#	fi
-
-### Put a intermediate tbl combiner here
 echo "$(tput setaf 5) combining .tbl files that have been generated so far $(tput sgr 0)"
 
 for nucl_fa in $NEW_FASTAS ; do
@@ -834,7 +812,6 @@ for nucl_fa in $NEW_FASTAS ; do
 			cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
 		fi
 	elif [ -s ${nucl_fa%.fasta}.SCAN.tbl ] ; then
-		#### insert tbl header!!!
 		echo ">Feature ${nucl_fa%.fasta} Table1" >> ${nucl_fa%.fasta}.int.tbl
 		echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
 		cat ${nucl_fa%.fasta}.SCAN.tbl >> ${nucl_fa%.fasta}.int.tbl
@@ -1046,12 +1023,15 @@ done
 
 rm *tmp.tbl
 
-#### exclude CRESS viruses from this analysis
 for feat_tbl2 in *.comb3.tbl ; do 
 	if grep -i -q "CRESS\|genomovir\|circovir\|bacilladnavir\|redondovir\|nanovir\|geminivir\|smacovir" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
 		echo ${feat_tbl2%.comb3.tbl}" is a CRESS virus of some kind"
 	else
-		if grep -i -q "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 ; then
+		CONJ_COUNT=$( grep -i "virb\|type-IV\|secretion system\|conjuga\|transposon\|tra[a-z] \|trb[b-z]\|pilus" $feat_tbl2 | wc -l )
+		STRUCTURAL_COUNT=$( grep -i "capsid\|terminase\|portal\|baseplate\|base plate\|tail\|collar\|zot\|zonular\|minor coat\|packaging\|	virion protein" $feat_tbl2 | wc -l )
+		if [[ $CONJ_COUNT -gt 0 ]] && [[ $STRUCTURAL_COUNT == 0 ]] ; then
+			TAX_ORF="Conjugative Transposon"
+		elif grep -i -q "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 ; then
 			TAX_ORF=$( grep -i -B1 "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
 		elif grep -i -q "dnab\|dna polymerase\|polb\|rdrp\|rna dependent rna polymerase" $feat_tbl2 ; then
 			TAX_ORF=$( grep -i -B1 "dnab\|dna polymerase\|polb\|rdrp\|rna dependent rna polymerase" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )			
@@ -1071,13 +1051,23 @@ for feat_tbl2 in *.comb3.tbl ; do
 		fi
 		if [ $TAX_ORF == "No_suitable_orf" ] ; then
 			echo "No suitable taxomic ORF for ${feat_tbl2%.comb3.tbl}"
+		elif [ $TAX_ORF == "Conjugative Transposon" ] ; then
+			echo "${feat_tbl2%.comb3.tbl} looks like a conjugative transposon"
+			echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 		else
 
 			grep -A1 "$TAX_ORF " ${feat_tbl2%.comb3.tbl}.rotate.AA.sorted.fasta | sed '/--/d' > ${feat_tbl2%.comb3.tbl}.tax_orf.fasta
 			blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query ${feat_tbl2%.comb3.tbl}.tax_orf.fasta -out ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
 			if [ ! -s "${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out" ]; then
 				echo "unclassified virus" > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
+			elif grep -q "virophage" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
+				echo "Virophage" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+			elif grep -q "adinto" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
+				echo "Adintovirus" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+			elif grep -i -q "polinton" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
+				echo "Polinton-like virus" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out				
 			else
+
 				ktClassifyBLAST -o ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 				taxid=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab | cut -f2 )
 				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
@@ -1450,7 +1440,6 @@ for feat_tbl2 in *.comb3.tbl ; do
 	fsa_head=$( echo $vir_name " sp." )
 	tax_guess=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ) ; 
 	perc_id=$( head -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | sed 's/ /-/g' | awk '{FS="\t"; OFS="\t"} {print $2" "$3}' | sed 's/-/ /g' ) ;
-	#### ensure taht urandom will work
 	rand_id=$( head /dev/urandom | tr -dc A-Za-z0-9 | head -c 3 ; echo '' )
 
 	# Editing and transferring tbl file and fasta (fsa) files to sequin directory
@@ -1510,7 +1499,7 @@ for feat_tbl2 in *.comb3.tbl ; do
 			fi
 
 		else
-			#####
+
 			if [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.CELLULAR.out ] ; then
 				CELL_CHROM=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 )
 				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
@@ -1530,7 +1519,7 @@ for feat_tbl2 in *.comb3.tbl ; do
 				else
 					bioawk -v srr_var="$srr_number" -v perc_var="$perc_id" -v strainname="$STRAIN_NAME" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v vir_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note=highly similar to sequence "vir_info "] [organism=" strainname "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
 				fi
-			#####
+
 			else
 				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then				
 					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
@@ -1618,7 +1607,7 @@ echo "$(tput setaf 3) Making a summary table of all viral contigs, if any. $(tpu
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: making summary table " $MDYT
 
-echo -e "Isolation source""\t""Completeness""\t""Cenote-taker contig name""\t""Length""\t""Element Name""\t""Topology""\t""Common Viral Domains""\t""BLAST hit for Taxonomy" > ${run_title}.tsv
+echo -e "Isolation source""\t""Completeness""\t""Cenote-taker contig name""\t""Length""\t""Element Name""\t""Topology""\t""Common Viral Domains""\t""BLASTP hit for Taxonomy""\t""BLASTN result (if any)" > ${run_title}.tsv
 for i in sequin_directory/*.fsa ; do
 	if [ ! -z "$i" ] ;then
 		site=$( head -n1 $i | sed -e 's/.*isolation_source=\(.*\)\] \[isolate.*/\1/' )
@@ -1635,8 +1624,11 @@ for i in sequin_directory/*.fsa ; do
 		echo length
 		j=${i%.fsa} ; 
 		DOMAIN_COUNT=$( cat ${j#sequin_directory/}.rotate.AA.called_hmmscan.txt | wc -l )
+		if [ -s ${j#sequin_directory/}.blastn.out ] ; then
+			BLASTN_REPORT=$( head -n1 ${j#sequin_directory/}.blastn.out )
+		fi
 		#title=$( cat $site | awk '{print $1}' )
-		echo -e $site "\t""Complete genome (putative)""\t" $df_num "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call >> ${run_title}.tsv
+		echo -e $site "\t""Complete genome (putative)""\t" $df_num "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call "\t" $BLASTN_REPORT >> ${run_title}.tsv
 	fi
 done
 
@@ -1652,7 +1644,6 @@ for i in no_end_contigs_with_viral_domain/sequin_directory/*.fsa ; do
 		echo $df_num
 		topologyq=$( head -n1 $i | sed -e 's/.*topology=\(.*\)\] \[Bioproject.*/\1/' )
 		echo $topologyq
-		### INSERT OPTION FOR BLASTN RESULT
 		tax_call=$( head -n1 $i | sed -e 's/.*organism=\(.*\)\] \[moltype=.*/\1/' )
 		echo $tax_call
 		if grep -q "highly similar to sequence" $i ; then
@@ -1666,7 +1657,10 @@ for i in no_end_contigs_with_viral_domain/sequin_directory/*.fsa ; do
 		echo $length
 		j=${i%.fsa} ; 
 		DOMAIN_COUNT=$( cat no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.AA.hmmscan2.sort.out | wc -l )
-		echo -e $site "\t""Partial genome (putative)""\t" $df_num "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call2 >> ${run_title}.tsv
+		if [ -s no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.blastn.out ] ; then
+			BLASTN_REPORT=$( head -n1 no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.blastn.out )
+		fi
+		echo -e $site "\t""Partial genome (putative)""\t" $df_num "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call2 "\t" $BLASTN_REPORT >> ${run_title}.tsv
 	fi
 done
 
