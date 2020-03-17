@@ -507,7 +507,7 @@ if [ -s "${nucl_fa%.fasta}.rotate.fasta" ]; then
 		done > ${nucl_fa%.fasta}.rotate.AA.fasta
 
 	else
-		prodigal -a ${nucl_fa%.fasta}.rotate.prodigal.fasta -i ${nucl_fa%.fasta}.rotate.fasta -p meta
+		prodigal -a ${nucl_fa%.fasta}.rotate.prodigal.fasta -i ${nucl_fa%.fasta}.rotate.fasta -p meta -c
 		sed 's/ /@/g' ${nucl_fa%.fasta}.rotate.prodigal.fasta | bioawk -c fastx '{print}' | while read LINE ; do 
 			ORIENTATION=$( echo "$LINE" | cut -d "#" -f 4 | sed 's/@//g' ) ;
 			if [[ "$ORIENTATION" == 1 ]] ; then
@@ -1042,6 +1042,8 @@ for feat_tbl2 in *.comb3.tbl ; do
 		STRUCTURAL_COUNT=$( grep -i "capsid\|terminase\|portal\|baseplate\|base plate\|tail\|collar\|zot\|zonular\|minor coat\|packaging\|	virion protein" $feat_tbl2 | wc -l )
 		if [[ $CONJ_COUNT -gt 0 ]] && [[ $STRUCTURAL_COUNT == 0 ]] ; then
 			TAX_ORF="Conjugative Transposon"
+		elif grep -i -q "zot\|zonular" $feat_tbl2 ; then
+			TAX_ORF="Inoviridae"
 		elif grep -i -q "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 ; then
 			TAX_ORF=$( grep -i -B1 "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
 		elif grep -i -q "dnab\|dna polymerase\|polb\|rdrp\|rna dependent rna polymerase" $feat_tbl2 ; then
