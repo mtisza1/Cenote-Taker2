@@ -239,7 +239,7 @@ for vd_fa in $virus_seg_fastas ; do
 					awk '{ print "; "$3 }' ${vd_fa%.fna}.blastn.notnew.out | sed 's/-/ /g; s/, complete genome//g' >> ${vd_fa%.fna}.tax_guide.blastn.out
 				fi
 
-				if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid" ${vd_fa%.fna}.tax_guide.blastn.out ; then
+				if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid\|phage" ${vd_fa%.fna}.tax_guide.blastn.out ; then
 					echo $vd_fa "$(tput setaf 4) is closely related to a virus that has already been deposited in GenBank nt. $(tput sgr 0)"
 					cp ${vd_fa%.fna}.tax_guide.blastn.out ${vd_fa%.fna}.tax_guide.KNOWN_VIRUS.out
 

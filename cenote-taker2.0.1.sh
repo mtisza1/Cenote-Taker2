@@ -662,7 +662,7 @@ if [[ "$BLASTN_LIST" -gt 1 ]] || [[ "$BLASTN_LIST" == 1 ]] ;then
 						awk '{ print "; "$3 }' ${circle%.fasta}.blastn.notnew.out | sed 's/-/ /g; s/, complete genome//g' >> ${circle%.fasta}.tax_guide.blastn.out
 					fi
 
-					if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid" ${circle%.fasta}.tax_guide.blastn.out ; then
+					if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid\|phage" ${circle%.fasta}.tax_guide.blastn.out ; then
 						echo $circle "$(tput setaf 4) is closely related to a virus that has already been deposited in GenBank nt. $(tput sgr 0)"
 						cat ${circle%.fasta}.tax_guide.blastn.out
 						cp ${circle%.fasta}.tax_guide.blastn.out ${circle%.fasta}.tax_guide.KNOWN_VIRUS.out
