@@ -1654,9 +1654,14 @@ for i in sequin_directory/*.fsa ; do
 		echo $topologyq
 		tax_call=$( head -n1 $i | sed -e 's/.*organism=\(.*\)\] \[moltype=.*/\1/' )
 		echo $tax_call
-		blast_call=$( head -n1 $i | sed -e 's/.*closest relative: \(.*\)\] \[organism=.*/\1/' )
+		if grep -q "highly similar to sequence" $i ; then
+			blast_call1=$( head -n1 $i | sed -e 's/.*note=highly similar to sequence \(.*\)\] \[organism=.*/\1/' )
+			blast_call2=$( echo "CLOSE SIMILARITY TO:" $blast_call1 )
+		else
+			blast_call2=$( head -n1 $i | sed -e 's/.*closest relative: \(.*\)\] \[organism=.*/\1/' )
+		fi
 		echo $blast_call
-		length=$( bioawk -c fastx '{ print length}' $i )
+		length=$( bioawk -c fastx '{ print length($seq)}' $i )
 		echo length
 		j=${i%.fsa} ; 
 		DOMAIN_COUNT=$( cat ${j#sequin_directory/}.rotate.AA.called_hmmscan.txt | wc -l )
@@ -1666,7 +1671,7 @@ for i in sequin_directory/*.fsa ; do
 			BLASTN_REPORT="no blastn"
 		fi
 		#title=$( cat $site | awk '{print $1}' )
-		echo -e $site "\t""Complete genome (putative)""\t" $df_num "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call "\t" $BLASTN_REPORT >> ${run_title}.tsv
+		echo -e $site "\t""Complete genome (putative)""\t" $df_num "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call2 "\t" $BLASTN_REPORT >> ${run_title}.tsv
 	fi
 done
 
@@ -1691,7 +1696,7 @@ for i in no_end_contigs_with_viral_domain/sequin_directory/*.fsa ; do
 			blast_call2=$( head -n1 $i | sed -e 's/.*closest relative: \(.*\)\] \[organism=.*/\1/' )
 		fi
 		echo $blast_call
-		length=$( bioawk -c fastx '{ print length}' $i )
+		length=$( bioawk -c fastx '{ print length($seq)}' $i )
 		echo $length
 		j=${i%.fsa} ; 
 		DOMAIN_COUNT=$( cat no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.AA.hmmscan2.sort.out | wc -l )
