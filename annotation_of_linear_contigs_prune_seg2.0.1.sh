@@ -639,12 +639,12 @@ for feat_tbl2 in *_vs[0-9].comb3.tbl ; do
 			TAX_ORF=$( grep -i -B1 "tail" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
 		else TAX_ORF="No_suitable_orf"
 		fi
-		if [ $TAX_ORF == "No_suitable_orf" ] ; then
+		if [ "$TAX_ORF" == "No_suitable_orf" ] ; then
 			echo "TAX_ORF is empty"
-		elif [ $TAX_ORF == "Conjugative Transposon" ] ; then
+		elif [ "$TAX_ORF" == "Conjugative Transposon" ] ; then
 			echo "${feat_tbl2%.comb3.tbl} looks like a conjugative transposon"
 			echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
-		elif [ $TAX_ORF == "Inoviridae" ] ; then
+		elif [ "$TAX_ORF" == "Inoviridae" ] ; then
 			echo "${feat_tbl2%.comb3.tbl} looks like an Inovirus"
 			echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 		else

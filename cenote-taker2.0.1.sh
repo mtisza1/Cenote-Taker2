@@ -1062,12 +1062,12 @@ for feat_tbl2 in *.comb3.tbl ; do
 
 
 		fi
-		if [ $TAX_ORF == "No_suitable_orf" ] ; then
+		if [ "$TAX_ORF" == "No_suitable_orf" ] ; then
 			echo "No suitable taxomic ORF for ${feat_tbl2%.comb3.tbl}"
-		elif [ $TAX_ORF == "Conjugative Transposon" ] ; then
+		elif [ "$TAX_ORF" == "Conjugative Transposon" ] ; then
 			echo "${feat_tbl2%.comb3.tbl} looks like a conjugative transposon"
 			echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
-		elif [ $TAX_ORF == "Inoviridae" ] ; then
+		elif [ "$TAX_ORF" == "Inoviridae" ] ; then
 			echo "${feat_tbl2%.comb3.tbl} looks like an Inovirus"
 			echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 		else
