@@ -54,7 +54,7 @@ bash cenote_install1.sh /path/to/better/directory
 ```
 
 
-![alt text](https://github.com/mtisza1/Cenote-Taker2/blob/master/cenote-taker2_schematic_190920.png)
+![alt text](https://github.com/mtisza1/Cenote-Taker2/blob/master/cenote-taker_figure_200318.png)
 
 # Running Cenote-Taker2
 Cenote-Taker2 currently runs in a python wrapper. 
