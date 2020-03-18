@@ -231,15 +231,15 @@ original_fastas=$( ls *.fasta )
 if [ -z "$original_fastas" ] ; then
 	echo "$(tput setaf 4)No circular fasta files detected. $(tput sgr 0)" 
 	#exit
-	mkdir noncircular_contigs	
+	mkdir other_contigs	
 	if [ ${original_contigs: -6} == ".fasta" ]; then
-		grep -A1 "^>" ../${original_contigs%.fasta}.over_${circ_length_cutoff}nt.fasta | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > noncircular_contigs/all_non_circular.fasta
+		grep -A1 "^>" ../${original_contigs%.fasta}.over_${circ_length_cutoff}nt.fasta | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > other_contigs/all_non_circular.fasta
 	elif [ ${original_contigs: -6} == ".fastg" ]; then
-		grep -A1 "^>" ../${original_contigs%.fastg}.over_${circ_length_cutoff}nt.fasta | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > noncircular_contigs/all_non_circular.fasta
+		grep -A1 "^>" ../${original_contigs%.fastg}.over_${circ_length_cutoff}nt.fasta | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > other_contigs/all_non_circular.fasta
 	fi			
-	if [ -s noncircular_contigs/all_non_circular.fasta ] ; then
-		grep "^>" noncircular_contigs/all_non_circular.fasta | sed 's/>//g' | cut -d " " -f1 | while read LINE ; do 
-			grep -A1 "$LINE [a-zA-Z]" noncircular_contigs/all_non_circular.fasta > noncircular_contigs/$LINE.fasta ; 
+	if [ -s other_contigs/all_non_circular.fasta ] ; then
+		grep "^>" other_contigs/all_non_circular.fasta | sed 's/>//g' | cut -d " " -f1 | while read LINE ; do 
+			grep -A1 "$LINE [a-zA-Z]" other_contigs/all_non_circular.fasta > other_contigs/$LINE.fasta ; 
 		done
 	fi
 else
@@ -248,19 +248,19 @@ else
 # Putting non-circular contigs in a separate directory
 	echo "$(tput setaf 4)Putting non-circular contigs in a separate directory $(tput sgr 0)" 
 
-	mkdir noncircular_contigs
+	mkdir other_contigs
 
 	for CIRCLE in $original_fastas ; do
 		grep "^>" $CIRCLE | sed 's/|.*//g' >> circular_contigs_spades_names.txt
 	done
 	if [ ${original_contigs: -6} == ".fasta" ]; then
-		grep -v -f circular_contigs_spades_names.txt ../${original_contigs%.fasta}.over_${circ_length_cutoff}nt.fasta | grep -A1 "^>" | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > noncircular_contigs/all_non_circular.fasta
+		grep -v -f circular_contigs_spades_names.txt ../${original_contigs%.fasta}.over_${circ_length_cutoff}nt.fasta | grep -A1 "^>" | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > other_contigs/all_non_circular.fasta
 	elif [ ${original_contigs: -6} == ".fastg" ]; then
-		grep -v -f circular_contigs_spades_names.txt ../${original_contigs%.fastg}.over_${circ_length_cutoff}nt.fasta | grep -A1 "^>" | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > noncircular_contigs/all_non_circular.fasta
+		grep -v -f circular_contigs_spades_names.txt ../${original_contigs%.fastg}.over_${circ_length_cutoff}nt.fasta | grep -A1 "^>" | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > other_contigs/all_non_circular.fasta
 	fi
-	if [ -s noncircular_contigs/all_non_circular.fasta ] ; then
-		grep "^>" noncircular_contigs/all_non_circular.fasta | sed 's/>//g' | cut -d " " -f1 | while read LINE ; do 
-			grep -A1 "$LINE [a-zA-Z]" noncircular_contigs/all_non_circular.fasta > noncircular_contigs/$LINE.fasta ; 
+	if [ -s other_contigs/all_non_circular.fasta ] ; then
+		grep "^>" other_contigs/all_non_circular.fasta | sed 's/>//g' | cut -d " " -f1 | while read LINE ; do 
+			grep -A1 "$LINE [a-zA-Z]" other_contigs/all_non_circular.fasta > other_contigs/$LINE.fasta ; 
 		done
 	fi
 
@@ -268,7 +268,7 @@ fi
 # Looking for ITRs in non-circular contigs
 echo "$(tput setaf 4)Looking for ITRs in non-circular contigs $(tput sgr 0)" 
 
-cd noncircular_contigs
+cd other_contigs
 CONTIGS_NON_CIRCULAR=$( ls *[0-9].fasta )
 
 if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
@@ -615,7 +615,7 @@ if [ -n "$CIRCLES_AND_ITRS" ]; then
 	done
 fi
 
-cat *.no_baits.fna >> noncircular_contigs/non_viral_domains_contigs.fna
+cat *.no_baits.fna >> other_contigs/non_viral_domains_contigs.fna
 # 5 blastn
 
 
@@ -1662,6 +1662,8 @@ for i in sequin_directory/*.fsa ; do
 		DOMAIN_COUNT=$( cat ${j#sequin_directory/}.rotate.AA.called_hmmscan.txt | wc -l )
 		if [ -s ${j#sequin_directory/}.blastn.out ] ; then
 			BLASTN_REPORT=$( head -n1 ${j#sequin_directory/}.blastn.out )
+		else
+			BLASTN_REPORT="no blastn"
 		fi
 		#title=$( cat $site | awk '{print $1}' )
 		echo -e $site "\t""Complete genome (putative)""\t" $df_num "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call "\t" $BLASTN_REPORT >> ${run_title}.tsv
@@ -1695,6 +1697,8 @@ for i in no_end_contigs_with_viral_domain/sequin_directory/*.fsa ; do
 		DOMAIN_COUNT=$( cat no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.AA.hmmscan2.sort.out | wc -l )
 		if [ -s no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.blastn.out ] ; then
 			BLASTN_REPORT=$( head -n1 no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.blastn.out )
+		else
+			BLASTN_REPORT="no blastn"
 		fi
 		echo -e $site "\t""Partial genome (putative)""\t" $df_num "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call2 "\t" $BLASTN_REPORT >> ${run_title}.tsv
 	fi
@@ -1706,7 +1710,7 @@ echo "removing ancillary files"
 
 rm *.all_start_stop.txt *.bad_starts.txt *.comb.tbl *.comb2.tbl *.good_start_orfs.txt *.hypo_start_stop.txt *.nucl_orfs.fa *.remove_hypo.txt *.log *.promer.contigs_with_ends.fa *.promer.promer *.out.hhr *.starting_orf.txt *.out.hhr *.nucl_orfs.txt *.called_hmmscan.txt *.hmmscan_replicate.out *.hmmscan.out *.rotate.no_hmmscan.fasta *.starting_orf.1.fa *.phan.*fasta 
 rm -r bt2_indices/
-rm noncircular_contigs/*.AA.fasta noncircular_contigs/*.AA.sorted.fasta noncircular_contigs/*.out noncircular_contigs/*.dat noncircular_contigs/*called_hmmscan.txt 
+rm other_contigs/*.AA.fasta other_contigs/*.AA.sorted.fasta other_contigs/*.out other_contigs/*.dat other_contigs/*called_hmmscan.txt 
 rm no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta no_end_contigs_with_viral_domain/*.comb*.tbl 
 echo " "
 echo "$(tput setaf 3) "$run_title" $(tput sgr 0)"

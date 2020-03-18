@@ -3,8 +3,8 @@
 echo "$(tput setaf 5) Starting Sketch of putatively non-viral contigs $(tput sgr 0)"
 
 cd $base_directory/$run_title
-mkdir noncircular_non_viral_domain_contig_sketches
-cd noncircular_contigs/
+mkdir non_viral_domain_contig_sketches
+cd other_contigs/
 
 
 if [ -z noncircular_non_viral_domains_contigs.fna ] ; then
@@ -12,11 +12,11 @@ if [ -z noncircular_non_viral_domains_contigs.fna ] ; then
 else
 	grep "^>" noncircular_non_viral_domains_contigs.fna | sed 's/>//g' | while read LINE ; do
 		CONTIG_NAME=$( echo $LINE | cut -f1 -d " " ) 
-		grep -A1 "$LINE" noncircular_non_viral_domains_contigs.fna | sed '/--/d' > ../noncircular_non_viral_domain_contig_sketches/$CONTIG_NAME.fasta ; 
+		grep -A1 "$LINE" noncircular_non_viral_domains_contigs.fna | sed '/--/d' > ../non_viral_domain_contig_sketches/$CONTIG_NAME.fasta ; 
 	done
 
 
-	cd ../noncircular_non_viral_domain_contig_sketches
+	cd ../non_viral_domain_contig_sketches
 
 	NUCL_FILES_LIST=$( ls *.fasta )
 	for NUCL_FILES in $NUCL_FILES_LIST ; do

@@ -1,6 +1,9 @@
 # Cenote-Taker2
 Cenote-Taker2 is a pipeline for divergent virus discovery and annotation. See schematic.
 The code is currently functional.
+An ulterior motive for creating and distributing Cenote-Taker2 is to facilitate annotation and deposition of viral genomes into GenBank where they can be used by the scientific public. Therefore, I hope you consider depositing the submittable outputs (.sqn) after reviewing them. I am not affiliated with GenBank.
+
+![alt text](https://github.com/mtisza1/Cenote-Taker2/blob/master/cenote-taker_logo.png)
 
 # Install Using Conda
 
@@ -8,14 +11,14 @@ The code is currently functional.
 **The Five Commandments
 **1. Know where your default conda environment install space is.
 **2. Ensure you have space for all 130GB of files.
-**3. Don't install without checking conda first.
-**4. Only install on an HPC unless your personal computer has sick specs.
+**3. Don't install without checking conda version first.
+**4. Only install on an HPC running on Linux, unless your personal computer has sick specs.
 **5. Don't let your computer fall asleep during the install
 ```
 
 Likely, this will only work in Linux. 
-Using a HPC with at least 16 CPUs and 16g of dedicated memory is strongly recommended. 
-I usually use 32 CPUs and 32 to 80 GB of memory for medium and large metagenomes.
+Using a HPC with at least 16 CPUs and 16g of dedicated memory is strongly recommended. (Annotation of a few selected genomes can be done with less memory/CPU) 
+I usually use 32 CPUs and 32 GB of memory for medium and large metagenomes. More resources would be helpful for extra-large metagenomes.
 ```diff
 - ALERT *** Because Cenote-Taker2 needs large high-quality 
 - sequence databases to work correctly, installation will take ~2 hours 
@@ -33,7 +36,7 @@ conda -V
 wget  https://raw.githubusercontent.com/mtisza1/Cenote-Taker2/master/install_scripts/cenote_install1.sh
 ```
 4. Run the install script. Give exactly one argument in the script: 'default' - OR - a path to the desired conda environment setup directory. 
-The conda environment itself requires 32GB of space mostly due to the krona taxonomy database. Some HPC users have installed their Conda in their /home directory which typically has little space. The other 100GB consists of sequence databases and will be put within the current directory
+The conda environment itself requires 32GB of space mostly due to the krona taxonomy database. Some HPC users have installed their Conda in their /home directory (or equivalent) which typically has little space. The other 100GB consists of sequence databases and will be put within the current directory
 ```diff
 - ALERT *** Because Cenote-Taker2 needs large high-quality 
 - sequence databases to work correctly, running this script will take ~2 hours 
@@ -77,32 +80,32 @@ usage: run_cenote-taker2.0.1.py [-h]
                           --prune_prophage PROPHAGE 
                           --mem MEM 
                           --cpu CPU
-                          [--reads1 F_READS] 
-                          [--reads2 R_READS]
-                          [--isolation_source ISOLATION_SOURCE]
-                          [--Environmental_sample ENVIRONMENTAL_SAMPLE]
-                          [--collection_date COLLECTION_DATE]
-                          [--metagenome_type METAGENOME_TYPE]
-                          [--srr_number SRR_NUMBER]
-                          [--srx_number SRX_NUMBER]
-                          [--biosample BIOSAMPLE]
-                          [--bioproject BIOPROJECT]
-                          [--handle_contigs_without_hallmark HANDLE_NONVIRAL]
-                          [--minimum_length_circular CIRC_LENGTH_CUTOFF]
-                          [--minimum_length_linear LINEAR_LENGTH_CUTOFF]
-                          [--virus_domain_db VIRUS_DOMAIN_DB]
-                          [--lin_minimum_hallmark_genes LIN_MINIMUM_DOMAINS]
-                          [--circ_minimum_hallmark_genes CIRC_MINIMUM_DOMAINS]
-                          [--known_strains HANDLE_KNOWNS]
-                          [--blastn_db BLASTN_DB]
-                          [--assembler ASSEMBLER]
-                          [--molecule_type MOLECULE_TYPE]
-                          [--hhsuite_tool HHSUITE_TOOL]
-                          [--data_source DATA_SOURCE]
-                          [--filter_out_plasmids FILTER_PLASMIDS]
-                          [--blastp BLASTP]
-                          [--enforce_start_codon ENFORCE_START_CODON]
-                          [--scratch_directory SCRATCH_DIR]
+                                [--reads1 F_READS] 
+                                [--reads2 R_READS]
+                                [--minimum_length_circular CIRC_LENGTH_CUTOFF]
+                                [--minimum_length_linear LINEAR_LENGTH_CUTOFF]
+                                [--virus_domain_db VIRUS_DOMAIN_DB]
+                                [--lin_minimum_hallmark_genes LIN_MINIMUM_DOMAINS]
+                                [--circ_minimum_hallmark_genes CIRC_MINIMUM_DOMAINS]
+                                [--known_strains HANDLE_KNOWNS]
+                                [--blastn_db BLASTN_DB]
+                                [--enforce_start_codon ENFORCE_START_CODON]
+                                [--handle_contigs_without_hallmark HANDLE_NONVIRAL]
+                                [--hhsuite_tool HHSUITE_TOOL]
+                                [--isolation_source ISOLATION_SOURCE]
+                                [--Environmental_sample ENVIRONMENTAL_SAMPLE]
+                                [--collection_date COLLECTION_DATE]
+                                [--metagenome_type METAGENOME_TYPE]
+                                [--srr_number SRR_NUMBER]
+                                [--srx_number SRX_NUMBER]
+                                [--biosample BIOSAMPLE]
+                                [--bioproject BIOPROJECT]
+                                [--assembler ASSEMBLER]
+                                [--molecule_type MOLECULE_TYPE]
+                                [--data_source DATA_SOURCE]
+                                [--filter_out_plasmids FILTER_PLASMIDS]
+                                [--scratch_directory SCRATCH_DIR]
+                                [--blastp BLASTP]
 
 Cenote-Taker2 is a pipeline for virus discovery and thorough annotation of
 viral contigs and genomes.
@@ -129,9 +132,11 @@ optional arguments:
                         chromosomal regions from non-circular contigs with
                         viral hallmarks (True is highly recommended for
                         sequenced material not enriched for viruses. Virus
-                        enriched samples probably should be False)
+                        enriched samples probably should be False (you might
+                        check with ViromeQC). Also, please use False if
+                        --lin_minimum_hallmark_genes is set to 0)
   --mem MEM             example: 56 Gigabytes of memory available for Cenote-
-                        Taker2. Typically, 32 to 80 should be used. Lower
+                        Taker2. Typically, 16 to 32 should be used. Lower
                         memory will work in theory, but could extend the
                         length of the run
   --cpu CPU             Example: 32 Number of CPUs available for Cenote-
@@ -148,47 +153,12 @@ optional arguments:
   --reads2 R_READS      Default: no_reads ILLUMINA READS ONLY: Second Read
                         file in paired read set. Disregard if not using paired
                         reads. Used for coverage depth determination.
-  --isolation_source ISOLATION_SOURCE
-                        Default: unknown Describes the local geographical
-                        source of the organism from which the sequence was
-                        derived
-  --Environmental_sample ENVIRONMENTAL_SAMPLE
-                        Default: False True or False, Identifies sequence
-                        derived by direct molecular isolation from an
-                        unidentified organism
-  --collection_date COLLECTION_DATE
-                        Default: unknown Date of collection. this format:
-                        01-Jan-2019, i.e. DD-Mmm-YYYY
-  --metagenome_type METAGENOME_TYPE
-                        Default: unknown a.k.a. metagenome_source
-  --srr_number SRR_NUMBER
-                        Default: unknown For read data on SRA, run number,
-                        usually beginning with 'SRR' or 'ERR'
-  --srx_number SRX_NUMBER
-                        Default: unknown For read data on SRA, experiment
-                        number, usually beginning with 'SRX' or 'ERX'
-  --biosample BIOSAMPLE
-                        Default: unknown For read data on SRA, sample number,
-                        usually beginning with 'SAMN' or 'SAMEA' or 'SRS'
-  --bioproject BIOPROJECT
-                        Default: unknown For read data on SRA, project number,
-                        usually beginning with 'PRJNA' or 'PRJEB'
-  --handle_contigs_without_hallmark HANDLE_NONVIRAL
-                        Default: no_sketch_domainless What do you want to do
-                        with contigs that do not have detectable viral
-                        hallmark features? 'no_sketch_domainless': do nothing,
-                        report sequences in file. 'sketch_all': call ORFs with
-                        RPSBLAST/CDD and tRNA scan only (Could add substantial
-                        time to run, especially without phyical or
-                        computational viral enrichment).
   --minimum_length_circular CIRC_LENGTH_CUTOFF
                         Default: 1000 Minimum length of contigs to be checked
                         for circularity. Bare minimun is 1000 nts
   --minimum_length_linear LINEAR_LENGTH_CUTOFF
                         Default: 1000 Minimum length of non-circualr contigs
-                        to be checked for viral hallmark genes. Bare minimun
-                        is 1000 nts. Also, cannot be shorter than argument
-                        given for --minimum_length_circular
+                        to be checked for viral hallmark genes.
   --virus_domain_db VIRUS_DOMAIN_DB
                         default: standard 'standard' database: mostly DNA
                         virus hallmark genes (i.e. genes with known function
@@ -232,12 +202,22 @@ optional arguments:
                         database downloaded from ftp://ftp.ncbi.nlm.nih.gov/
                         or another GenBank formatted .fasta file to make
                         databse
-  --assembler ASSEMBLER
-                        Default: unknown_assembler Assembler used to generate
-                        contigs, if applicable. Specify version of assembler
-                        software, if possible.
-  --molecule_type MOLECULE_TYPE
-                        Default: DNA viable options are DNA - OR - RNA
+  --enforce_start_codon ENFORCE_START_CODON
+                        Default: True For final genome maps, require ORFs to
+                        be initiated by a typical start codon? GenBank
+                        submissions containing ORFs without start codons can
+                        be rejected. However, if True, important but
+                        incomplete genes could be culled from the final
+                        output. This is relevant mainly to contigs of
+                        incomplete genomes
+  --handle_contigs_without_hallmark HANDLE_NONVIRAL
+                        Default: no_sketch_domainless What do you want to do
+                        with contigs that do not have detectable viral
+                        hallmark features? 'no_sketch_domainless': do nothing,
+                        report sequences in file. 'sketch_all': annotate ORFs
+                        with RPSBLAST/CDD and tRNA scan only (Could still add
+                        substantial time to run, especially without phyical or
+                        computational viral enrichment).
   --hhsuite_tool HHSUITE_TOOL
                         default: hhblits hhblits will query PDB, pfam, and CDD
                         to annotate ORFs escaping identification via upstream
@@ -249,6 +229,37 @@ optional arguments:
                         times over. Do not use on large input contig files).
                         'no_hhsuite_tool': forgoes annotation of ORFs with
                         hhsuite. Fastest way to complete a run.
+  --isolation_source ISOLATION_SOURCE
+                        Default: unknown Describes the local geographical
+                        source of the organism from which the sequence was
+                        derived
+  --Environmental_sample ENVIRONMENTAL_SAMPLE
+                        Default: False True or False, Identifies sequence
+                        derived by direct molecular isolation from an
+                        unidentified organism
+  --collection_date COLLECTION_DATE
+                        Default: unknown Date of collection. this format:
+                        01-Jan-2019, i.e. DD-Mmm-YYYY
+  --metagenome_type METAGENOME_TYPE
+                        Default: unknown a.k.a. metagenome_source
+  --srr_number SRR_NUMBER
+                        Default: unknown For read data on SRA, run number,
+                        usually beginning with 'SRR' or 'ERR'
+  --srx_number SRX_NUMBER
+                        Default: unknown For read data on SRA, experiment
+                        number, usually beginning with 'SRX' or 'ERX'
+  --biosample BIOSAMPLE
+                        Default: unknown For read data on SRA, sample number,
+                        usually beginning with 'SAMN' or 'SAMEA' or 'SRS'
+  --bioproject BIOPROJECT
+                        Default: unknown For read data on SRA, project number,
+                        usually beginning with 'PRJNA' or 'PRJEB'
+  --assembler ASSEMBLER
+                        Default: unknown_assembler Assembler used to generate
+                        contigs, if applicable. Specify version of assembler
+                        software, if possible.
+  --molecule_type MOLECULE_TYPE
+                        Default: DNA viable options are DNA - OR - RNA
   --data_source DATA_SOURCE
                         default: original original data is not taken from
                         other researchers' public or private database.
@@ -259,16 +270,8 @@ optional arguments:
                         Default: True True - OR - False. If True, hallmark
                         genes of plasmids will not count toward the minimum
                         hallmark gene parameters. If False, hallmark genes of
-                        plasmids will count.
-  --blastp BLASTP       Do BLASTP?
-  --enforce_start_codon ENFORCE_START_CODON
-                        Default: True For final genome maps, require ORFs to
-                        be initiated by a typical start codon? GenBank
-                        submissions containing ORFs without start codons can
-                        be rejected. However, if True, important but
-                        incomplete genes could be culled from the final
-                        output. This is relevant mainly to contigs of
-                        incomplete genomes
+                        plasmids will count. Plasmid hallmark gene set is not
+                        necessarily comprehensive at this time.
   --scratch_directory SCRATCH_DIR
                         Default: none When running many instances of Cenote-
                         Taker2, it seems to run more quickly if you copy the
@@ -276,6 +279,7 @@ optional arguments:
                         this argument to set a scratch directory that the
                         databases will be copied to (at least 100GB of scratch
                         space are required for copying the databases)
+  --blastp BLASTP       Do not use this argument as of now.
 ```
 
 ![alt text](https://github.com/mtisza1/Cenote-Taker2/blob/master/cenote-taker2_directory_tree2.png)
