@@ -7,12 +7,12 @@ mkdir non_viral_domain_contig_sketches
 cd other_contigs/
 
 
-if [ -z noncircular_non_viral_domains_contigs.fna ] ; then
-	echo "$(tput setaf 5)There are no contigs in the noncircular_non_viral_domains_contigs.fna file, exiting module $(tput sgr 0)"
+if [ -z non_viral_domains_contigs.fna ] ; then
+	echo "$(tput setaf 5)There are no contigs in the non_viral_domains_contigs.fna file, exiting module $(tput sgr 0)"
 else
-	grep "^>" noncircular_non_viral_domains_contigs.fna | sed 's/>//g' | while read LINE ; do
+	grep "^>" non_viral_domains_contigs.fna | sed 's/>//g' | while read LINE ; do
 		CONTIG_NAME=$( echo $LINE | cut -f1 -d " " ) 
-		grep -A1 "$LINE" noncircular_non_viral_domains_contigs.fna | sed '/--/d' > ../non_viral_domain_contig_sketches/$CONTIG_NAME.fasta ; 
+		grep -A1 "$LINE" non_viral_domains_contigs.fna | sed '/--/d' > ../non_viral_domain_contig_sketches/$CONTIG_NAME.fasta ; 
 	done
 
 
