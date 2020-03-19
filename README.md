@@ -1,7 +1,7 @@
 # Cenote-Taker2
 Cenote-Taker2 is a pipeline for divergent virus discovery and annotation. See schematic.
 The code is currently functional.
-An ulterior motive for creating and distributing Cenote-Taker2 is to facilitate annotation and deposition of viral genomes into GenBank where they can be used by the scientific public. Therefore, I hope you consider depositing the submittable outputs (.sqn) after reviewing them. I am not affiliated with GenBank.
+An ulterior motive for creating and distributing Cenote-Taker2 is to facilitate annotation and deposition of viral genomes into GenBank where they can be used by the scientific public. Therefore, I hope you consider depositing the submittable outputs (.sqn) after reviewing them. I am not affiliated with GenBank. See the [Cenote-Taker2 wiki](https://github.com/mtisza1/Cenote-Taker2/wiki) for useful information on using the pipeline (e.g. expected outputs) and screeds on myriad topics.
 
 ![alt text](https://github.com/mtisza1/Cenote-Taker2/blob/master/cenote-taker_logo.png)
 
