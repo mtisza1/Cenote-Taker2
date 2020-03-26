@@ -1116,518 +1116,515 @@ done
 # .gtf file maker
 echo "$(tput setaf 5) Making .gff files for each annotated sequence $(tput sgr 0)"
 
-for feat_tbl2 in *.comb3.tbl ; do
-	if [ -s ${feat_tbl2%.comb3.tbl}.gtf ] ; then
-		rm ${feat_tbl2%.comb3.tbl}.gtf
-	fi
-	grep "^[0-9]" -A3 $feat_tbl2 | sed '/--/d' | sed 's/ /_/g' | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n		//g' | while read LINE ; do
-		if echo $LINE | grep -q "CDS" ; then
-			GENOME=${feat_tbl2%.comb3.tbl}
-			FEAT_TYPE=$( echo $LINE | cut -d " " -f3 )
-			FEAT_START=$( echo $LINE | cut -d " " -f1 )
-			FEAT_END=$( echo $LINE | cut -d " " -f2 )
-			FEAT_NAME=$( echo $LINE | cut -d " " -f7 )
-			FEAT_ATT=$( echo $LINE | cut -d " " -f9 )
-			FEAT_ID=$( echo $LINE | cut -d " " -f5 )
-		elif echo $LINE | grep -q "repeat_region" ; then
-			GENOME=${feat_tbl2%.comb3.tbl}
-			FEAT_TYPE=$( echo $LINE | cut -d " " -f3 )
-			FEAT_START=$( echo $LINE | cut -d " " -f1 )
-			FEAT_END=$( echo $LINE | cut -d " " -f2 )
-			FEAT_NAME="ITR"
-			FEAT_ATT="ITR"
-			FEAT_ID="ITR"	
+COMB3_COUNT=$( ls ${run_title}*.comb3.tbl | wc -l )
+	if [[ $COMB3_COUNT -gt 0 ]] ; then
+	for feat_tbl2 in *.comb3.tbl ; do
+		if [ -s ${feat_tbl2%.comb3.tbl}.gtf ] ; then
+			rm ${feat_tbl2%.comb3.tbl}.gtf
 		fi
+		grep "^[0-9]" -A3 $feat_tbl2 | sed '/--/d' | sed 's/ /_/g' | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n		//g' | while read LINE ; do
+			if echo $LINE | grep -q "CDS" ; then
+				GENOME=${feat_tbl2%.comb3.tbl}
+				FEAT_TYPE=$( echo $LINE | cut -d " " -f3 )
+				FEAT_START=$( echo $LINE | cut -d " " -f1 )
+				FEAT_END=$( echo $LINE | cut -d " " -f2 )
+				FEAT_NAME=$( echo $LINE | cut -d " " -f7 )
+				FEAT_ATT=$( echo $LINE | cut -d " " -f9 )
+				FEAT_ID=$( echo $LINE | cut -d " " -f5 )
+			elif echo $LINE | grep -q "repeat_region" ; then
+				GENOME=${feat_tbl2%.comb3.tbl}
+				FEAT_TYPE=$( echo $LINE | cut -d " " -f3 )
+				FEAT_START=$( echo $LINE | cut -d " " -f1 )
+				FEAT_END=$( echo $LINE | cut -d " " -f2 )
+				FEAT_NAME="ITR"
+				FEAT_ATT="ITR"
+				FEAT_ID="ITR"	
+			fi
 
 
-		echo -e "$GENOME\t""Cenote-Taker\t""$FEAT_TYPE\t""$FEAT_START\t""$FEAT_END\t"".\t"".\t"".\t""gene_id \"$FEAT_ID\"; gene_name \"$FEAT_NAME\"; gene_inference \"$FEAT_ATT\"" >> ${feat_tbl2%.comb3.tbl}.gtf
+			echo -e "$GENOME\t""Cenote-Taker\t""$FEAT_TYPE\t""$FEAT_START\t""$FEAT_END\t"".\t"".\t"".\t""gene_id \"$FEAT_ID\"; gene_name \"$FEAT_NAME\"; gene_inference \"$FEAT_ATT\"" >> ${feat_tbl2%.comb3.tbl}.gtf
+		done
 	done
-done
 
-# Making directory for sequin generation
-if [ ! -d "sequin_directory" ]; then
-	mkdir sequin_directory
-fi
+	# Making directory for sequin generation
+	if [ ! -d "sequin_directory" ]; then
+		mkdir sequin_directory
+	fi
 
-# Getting info for virus nomenclature and divergence 
-echo "$(tput setaf 5) Getting info for virus nomenclature and divergence $(tput sgr 0)"
-MDYT=$( date +"%m-%d-%y---%T" )
-echo "time update: making nomeclature and fsa file " $MDYT
-for feat_tbl2 in *.comb3.tbl ; do 
-	file_core=${feat_tbl2%.comb3.tbl}
-	echo $file_core
-	file_numbers=$( echo ${file_core: -3} | sed 's/[a-z]//g' | sed 's/[A-Z]//g' )
-	echo $file_numbers
-	tax_info=${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
-	echo $tax_info
-	if grep -q "Anellovir" $tax_info ; then
-		vir_name=Anelloviridae ;
-	elif grep -q "Circovirus-like" $tax_info ; then
-		vir_name="CRESS virus" ;
-	elif grep -q "CRESS virus" $tax_info ; then
-		vir_name="CRESS virus" ;
-	elif grep -q "Adenovir" $tax_info ; then
-		vir_name=Adenoviridae ;
-	elif grep -q "Alphasatellit" $tax_info ; then
-		vir_name=Alphasatellitidae ;
-	elif grep -q "Ampullavir" $tax_info ; then
-		vir_name=Ampullaviridae ;
-	elif grep -q "Ascovir" $tax_info ; then
-		vir_name=Ascoviridae ;
-	elif grep -q "Asfarvir" $tax_info ; then
-		vir_name=Asfarviridae ;
-	elif grep -q "Bacilladnavir" $tax_info ; then
-		vir_name=Bacilladnaviridae ;
-	elif grep -q "Baculovir" $tax_info ; then
-		vir_name=Baculoviridae ;
-	elif grep -q "Bicaudavir" $tax_info ; then
-		vir_name=Bicaudaviridae ;
-	elif grep -q "Bidnavir" $tax_info ; then
-		vir_name=Bidnaviridae ;
-	elif grep -q "Ackermannvir" $tax_info ; then
-		vir_name=Ackermannviridae ;
-	elif grep -q "Herellevir" $tax_info ; then
-		vir_name=Herelleviridae ;
-	elif grep -q "Clavavir" $tax_info ; then
-		vir_name=Clavaviridae ;
-	elif grep -q "Adomavir" $tax_info ; then
-		vir_name=Adomaviridae ;
-	elif grep -q "Corticovir" $tax_info ; then
-		vir_name=Corticoviridae ;
-	elif grep -q "Dinodnavir" $tax_info ; then
-		vir_name=Dinodnavirus ;
-	elif grep -q "Autolykivir" $tax_info ; then
-		vir_name=Autolykiviridae ;
-	elif grep -q "Globulovir" $tax_info ; then
-		vir_name=Globuloviridae ;
-	elif grep -q "Pithovir" $tax_info ; then
-		vir_name=Pithoviridae ;
-	elif grep -q "Pandoravir" $tax_info ; then
-		vir_name=Pandoravirus ;
-	elif grep -q "Fusellovir" $tax_info ; then
-		vir_name=Fuselloviridae ;
-	elif grep -q "Guttavir" $tax_info ; then
-		vir_name=Guttaviridae ;
-	elif grep -q "Hepadnavir" $tax_info ; then
-		vir_name=Hepadnaviridae ;
-	elif grep -q "Herpesvir" $tax_info ; then
-		vir_name=Herpesvirales ;
-	elif grep -q "Hytrosavir" $tax_info ; then
-		vir_name=Hytrosaviridae ;
-	elif grep -q "Iridovir" $tax_info ; then
-		vir_name=Iridoviridae ;
-	elif grep -q "Lavidavir" $tax_info ; then
-		vir_name=Lavidaviridae ;
-	elif grep -q "Adintovir" $tax_info ; then
-		vir_name=Adintovirus ;
-	elif grep -q "Lipothrixvir" $tax_info ; then
-		vir_name=Lipothrixviridae ;
-	elif grep -q "Rudivir" $tax_info ; then
-		vir_name=Rudiviridae ;
-	elif grep -q "Ligamenvir" $tax_info ; then
-		vir_name=Ligamenvirales ;
-	elif grep -q "Marseillevir" $tax_info ; then
-		vir_name=Marseilleviridae ;
-	elif grep -q "Mimivir" $tax_info ; then
-		vir_name=Mimiviridae ;
-	elif grep -q "Nanovir" $tax_info ; then
-		vir_name=Nanoviridae ;
-	elif grep -q "Nimavir" $tax_info ; then
-		vir_name=Nimaviridae ;
-	elif grep -q "Nudivir" $tax_info ; then
-		vir_name=Nudiviridae ;
-	elif grep -q "Caulimovir" $tax_info ; then
-		vir_name=Caulimoviridae ;
-	elif grep -q "Metavir" $tax_info ; then
-		vir_name=Metaviridae ;
-	elif grep -q "Pseudovir" $tax_info ; then
-		vir_name=Pseudoviridae ;
-	elif grep -q "Retrovir" $tax_info ; then
-		vir_name=Retroviridae ;
-	elif grep -q "Ovalivir" $tax_info ; then
-		vir_name=Ovaliviridae ;
-	elif grep -q "Parvovir" $tax_info ; then
-		vir_name=Parvoviridae ;
-	elif grep -q "Phycodnavir" $tax_info ; then
-		vir_name=Phycodnaviridae ;
-	elif grep -q "Plasmavir" $tax_info ; then
-		vir_name=Plasmaviridae ;
-	elif grep -q "Pleolipovir" $tax_info ; then
-		vir_name=Pleolipoviridae ;
-	elif grep -q "Polydnavir" $tax_info ; then
-		vir_name=Polydnaviridae ;
-	elif grep -q "Portoglobovir" $tax_info ; then
-		vir_name=Portogloboviridae ;
-	elif grep -q "Poxvir" $tax_info ; then
-		vir_name=Poxviridae ;
-	elif grep -q "Albetovir" $tax_info ; then
-		vir_name=Albetoviridae ;
-	elif grep -q "Alphatetravir" $tax_info ; then
-		vir_name=Alphatetraviridae ;
-	elif grep -q "Alvernavir" $tax_info ; then
-		vir_name=Alvernaviridae ;
-	elif grep -q "Amalgavir" $tax_info ; then
-		vir_name=Amalgaviridae ;
-	elif grep -q "Astrovir" $tax_info ; then
-		vir_name=Astroviridae ;
-	elif grep -q "Aumaivir" $tax_info ; then
-		vir_name=Aumaivirus ;
-	elif grep -q "Avsunviroid" $tax_info ; then
-		vir_name=Avsunviroidae ;
-	elif grep -q "Barnavir" $tax_info ; then
-		vir_name=Barnaviridae ;
-	elif grep -q "Benyvir" $tax_info ; then
-		vir_name=Benyviridae ;
-	elif grep -q "Birnavir" $tax_info ; then
-		vir_name=Birnaviridae ;
-	elif grep -q "Botourmiavir" $tax_info ; then
-		vir_name=Botourmiaviridae ;
-	elif grep -q "Botybirnavir" $tax_info ; then
-		vir_name=Botybirnavirus ;
-	elif grep -q "Bromovir" $tax_info ; then
-		vir_name=Bromoviridae ;
-	elif grep -q "Calicivir" $tax_info ; then
-		vir_name=Caliciviridae ;
-	elif grep -q "Carmotetravir" $tax_info ; then
-		vir_name=Carmotetraviridae ;
-	elif grep -q "Chrysovir" $tax_info ; then
-		vir_name=Chrysoviridae ;
-	elif grep -q "Closterovir" $tax_info ; then
-		vir_name=Closteroviridae ;
-	elif grep -q "Cystovir" $tax_info ; then
-		vir_name=Cystoviridae ;
-	elif grep -q "Deltavir" $tax_info ; then
-		vir_name=Deltavirus ;
-	elif grep -q "Endornavir" $tax_info ; then
-		vir_name=Endornaviridae ;
-	elif grep -q "Flavivir" $tax_info ; then
-		vir_name=Flaviviridae ;
-	elif grep -q "Hepevir" $tax_info ; then
-		vir_name=Hepeviridae ;
-	elif grep -q "Hypovir" $tax_info ; then
-		vir_name=Hypoviridae ;
-	elif grep -q "Idaeovir" $tax_info ; then
-		vir_name=Idaeovirus ;
-	elif grep -q "Kitavir" $tax_info ; then
-		vir_name=Kitaviridae ;
-	elif grep -q "Levivir" $tax_info ; then
-		vir_name=Leviviridae ;
-	elif grep -q "Luteovir" $tax_info ; then
-		vir_name=Luteoviridae ;
-	elif grep -q "Matonavir" $tax_info ; then
-		vir_name=Matonaviridae ;
-	elif grep -q "Megabirnavir" $tax_info ; then
-		vir_name=Megabirnaviridae ;
-	elif grep -q "Narnavir" $tax_info ; then
-		vir_name=Narnaviridae ;
-	elif grep -q "Nidovir" $tax_info ; then
-		vir_name=Nidovirales ;
-	elif grep -q "Nodavir" $tax_info ; then
-		vir_name=Nodaviridae ;
-	elif grep -q "Papanivir" $tax_info ; then
-		vir_name=Papanivirus ;
-	elif grep -q "Partitivir" $tax_info ; then
-		vir_name=Partitiviridae ;
-	elif grep -q "Permutotetravir" $tax_info ; then
-		vir_name=Permutotetraviridae ;
-	elif grep -q "Picobirnavir" $tax_info ; then
-		vir_name=Picobirnaviridae ;
-	elif grep -q "Dicistrovir" $tax_info ; then
-		vir_name=Dicistroviridae ;
-	elif grep -q "Iflavir" $tax_info ; then
-		vir_name=Iflaviridae ;
-	elif grep -q "Marnavir" $tax_info ; then
-		vir_name=Marnaviridae ;
-	elif grep -q "Picornavir" $tax_info ; then
-		vir_name=Picornaviridae ;
-	elif grep -q "Polycipivir" $tax_info ; then
-		vir_name=Polycipiviridae ;
-	elif grep -q "Secovir" $tax_info ; then
-		vir_name=Secoviridae ;
-	elif grep -q "Picornavir" $tax_info ; then
-		vir_name=Picornavirales ;
-	elif grep -q "Pospiviroid" $tax_info ; then
-		vir_name=Pospiviroidae ;
-	elif grep -q "Polinton-like virus" $tax_info ; then
-		vir_name="Polinton-like virus" ;
-	elif grep -q "Potyvir" $tax_info ; then
-		vir_name=Potyviridae ;
-	elif grep -q "Quadrivir" $tax_info ; then
-		vir_name=Quadriviridae ;
-	elif grep -q "Reovir" $tax_info ; then
-		vir_name=Reoviridae ;
-	elif grep -q "Sarthrovir" $tax_info ; then
-		vir_name=Sarthroviridae ;
-	elif grep -q "Sinaivir" $tax_info ; then
-		vir_name=Sinaivirus ;
-	elif grep -q "Solemovir" $tax_info ; then
-		vir_name=Solemoviridae ;
-	elif grep -q "Solinvivir" $tax_info ; then
-		vir_name=Solinviviridae ;
-	elif grep -q "Togavir" $tax_info ; then
-		vir_name=Togaviridae ;
-	elif grep -q "Tombusvir" $tax_info ; then
-		vir_name=Tombusviridae ;
-	elif grep -q "Totivir" $tax_info ; then
-		vir_name=Totiviridae ;
-	elif grep -q "Tymovir" $tax_info ; then
-		vir_name=Tymovirales ;
-	elif grep -q "Virgavir" $tax_info ; then
-		vir_name=Virgaviridae ;
-	elif grep -q "Virtovir" $tax_info ; then
-		vir_name=Virtovirus ;
-	elif grep -q "Salterprovir" $tax_info ; then
-		vir_name=Salterprovirus ;
-	elif grep -q "Smacovir" $tax_info ; then
-		vir_name=Smacoviridae ;
-	elif grep -q "Sphaerolipovir" $tax_info ; then
-		vir_name=Sphaerolipoviridae ;
-	elif grep -q "Spiravir" $tax_info ; then
-		vir_name=Spiraviridae ;
-	elif grep -q "Crucivir" $tax_info ; then
-		vir_name=Cruciviridae ;
-	elif grep -q "Tectivir" $tax_info ; then
-		vir_name=Tectiviridae ;
-	elif grep -q "Tolecusatellit" $tax_info ; then
-		vir_name=Tolecusatellitidae ;
-	elif grep -q "Tristromavir" $tax_info ; then
-		vir_name=Tristromaviridae ;
-	elif grep -q "Turrivir" $tax_info ; then
-		vir_name=Turriviridae ;
-	elif grep -q "crAss-like virus\|CrAssphage" $tax_info ; then
-		vir_name="CrAss-like virus" ;
-	elif grep -q "Mavir\|virophage" $tax_info ; then
-		vir_name=Virophage ;
-	elif grep -q "Microvir" $tax_info ; then
-		vir_name=Microviridae ;
-	elif grep -q "microphage" $tax_info ; then
-		vir_name=Microviridae ;
-	elif grep -q "uncultured marine virus" $tax_info ; then
-		vir_name="Virus" ;
-	elif grep -q "Inovir" $tax_info ; then
-		vir_name=Inoviridae ;
-	elif grep -q "Siphovir" $tax_info ; then
-		vir_name=Siphoviridae ;
-	elif grep -q "Myovir" $tax_info ; then
-		vir_name=Myoviridae ;		
-	elif grep -q "unclassified dsDNA phage" $tax_info ; then
-		vir_name="Phage" ;
-	elif grep -q "unclassified ssDNA virus" $tax_info ; then
-		vir_name="CRESS virus" ;
-	elif grep -q "Lake Sarah" $tax_info ; then
-		vir_name="CRESS virus" ;
-	elif grep -q "Avon-Heathcote" $tax_info ; then
-		vir_name="CRESS virus" ;
-	elif grep -q "Circovir" $tax_info ; then
-		vir_name=Circoviridae ;
-	elif grep -q "Genomovir" $tax_info ; then
-		vir_name=Genomoviridae ;
-	elif grep -q "Geminivir" $tax_info ; then
-		vir_name=Geminiviridae ;
-	elif grep -q "Polyoma" $tax_info ; then
-		vir_name=Polyomaviridae ;
-	elif grep -q "Papillomavir" $tax_info ; then
-		vir_name=Papillomaviridae ;
-	elif grep -q "Halovir" $tax_info ; then
-		vir_name=Halovirus ;
-	elif grep -q "Conjugative Transposon" $tax_info ; then
-		vir_name="Conjugative Transposon" ;
-	elif grep -q "No homologues found" $tax_info ; then
-		if  [ -s ITR_containing_contigs/${feat_tbl2%.comb3.tbl}.fasta ] ; then
-			vir_name="genetic element" ;
-		else
-			vir_name="circular genetic element" ;
-		fi
-	elif grep -q "Circular genetic element" $tax_info ; then
-		vir_name="Circular genetic element" ;
-	elif grep -q "Podovir" $tax_info ; then
-		vir_name=Podoviridae ;
-	elif grep -q "Caudovir" $tax_info ; then
-		vir_name=Caudovirales ;
-	elif grep -q "dsRNA virus" $tax_info ; then
-		vir_name="dsRNA virus" ;
-	elif grep -q "ssRNA virus" $tax_info ; then
-		vir_name="ssRNA virus" ;
-	elif grep -q "unclassified RNA virus" $tax_info ; then
-		vir_name="unclassified RNA viruse" ;
-	elif grep -q "Satellite" $tax_info ; then
-		vir_name="Satellite virus" ;
-	elif grep -q "unclassified ssDNA bacterial virus" $tax_info ; then
-		vir_name="unclassified ssDNA bacterial virus" ;
-	elif grep -q "phage" $tax_info ; then
-		vir_name="Phage" ;
-	elif grep -q "plasmid" $tax_info ; then
-		vir_name="metagenomic plasmid" ;
-	elif grep -q "Bacteria" $tax_info ; then
-		vir_name="Phage" ;
-	elif grep -q "unclassified virus" $tax_info ; then
-		vir_name="Unclassified virus" ;		
-	elif grep -q "virus" $tax_info ; then
-		vir_name="Virus" ;
-	else
-		if  [ -s ITR_containing_contigs/${feat_tbl2%.comb3.tbl}.fasta ] ; then
-			vir_name="unclassified element" ;
-		else
+	# Getting info for virus nomenclature and divergence 
+	echo "$(tput setaf 5) Getting info for virus nomenclature and divergence $(tput sgr 0)"
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "time update: making nomeclature and fsa file " $MDYT
+	for feat_tbl2 in *.comb3.tbl ; do 
+		file_core=${feat_tbl2%.comb3.tbl}
+		echo $file_core
+		file_numbers=$( echo ${file_core: -3} | sed 's/[a-z]//g' | sed 's/[A-Z]//g' )
+		echo $file_numbers
+		tax_info=${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+		echo $tax_info
+		if grep -q "Anellovir" $tax_info ; then
+			vir_name=Anelloviridae ;
+		elif grep -q "Circovirus-like" $tax_info ; then
+			vir_name="CRESS virus" ;
+		elif grep -q "CRESS virus" $tax_info ; then
+			vir_name="CRESS virus" ;
+		elif grep -q "Adenovir" $tax_info ; then
+			vir_name=Adenoviridae ;
+		elif grep -q "Alphasatellit" $tax_info ; then
+			vir_name=Alphasatellitidae ;
+		elif grep -q "Ampullavir" $tax_info ; then
+			vir_name=Ampullaviridae ;
+		elif grep -q "Ascovir" $tax_info ; then
+			vir_name=Ascoviridae ;
+		elif grep -q "Asfarvir" $tax_info ; then
+			vir_name=Asfarviridae ;
+		elif grep -q "Bacilladnavir" $tax_info ; then
+			vir_name=Bacilladnaviridae ;
+		elif grep -q "Baculovir" $tax_info ; then
+			vir_name=Baculoviridae ;
+		elif grep -q "Bicaudavir" $tax_info ; then
+			vir_name=Bicaudaviridae ;
+		elif grep -q "Bidnavir" $tax_info ; then
+			vir_name=Bidnaviridae ;
+		elif grep -q "Ackermannvir" $tax_info ; then
+			vir_name=Ackermannviridae ;
+		elif grep -q "Herellevir" $tax_info ; then
+			vir_name=Herelleviridae ;
+		elif grep -q "Clavavir" $tax_info ; then
+			vir_name=Clavaviridae ;
+		elif grep -q "Adomavir" $tax_info ; then
+			vir_name=Adomaviridae ;
+		elif grep -q "Corticovir" $tax_info ; then
+			vir_name=Corticoviridae ;
+		elif grep -q "Dinodnavir" $tax_info ; then
+			vir_name=Dinodnavirus ;
+		elif grep -q "Autolykivir" $tax_info ; then
+			vir_name=Autolykiviridae ;
+		elif grep -q "Globulovir" $tax_info ; then
+			vir_name=Globuloviridae ;
+		elif grep -q "Pithovir" $tax_info ; then
+			vir_name=Pithoviridae ;
+		elif grep -q "Pandoravir" $tax_info ; then
+			vir_name=Pandoravirus ;
+		elif grep -q "Fusellovir" $tax_info ; then
+			vir_name=Fuselloviridae ;
+		elif grep -q "Guttavir" $tax_info ; then
+			vir_name=Guttaviridae ;
+		elif grep -q "Hepadnavir" $tax_info ; then
+			vir_name=Hepadnaviridae ;
+		elif grep -q "Herpesvir" $tax_info ; then
+			vir_name=Herpesvirales ;
+		elif grep -q "Hytrosavir" $tax_info ; then
+			vir_name=Hytrosaviridae ;
+		elif grep -q "Iridovir" $tax_info ; then
+			vir_name=Iridoviridae ;
+		elif grep -q "Lavidavir" $tax_info ; then
+			vir_name=Lavidaviridae ;
+		elif grep -q "Adintovir" $tax_info ; then
+			vir_name=Adintovirus ;
+		elif grep -q "Lipothrixvir" $tax_info ; then
+			vir_name=Lipothrixviridae ;
+		elif grep -q "Rudivir" $tax_info ; then
+			vir_name=Rudiviridae ;
+		elif grep -q "Ligamenvir" $tax_info ; then
+			vir_name=Ligamenvirales ;
+		elif grep -q "Marseillevir" $tax_info ; then
+			vir_name=Marseilleviridae ;
+		elif grep -q "Mimivir" $tax_info ; then
+			vir_name=Mimiviridae ;
+		elif grep -q "Nanovir" $tax_info ; then
+			vir_name=Nanoviridae ;
+		elif grep -q "Nimavir" $tax_info ; then
+			vir_name=Nimaviridae ;
+		elif grep -q "Nudivir" $tax_info ; then
+			vir_name=Nudiviridae ;
+		elif grep -q "Caulimovir" $tax_info ; then
+			vir_name=Caulimoviridae ;
+		elif grep -q "Metavir" $tax_info ; then
+			vir_name=Metaviridae ;
+		elif grep -q "Pseudovir" $tax_info ; then
+			vir_name=Pseudoviridae ;
+		elif grep -q "Retrovir" $tax_info ; then
+			vir_name=Retroviridae ;
+		elif grep -q "Ovalivir" $tax_info ; then
+			vir_name=Ovaliviridae ;
+		elif grep -q "Parvovir" $tax_info ; then
+			vir_name=Parvoviridae ;
+		elif grep -q "Phycodnavir" $tax_info ; then
+			vir_name=Phycodnaviridae ;
+		elif grep -q "Plasmavir" $tax_info ; then
+			vir_name=Plasmaviridae ;
+		elif grep -q "Pleolipovir" $tax_info ; then
+			vir_name=Pleolipoviridae ;
+		elif grep -q "Polydnavir" $tax_info ; then
+			vir_name=Polydnaviridae ;
+		elif grep -q "Portoglobovir" $tax_info ; then
+			vir_name=Portogloboviridae ;
+		elif grep -q "Poxvir" $tax_info ; then
+			vir_name=Poxviridae ;
+		elif grep -q "Albetovir" $tax_info ; then
+			vir_name=Albetoviridae ;
+		elif grep -q "Alphatetravir" $tax_info ; then
+			vir_name=Alphatetraviridae ;
+		elif grep -q "Alvernavir" $tax_info ; then
+			vir_name=Alvernaviridae ;
+		elif grep -q "Amalgavir" $tax_info ; then
+			vir_name=Amalgaviridae ;
+		elif grep -q "Astrovir" $tax_info ; then
+			vir_name=Astroviridae ;
+		elif grep -q "Aumaivir" $tax_info ; then
+			vir_name=Aumaivirus ;
+		elif grep -q "Avsunviroid" $tax_info ; then
+			vir_name=Avsunviroidae ;
+		elif grep -q "Barnavir" $tax_info ; then
+			vir_name=Barnaviridae ;
+		elif grep -q "Benyvir" $tax_info ; then
+			vir_name=Benyviridae ;
+		elif grep -q "Birnavir" $tax_info ; then
+			vir_name=Birnaviridae ;
+		elif grep -q "Botourmiavir" $tax_info ; then
+			vir_name=Botourmiaviridae ;
+		elif grep -q "Botybirnavir" $tax_info ; then
+			vir_name=Botybirnavirus ;
+		elif grep -q "Bromovir" $tax_info ; then
+			vir_name=Bromoviridae ;
+		elif grep -q "Calicivir" $tax_info ; then
+			vir_name=Caliciviridae ;
+		elif grep -q "Carmotetravir" $tax_info ; then
+			vir_name=Carmotetraviridae ;
+		elif grep -q "Chrysovir" $tax_info ; then
+			vir_name=Chrysoviridae ;
+		elif grep -q "Closterovir" $tax_info ; then
+			vir_name=Closteroviridae ;
+		elif grep -q "Cystovir" $tax_info ; then
+			vir_name=Cystoviridae ;
+		elif grep -q "Deltavir" $tax_info ; then
+			vir_name=Deltavirus ;
+		elif grep -q "Endornavir" $tax_info ; then
+			vir_name=Endornaviridae ;
+		elif grep -q "Flavivir" $tax_info ; then
+			vir_name=Flaviviridae ;
+		elif grep -q "Hepevir" $tax_info ; then
+			vir_name=Hepeviridae ;
+		elif grep -q "Hypovir" $tax_info ; then
+			vir_name=Hypoviridae ;
+		elif grep -q "Idaeovir" $tax_info ; then
+			vir_name=Idaeovirus ;
+		elif grep -q "Kitavir" $tax_info ; then
+			vir_name=Kitaviridae ;
+		elif grep -q "Levivir" $tax_info ; then
+			vir_name=Leviviridae ;
+		elif grep -q "Luteovir" $tax_info ; then
+			vir_name=Luteoviridae ;
+		elif grep -q "Matonavir" $tax_info ; then
+			vir_name=Matonaviridae ;
+		elif grep -q "Megabirnavir" $tax_info ; then
+			vir_name=Megabirnaviridae ;
+		elif grep -q "Narnavir" $tax_info ; then
+			vir_name=Narnaviridae ;
+		elif grep -q "Nidovir" $tax_info ; then
+			vir_name=Nidovirales ;
+		elif grep -q "Nodavir" $tax_info ; then
+			vir_name=Nodaviridae ;
+		elif grep -q "Papanivir" $tax_info ; then
+			vir_name=Papanivirus ;
+		elif grep -q "Partitivir" $tax_info ; then
+			vir_name=Partitiviridae ;
+		elif grep -q "Permutotetravir" $tax_info ; then
+			vir_name=Permutotetraviridae ;
+		elif grep -q "Picobirnavir" $tax_info ; then
+			vir_name=Picobirnaviridae ;
+		elif grep -q "Dicistrovir" $tax_info ; then
+			vir_name=Dicistroviridae ;
+		elif grep -q "Iflavir" $tax_info ; then
+			vir_name=Iflaviridae ;
+		elif grep -q "Marnavir" $tax_info ; then
+			vir_name=Marnaviridae ;
+		elif grep -q "Picornavir" $tax_info ; then
+			vir_name=Picornaviridae ;
+		elif grep -q "Polycipivir" $tax_info ; then
+			vir_name=Polycipiviridae ;
+		elif grep -q "Secovir" $tax_info ; then
+			vir_name=Secoviridae ;
+		elif grep -q "Picornavir" $tax_info ; then
+			vir_name=Picornavirales ;
+		elif grep -q "Pospiviroid" $tax_info ; then
+			vir_name=Pospiviroidae ;
+		elif grep -q "Polinton-like virus" $tax_info ; then
+			vir_name="Polinton-like virus" ;
+		elif grep -q "Potyvir" $tax_info ; then
+			vir_name=Potyviridae ;
+		elif grep -q "Quadrivir" $tax_info ; then
+			vir_name=Quadriviridae ;
+		elif grep -q "Reovir" $tax_info ; then
+			vir_name=Reoviridae ;
+		elif grep -q "Sarthrovir" $tax_info ; then
+			vir_name=Sarthroviridae ;
+		elif grep -q "Sinaivir" $tax_info ; then
+			vir_name=Sinaivirus ;
+		elif grep -q "Solemovir" $tax_info ; then
+			vir_name=Solemoviridae ;
+		elif grep -q "Solinvivir" $tax_info ; then
+			vir_name=Solinviviridae ;
+		elif grep -q "Togavir" $tax_info ; then
+			vir_name=Togaviridae ;
+		elif grep -q "Tombusvir" $tax_info ; then
+			vir_name=Tombusviridae ;
+		elif grep -q "Totivir" $tax_info ; then
+			vir_name=Totiviridae ;
+		elif grep -q "Tymovir" $tax_info ; then
+			vir_name=Tymovirales ;
+		elif grep -q "Virgavir" $tax_info ; then
+			vir_name=Virgaviridae ;
+		elif grep -q "Virtovir" $tax_info ; then
+			vir_name=Virtovirus ;
+		elif grep -q "Salterprovir" $tax_info ; then
+			vir_name=Salterprovirus ;
+		elif grep -q "Smacovir" $tax_info ; then
+			vir_name=Smacoviridae ;
+		elif grep -q "Sphaerolipovir" $tax_info ; then
+			vir_name=Sphaerolipoviridae ;
+		elif grep -q "Spiravir" $tax_info ; then
+			vir_name=Spiraviridae ;
+		elif grep -q "Crucivir" $tax_info ; then
+			vir_name=Cruciviridae ;
+		elif grep -q "Tectivir" $tax_info ; then
+			vir_name=Tectiviridae ;
+		elif grep -q "Tolecusatellit" $tax_info ; then
+			vir_name=Tolecusatellitidae ;
+		elif grep -q "Tristromavir" $tax_info ; then
+			vir_name=Tristromaviridae ;
+		elif grep -q "Turrivir" $tax_info ; then
+			vir_name=Turriviridae ;
+		elif grep -q "crAss-like virus\|CrAssphage" $tax_info ; then
+			vir_name="CrAss-like virus" ;
+		elif grep -q "Mavir\|virophage" $tax_info ; then
+			vir_name=Virophage ;
+		elif grep -q "Microvir" $tax_info ; then
+			vir_name=Microviridae ;
+		elif grep -q "microphage" $tax_info ; then
+			vir_name=Microviridae ;
+		elif grep -q "uncultured marine virus" $tax_info ; then
+			vir_name="Virus" ;
+		elif grep -q "Inovir" $tax_info ; then
+			vir_name=Inoviridae ;
+		elif grep -q "Siphovir" $tax_info ; then
+			vir_name=Siphoviridae ;
+		elif grep -q "Myovir" $tax_info ; then
+			vir_name=Myoviridae ;		
+		elif grep -q "unclassified dsDNA phage" $tax_info ; then
+			vir_name="Phage" ;
+		elif grep -q "unclassified ssDNA virus" $tax_info ; then
+			vir_name="CRESS virus" ;
+		elif grep -q "Lake Sarah" $tax_info ; then
+			vir_name="CRESS virus" ;
+		elif grep -q "Avon-Heathcote" $tax_info ; then
+			vir_name="CRESS virus" ;
+		elif grep -q "Circovir" $tax_info ; then
+			vir_name=Circoviridae ;
+		elif grep -q "Genomovir" $tax_info ; then
+			vir_name=Genomoviridae ;
+		elif grep -q "Geminivir" $tax_info ; then
+			vir_name=Geminiviridae ;
+		elif grep -q "Polyoma" $tax_info ; then
+			vir_name=Polyomaviridae ;
+		elif grep -q "Papillomavir" $tax_info ; then
+			vir_name=Papillomaviridae ;
+		elif grep -q "Halovir" $tax_info ; then
+			vir_name=Halovirus ;
+		elif grep -q "Conjugative Transposon" $tax_info ; then
+			vir_name="Conjugative Transposon" ;
+		elif grep -q "No homologues found" $tax_info ; then
+			if  [ -s ITR_containing_contigs/${feat_tbl2%.comb3.tbl}.fasta ] ; then
+				vir_name="genetic element" ;
+			else
+				vir_name="circular genetic element" ;
+			fi
+		elif grep -q "Circular genetic element" $tax_info ; then
 			vir_name="Circular genetic element" ;
-		fi
-	fi
-	echo $vir_name ;
-	fsa_head=$( echo $vir_name " sp." )
-	tax_guess=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ) ; 
-	perc_id=$( head -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | sed 's/ /-/g' | awk '{FS="\t"; OFS="\t"} {print $2" "$3}' | sed 's/-/ /g' ) ;
-	rand_id=$( head /dev/urandom | tr -dc A-Za-z0-9 | head -c 3 ; echo '' )
-
-	# Editing and transferring tbl file and fasta (fsa) files to sequin directory
-	echo "$(tput setaf 5) Editing and transferring tbl file and fasta (fsa) files to sequin directory $(tput sgr 0)"
-
-	if [ -s ${feat_tbl2%.comb3.tbl}.phan.fasta ]; then
-		echo "$(tput setaf 5)tbl file made from: "$feat_tbl2" will be used for sqn generation$(tput sgr 0)" ; 
-		cp $feat_tbl2 sequin_directory/${feat_tbl2%.comb3.tbl}.tbl ; 
-		if [ -s ITR_containing_contigs/${feat_tbl2%.comb3.tbl}.fasta ]; then
-			if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
-				#echo "1"
-				bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var " ; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
-				echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
-
-			else
-				#echo "2"
-				bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
-			fi
-
+		elif grep -q "Podovir" $tax_info ; then
+			vir_name=Podoviridae ;
+		elif grep -q "Caudovir" $tax_info ; then
+			vir_name=Caudovirales ;
+		elif grep -q "dsRNA virus" $tax_info ; then
+			vir_name="dsRNA virus" ;
+		elif grep -q "ssRNA virus" $tax_info ; then
+			vir_name="ssRNA virus" ;
+		elif grep -q "unclassified RNA virus" $tax_info ; then
+			vir_name="unclassified RNA viruse" ;
+		elif grep -q "Satellite" $tax_info ; then
+			vir_name="Satellite virus" ;
+		elif grep -q "unclassified ssDNA bacterial virus" $tax_info ; then
+			vir_name="unclassified ssDNA bacterial virus" ;
+		elif grep -q "phage" $tax_info ; then
+			vir_name="Phage" ;
+		elif grep -q "plasmid" $tax_info ; then
+			vir_name="metagenomic plasmid" ;
+		elif grep -q "Bacteria" $tax_info ; then
+			vir_name="Phage" ;
+		elif grep -q "unclassified virus" $tax_info ; then
+			vir_name="Unclassified virus" ;		
+		elif grep -q "virus" $tax_info ; then
+			vir_name="Virus" ;
 		else
-			if [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.CELLULAR.out ] ; then
-				CELL_CHROM=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 )
-				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
-					#echo "3"
-					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$CELL_CHROM" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var " ; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [note=highly similar to sequence "chrom_info "; please manually check if this is a transposon especially if there is an annotated reverse transcriptase] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
-					echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
-
-				else
-					#echo "4"
-					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$CELL_CHROM" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [note=highly similar to sequence "chrom_info "; please manually check if this is a transposon especially if there is an annotated reverse transcriptase] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
-				fi
-			elif [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.KNOWN_VIRUS.out ] ; then
-				VIR_HIT=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 | sed 's/,-complete-genome//g' )
-				#STRAIN_NAME=$( echo $VIR_HIT " strain ct"${rand_id}${file_numbers} )
-				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
-					#echo "5"
-					bioawk -v srr_var="$srr_number" -v perc_var="$perc_id" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v vir_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= WARNING: no viral/plasmid-specific domains were detected. This may not be a true mobile genetic element.] [note=highly similar to sequence "vir_info "] [organism=" vir_info " strain ct" rand_var number_var"] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
-					echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
-
-				else
-					#echo "6"
-					bioawk -v srr_var="$srr_number" -v perc_var="$perc_id" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v vir_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note=highly similar to sequence "vir_info "] [organism=" vir_info " strain ct" rand_var number_var"] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
-				fi
+			if  [ -s ITR_containing_contigs/${feat_tbl2%.comb3.tbl}.fasta ] ; then
+				vir_name="unclassified element" ;
 			else
-				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then	
-				#echo "7"			
-					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
-					echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
-				else
-					#echo "8"
-					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
-				fi
+				vir_name="Circular genetic element" ;
 			fi
 		fi
-	else
-		echo "$(tput setaf 5)tbl file made from: "$feat_tbl2" will be used for sqn generation$(tput sgr 0)" ; 
-		cp $feat_tbl2 sequin_directory/${feat_tbl2%.comb3.tbl}.tbl ; 
-		if [ -s ITR_containing_contigs/${feat_tbl2%.comb3.tbl}.fasta ]; then
-			if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
-				#echo "9"
-				bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var " ; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
-				echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
+		echo $vir_name ;
+		fsa_head=$( echo $vir_name " sp." )
+		tax_guess=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ) ; 
+		perc_id=$( head -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | sed 's/ /-/g' | awk '{FS="\t"; OFS="\t"} {print $2" "$3}' | sed 's/-/ /g' ) ;
+		rand_id=$( head /dev/urandom | tr -dc A-Za-z0-9 | head -c 3 ; echo '' )
+
+		# Editing and transferring tbl file and fasta (fsa) files to sequin directory
+		echo "$(tput setaf 5) Editing and transferring tbl file and fasta (fsa) files to sequin directory $(tput sgr 0)"
+
+		if [ -s ${feat_tbl2%.comb3.tbl}.phan.fasta ]; then
+			echo "$(tput setaf 5)tbl file made from: "$feat_tbl2" will be used for sqn generation$(tput sgr 0)" ; 
+			cp $feat_tbl2 sequin_directory/${feat_tbl2%.comb3.tbl}.tbl ; 
+			if [ -s ITR_containing_contigs/${feat_tbl2%.comb3.tbl}.fasta ]; then
+				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
+					#echo "1"
+					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var " ; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+					echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
+
+				else
+					#echo "2"
+					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+				fi
 
 			else
-				#echo "10"
-				bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
-			fi
+				if [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.CELLULAR.out ] ; then
+					CELL_CHROM=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 )
+					if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
+						#echo "3"
+						bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$CELL_CHROM" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var " ; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [note=highly similar to sequence "chrom_info "; please manually check if this is a transposon especially if there is an annotated reverse transcriptase] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+						echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
 
+					else
+						#echo "4"
+						bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$CELL_CHROM" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [note=highly similar to sequence "chrom_info "; please manually check if this is a transposon especially if there is an annotated reverse transcriptase] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+					fi
+				elif [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.KNOWN_VIRUS.out ] ; then
+					VIR_HIT=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 | sed 's/,-complete-genome//g' )
+					#STRAIN_NAME=$( echo $VIR_HIT " strain ct"${rand_id}${file_numbers} )
+					if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
+						#echo "5"
+						bioawk -v srr_var="$srr_number" -v perc_var="$perc_id" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v vir_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= WARNING: no viral/plasmid-specific domains were detected. This may not be a true mobile genetic element.] [note=highly similar to sequence "vir_info "] [organism=" vir_info " strain ct" rand_var number_var"] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+						echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
+
+					else
+						#echo "6"
+						bioawk -v srr_var="$srr_number" -v perc_var="$perc_id" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v vir_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note=highly similar to sequence "vir_info "] [organism=" vir_info " strain ct" rand_var number_var"] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+					fi
+				else
+					if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then	
+					#echo "7"			
+						bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+						echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
+					else
+						#echo "8"
+						bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+					fi
+				fi
+			fi
 		else
-
-			if [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.CELLULAR.out ] ; then
-				CELL_CHROM=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 )
+			echo "$(tput setaf 5)tbl file made from: "$feat_tbl2" will be used for sqn generation$(tput sgr 0)" ; 
+			cp $feat_tbl2 sequin_directory/${feat_tbl2%.comb3.tbl}.tbl ; 
+			if [ -s ITR_containing_contigs/${feat_tbl2%.comb3.tbl}.fasta ]; then
 				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
-					#echo "11"
-					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$CELL_CHROM" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var " ; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [note=highly similar to sequence "chrom_info "; please manually check if this is a transposon especially if there is an annotated reverse transcriptase] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+					#echo "9"
+					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var " ; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
 					echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
 
 				else
-					#echo "12"
-					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$CELL_CHROM" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [note=highly similar to sequence "chrom_info "; please manually check if this is a transposon especially if there is an annotated reverse transcriptase] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
-				fi
-			elif [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.KNOWN_VIRUS.out ] ; then
-				VIR_HIT=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 | sed 's/,-complete-genome//g' )
-				#STRAIN_NAME=$( echo $VIR_HIT " strain ct"${rand_id}${file_numbers} )
-				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
-					#echo "13"
-					bioawk -v srr_var="$srr_number" -v perc_var="$perc_id" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v vir_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= WARNING: no viral/plasmid-specific domains were detected. This may not be a true mobile genetic element.] [note=highly similar to sequence "vir_info "] [organism=" vir_info " strain ct " rand_var number_var"] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
-					echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
-
-				else
-					#echo "14"
-					bioawk -v srr_var="$srr_number" -v perc_var="$perc_id" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v vir_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note=highly similar to sequence "vir_info "] [organism=" vir_info " strain ct " rand_var number_var"] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+					#echo "10"
+					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
 				fi
 
 			else
-				if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then		
-				#echo "15"		
-					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
-					echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
+
+				if [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.CELLULAR.out ] ; then
+					CELL_CHROM=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 )
+					if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
+						#echo "11"
+						bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$CELL_CHROM" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var " ; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [note=highly similar to sequence "chrom_info "; please manually check if this is a transposon especially if there is an annotated reverse transcriptase] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+						echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
+
+					else
+						#echo "12"
+						bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v chrom_info="$CELL_CHROM" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [note=highly similar to sequence "chrom_info "; please manually check if this is a transposon especially if there is an annotated reverse transcriptase] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+					fi
+				elif [ -s ${feat_tbl2%.comb3.tbl}.tax_guide.KNOWN_VIRUS.out ] ; then
+					VIR_HIT=$( cat ${feat_tbl2%.comb3.tbl}.blastn.notnew.out | head -n1 | cut -f3 | sed 's/,-complete-genome//g' )
+					#STRAIN_NAME=$( echo $VIR_HIT " strain ct"${rand_id}${file_numbers} )
+					if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then
+						#echo "13"
+						bioawk -v srr_var="$srr_number" -v perc_var="$perc_id" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v vir_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= WARNING: no viral/plasmid-specific domains were detected. This may not be a true mobile genetic element.] [note=highly similar to sequence "vir_info "] [organism=" vir_info " strain ct " rand_var number_var"] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+						echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
+
+					else
+						#echo "14"
+						bioawk -v srr_var="$srr_number" -v perc_var="$perc_id" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v vir_info="$VIR_HIT" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note=highly similar to sequence "vir_info "] [organism=" vir_info " strain ct " rand_var number_var"] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+					fi
+
 				else
-					#echo "16"
-					bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+					if [ -z "${feat_tbl2%.comb3.tbl}.rotate.AA.called_hmmscan.txt" ] ; then		
+					#echo "15"		
+						bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+						echo "$(tput setaf 3) WARNING: no viral/plasmid-specific domains were detected in "${feat_tbl2%.comb3.tbl}". This is probably not a true mobile genetic element. Scrutinize carefully. $(tput sgr 0)"
+					else
+						#echo "16"
+						bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var "] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=circular] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=1]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;	
+					fi
 				fi
 			fi
 		fi
-	fi
-done
+	done
 
 
-#making cmt file for assembly data
-for nucl_fa in $NEW_FASTAS ; do
-	input_contig_name=$( head -n1 $nucl_fa | cut -d " " -f 1 | sed 's/|.*//g; s/>//g' ) 
-	echo $input_contig_name
-	if [ -s reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt ] ; then
-		COVERAGE=$( grep "$input_contig_name	" reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt | cut -f2 )
-		echo $COVERAGE
+	#making cmt file for assembly data
+	for nucl_fa in $NEW_FASTAS ; do
+		input_contig_name=$( head -n1 $nucl_fa | cut -d " " -f 1 | sed 's/|.*//g; s/>//g' ) 
+		echo $input_contig_name
+		if [ -s reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt ] ; then
+			COVERAGE=$( grep "$input_contig_name	" reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt | cut -f2 )
+			echo $COVERAGE
+		else
+			COVERAGE="1"
+		fi
+		echo "StructuredCommentPrefix	##Genome-Assembly-Data-START##" > sequin_directory/${nucl_fa%.fasta}.cmt ;
+		echo "Assembly Method	" $ASSEMBLER >> sequin_directory/${nucl_fa%.fasta}.cmt ;
+		echo "Genome Coverage	"$COVERAGE"x" >> sequin_directory/${nucl_fa%.fasta}.cmt ;
+		echo "Sequencing Technology	Illumina" >> sequin_directory/${nucl_fa%.fasta}.cmt ;
+		echo "Annotation Pipeline	Cenote-Taker2" >> sequin_directory/${nucl_fa%.fasta}.cmt ;
+		echo "URL	https://github.com/mtisza1/Cenote-Taker2" >> sequin_directory/${nucl_fa%.fasta}.cmt ;
+	done
+
+
+	for fsa_file in sequin_directory/*.fsa ; do
+		#echo "editing fsa file!!!!!!"
+		fsa_name2=$( echo ${fsa_file#sequin_directory/} ) ; 
+		fsa_name3=$( echo ${fsa_name2%.fsa} | sed 's/.PLASMID//g' )
+		seq_name1=$( head -n1 $fsa_name3.fasta | sed 's/>//g; s/|.*//g' | cut -d " " -f2 )
+		sed " 1 s/note= closest relative/note= $seq_name1 ; closest relative/" $fsa_file > $fsa_file.temp
+		mv $fsa_file.temp $fsa_file
+	done
+
+
+	# Running sequin to generate sqn, gbf, and val files for each genome
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "time update: running tbl2asn " $MDYT
+	if [[ $DATA_SOURCE = "tpa_assembly" ]] ;then
+		tbl2asn -V vb -j "[keyword=TPA:assembly]" -t ${base_directory}/${template_file} -X C -p sequin_directory/ ;
 	else
-		COVERAGE="1"
+		tbl2asn -V vb -t ${base_directory}/${template_file} -X C -p sequin_directory/ ;
 	fi
-	echo "StructuredCommentPrefix	##Genome-Assembly-Data-START##" > sequin_directory/${nucl_fa%.fasta}.cmt ;
-	echo "Assembly Method	" $ASSEMBLER >> sequin_directory/${nucl_fa%.fasta}.cmt ;
-	echo "Genome Coverage	"$COVERAGE"x" >> sequin_directory/${nucl_fa%.fasta}.cmt ;
-	echo "Sequencing Technology	Illumina" >> sequin_directory/${nucl_fa%.fasta}.cmt ;
-	echo "Annotation Pipeline	Cenote-Taker2" >> sequin_directory/${nucl_fa%.fasta}.cmt ;
-	echo "URL	https://github.com/mtisza1/Cenote-Taker2" >> sequin_directory/${nucl_fa%.fasta}.cmt ;
-done
-
-
-for fsa_file in sequin_directory/*.fsa ; do
-	#echo "editing fsa file!!!!!!"
-	fsa_name2=$( echo ${fsa_file#sequin_directory/} ) ; 
-	fsa_name3=$( echo ${fsa_name2%.fsa} | sed 's/.PLASMID//g' )
-	seq_name1=$( head -n1 $fsa_name3.fasta | sed 's/>//g; s/|.*//g' | cut -d " " -f2 )
-	sed " 1 s/note= closest relative/note= $seq_name1 ; closest relative/" $fsa_file > $fsa_file.temp
-	mv $fsa_file.temp $fsa_file
-done
-
-
-# Running sequin to generate sqn, gbf, and val files for each genome
-MDYT=$( date +"%m-%d-%y---%T" )
-echo "time update: running tbl2asn " $MDYT
-if [[ $DATA_SOURCE = "tpa_assembly" ]] ;then
-	tbl2asn -V vb -j "[keyword=TPA:assembly]" -t ${base_directory}/${template_file} -X C -p sequin_directory/ ;
-else
-	tbl2asn -V vb -t ${base_directory}/${template_file} -X C -p sequin_directory/ ;
 fi
 
-# Script for annotating complete circular viruses of known species
-#KNOWN_VIRAL_CIRCLES=$( ls circles_of_known_viruses/ | grep ".fna" )
-#if [ ! -z "$KNOWN_VIRAL_CIRCLES" ] ;then
-#	echo "$(tput setaf 3) Starting annotation of known circular viruses $(tput sgr 0)"
-#	. ${CENOTE_SCRIPT_DIR}/quick_annotation_of_known_seqs1_200207.sh
-#fi
 
 # script for annotating no_end contigs with viral domains
 LIST_OF_VIRAL_DOMAIN_CONTIGS=$( ls no_end_contigs_with_viral_domain/ | grep ".fna" )
@@ -1658,7 +1655,7 @@ echo "$(tput setaf 3) Making a summary table of all viral contigs, if any. $(tpu
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: making summary table " $MDYT
 
-echo -e "Isolation source""\t""Completeness""\t""Cenote-taker contig name""\t""Length""\t""Element Name""\t""Topology""\t""Common Viral Domains""\t""BLASTP hit for Taxonomy""\t""BLASTN result (if any)" > ${run_title}.tsv
+echo -e "Isolation source""\t""Completeness""\t""Cenote-taker contig name""\t""original contig name""\t""Length""\t""Element Name""\t""Topology""\t""Common Viral Domains""\t""BLASTP hit for Taxonomy""\t""BLASTN result (if any)" > ${run_title}.tsv
 for i in sequin_directory/*.fsa ; do
 	if [ ! -z "$i" ] ;then
 		site=$( head -n1 $i | sed -e 's/.*isolation_source=\(.*\)\] \[isolate.*/\1/' )
@@ -1680,13 +1677,14 @@ for i in sequin_directory/*.fsa ; do
 		echo length
 		j=${i%.fsa} ; 
 		DOMAIN_COUNT=$( cat ${j#sequin_directory/}.rotate.AA.called_hmmscan.txt | wc -l )
+		seq_name1=$( head -n1 ${j#sequin_directory/}.fasta  | sed 's/>//g; s/|.*//g' | cut -d " " -f2 ) ; 
 		if [ -s ${j#sequin_directory/}.blastn.out ] ; then
 			BLASTN_REPORT=$( head -n1 ${j#sequin_directory/}.blastn.out )
 		else
 			BLASTN_REPORT="no blastn"
 		fi
 		#title=$( cat $site | awk '{print $1}' )
-		echo -e $site "\t""Complete genome (putative)""\t" $df_num "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call2 "\t" $BLASTN_REPORT >> ${run_title}.tsv
+		echo -e $site "\t""Complete genome (putative)""\t" $df_num "\t" $seq_name1 "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call2 "\t" $BLASTN_REPORT >> ${run_title}.tsv
 	fi
 done
 
@@ -1715,12 +1713,13 @@ for i in no_end_contigs_with_viral_domain/sequin_directory/*.fsa ; do
 		echo $length
 		j=${i%.fsa} ; 
 		DOMAIN_COUNT=$( cat no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.AA.hmmscan2.sort.out | wc -l )
+		seq_name1=$( head -n1 no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.fna  | sed 's/>//g; s/|.*//g' | cut -d " " -f2 ) ; 
 		if [ -s no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.blastn.out ] ; then
 			BLASTN_REPORT=$( head -n1 no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.blastn.out )
 		else
 			BLASTN_REPORT="no blastn"
 		fi
-		echo -e $site "\t""Partial genome (putative)""\t" $df_num "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call2 "\t" $BLASTN_REPORT >> ${run_title}.tsv
+		echo -e $site "\t""Partial genome (putative)""\t" $df_num "\t" $seq_name1 "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call2 "\t" $BLASTN_REPORT >> ${run_title}.tsv
 	fi
 done
 
