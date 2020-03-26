@@ -171,19 +171,27 @@ if [ ${original_contigs: -4} == ".fsa" ]; then
 	original_contigs=${original_contigs%fsa}fasta
 fi
 # Removing contigs under $circ_length_cutoff nts and detecting circular contigs
+if [ $circ_length_cutoff -gt $linear_length_cutoff ] ; then
+	LENGTH_MINIMUM=$linear_length_cutoff
+else
+	LENGTH_MINIMUM=$circ_length_cutoff
+
+fi
+
+
 if [ ${original_contigs: -6} == ".fasta" ]; then
-	echo "$(tput setaf 5)File with .fasta extension detected, attempting to keep contigs over $circ_length_cutoff nt and find circular sequences with apc.pl$(tput sgr 0)"
-	bioawk -v run_var="$run_title" -v contig_cutoff="$circ_length_cutoff" -c fastx '{ if(length($seq) > contig_cutoff) { print ">"run_var NR" "$name; print $seq }}' $original_contigs > ${original_contigs%.fasta}.over_${circ_length_cutoff}nt.fasta ;
+	echo "$(tput setaf 5)File with .fasta extension detected, attempting to keep contigs over $LENGTH_MINIMUM nt and find circular sequences with apc.pl$(tput sgr 0)"
+	bioawk -v run_var="$run_title" -v contig_cutoff="$LENGTH_MINIMUM" -c fastx '{ if(length($seq) > contig_cutoff) { print ">"run_var NR" "$name; print $seq }}' $original_contigs > ${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta ;
 	cd $run_title
-	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fasta}.over_${circ_length_cutoff}nt.fasta ;
+	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta ;
 	rm apc_aln*
 	for fa1 in $run_title*.fa ; do 
 		mv $fa1 $run_title${fa1#$run_title.}sta ; 
 	done 
 elif [ ${original_contigs: -6} == ".fastg" ]; then
-	bioawk -v contig_cutoff="$circ_length_cutoff" -c fastx '{ if(length($seq) > contig_cutoff) {print }}' $original_contigs | grep "[a-zA-Z0-9]:\|[a-zA-Z0-9];" | grep -v "':" | awk '{ print ">"$1 ; print $2 }' | sed 's/:.*//g; s/;.*//g' | bioawk -v run_var="$run_title" -c fastx '{ print ">"run_var NR" "$name; print $seq }' > ${original_contigs%.fastg}.over_${circ_length_cutoff}nt.fasta
+	bioawk -v contig_cutoff="$LENGTH_MINIMUM" -c fastx '{ if(length($seq) > contig_cutoff) {print }}' $original_contigs | grep "[a-zA-Z0-9]:\|[a-zA-Z0-9];" | grep -v "':" | awk '{ print ">"$1 ; print $2 }' | sed 's/:.*//g; s/;.*//g' | bioawk -v run_var="$run_title" -c fastx '{ print ">"run_var NR" "$name; print $seq }' > ${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta
 	cd $run_title
-	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fastg}.over_${circ_length_cutoff}nt.fasta ;
+	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta ;
 	rm apc_aln*
 	for fa1 in $run_title*.fa ; do 
 		mv $fa1 $run_title${fa1#$run_title.}sta ; 
@@ -196,10 +204,16 @@ fi
 # Changing to output directory
 cd $run_title
 
+# Removing cirles that are smaller than user specified cutoff
+for CIRCLE1 in *.fasta ; do
+	CIRCLE1_LENGTH=$( bioawk -c fastx '{print length($seq) }' $CIRCLE1 )
+	if [[ $CIRCLE1_LENGTH -lt $circ_length_cutoff ]] ; then
+		mv $CIRCLE1 ${CIRCLE1%.fasta}.too_short.fasta 
+	fi
+done
+rm *.too_short.fasta
+
 # Aligning reads to contigs
-
-
-
 if [ ! -s "$F_READS" ] ; then
 	echo "no reads provided or reads not found"
 else
@@ -208,34 +222,35 @@ else
 	echo "time update: making bowtie2 indices " $MDYT
 	mkdir bt2_indices ; 
 	#### update the script to allow for contigs from other directories
-	bowtie2-build ../${original_contigs%.fasta}.over_${circ_length_cutoff}nt.fasta bt2_indices/${run_title}_bt2_index
+	bowtie2-build ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta bt2_indices/${run_title}_bt2_index
 	echo "$(tput setaf 4)Aligning reads to BowTie2 index. $(tput sgr 0)" 
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: aligning reads to bowtie2 indices " $MDYT
 	if [ ! -s "$R_READS" ] ;then
-		bowtie2 -q -p${CPU} -x bt2_indices/${run_title}_bt2_index -U $F_READS -S reads_to_all_contigs_over${circ_length_cutoff}nt.sam --very-fast
+		bowtie2 -q -p${CPU} -x bt2_indices/${run_title}_bt2_index -U $F_READS -S reads_to_all_contigs_over${LENGTH_MINIMUM}nt.sam --very-fast
 	else
-		bowtie2 -q -p${CPU} -x bt2_indices/${run_title}_bt2_index -1 $F_READS -2 $R_READS -S reads_to_all_contigs_over${circ_length_cutoff}nt.sam --very-fast
+		bowtie2 -q -p${CPU} -x bt2_indices/${run_title}_bt2_index -1 $F_READS -2 $R_READS -S reads_to_all_contigs_over${LENGTH_MINIMUM}nt.sam --very-fast
 	fi
 	echo "$(tput setaf 4)Calculating read coverage of each contig with BBTools Pileup. $(tput sgr 0)" 
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: running BBTools Pileup " $MDYT
-	pileup.sh in=reads_to_all_contigs_over${circ_length_cutoff}nt.sam out=reads_to_all_contigs_over${circ_length_cutoff}nt.coverage.txt
-	rm reads_to_all_contigs_over${circ_length_cutoff}nt.sam
+	pileup.sh in=reads_to_all_contigs_over${LENGTH_MINIMUM}nt.sam out=reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt
+	rm reads_to_all_contigs_over${LENGTH_MINIMUM}nt.sam
 fi
 
 
 # Detecting whether any circular contigs were present
 original_fastas=$( ls *.fasta )
 # "$(tput setaf 5)$var1$(tput sgr 0)"
+
 if [ -z "$original_fastas" ] ; then
 	echo "$(tput setaf 4)No circular fasta files detected. $(tput sgr 0)" 
 	#exit
 	mkdir other_contigs	
 	if [ ${original_contigs: -6} == ".fasta" ]; then
-		grep -A1 "^>" ../${original_contigs%.fasta}.over_${circ_length_cutoff}nt.fasta | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > other_contigs/all_non_circular.fasta
+		grep -A1 "^>" ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > other_contigs/all_non_circular.fasta
 	elif [ ${original_contigs: -6} == ".fastg" ]; then
-		grep -A1 "^>" ../${original_contigs%.fastg}.over_${circ_length_cutoff}nt.fasta | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > other_contigs/all_non_circular.fasta
+		grep -A1 "^>" ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > other_contigs/all_non_circular.fasta
 	fi			
 	if [ -s other_contigs/all_non_circular.fasta ] ; then
 		grep "^>" other_contigs/all_non_circular.fasta | sed 's/>//g' | cut -d " " -f1 | while read LINE ; do 
@@ -254,9 +269,9 @@ else
 		grep "^>" $CIRCLE | sed 's/|.*//g' >> circular_contigs_spades_names.txt
 	done
 	if [ ${original_contigs: -6} == ".fasta" ]; then
-		grep -v -f circular_contigs_spades_names.txt ../${original_contigs%.fasta}.over_${circ_length_cutoff}nt.fasta | grep -A1 "^>" | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > other_contigs/all_non_circular.fasta
+		grep -v -f circular_contigs_spades_names.txt ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta | grep -A1 "^>" | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > other_contigs/all_non_circular.fasta
 	elif [ ${original_contigs: -6} == ".fastg" ]; then
-		grep -v -f circular_contigs_spades_names.txt ../${original_contigs%.fastg}.over_${circ_length_cutoff}nt.fasta | grep -A1 "^>" | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > other_contigs/all_non_circular.fasta
+		grep -v -f circular_contigs_spades_names.txt ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta | grep -A1 "^>" | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > other_contigs/all_non_circular.fasta
 	fi
 	if [ -s other_contigs/all_non_circular.fasta ] ; then
 		grep "^>" other_contigs/all_non_circular.fasta | sed 's/>//g' | cut -d " " -f1 | while read LINE ; do 
@@ -1573,8 +1588,8 @@ done
 for nucl_fa in $NEW_FASTAS ; do
 	input_contig_name=$( head -n1 $nucl_fa | cut -d " " -f 1 | sed 's/|.*//g; s/>//g' ) 
 	echo $input_contig_name
-	if [ -s reads_to_all_contigs_over${circ_length_cutoff}nt.coverage.txt ] ; then
-		COVERAGE=$( grep "$input_contig_name	" reads_to_all_contigs_over${circ_length_cutoff}nt.coverage.txt | cut -f2 )
+	if [ -s reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt ] ; then
+		COVERAGE=$( grep "$input_contig_name	" reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt | cut -f2 )
 		echo $COVERAGE
 	else
 		COVERAGE="1"
