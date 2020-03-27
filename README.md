@@ -3,7 +3,7 @@ Cenote-Taker2 is a pipeline for divergent virus discovery and annotation. See sc
 The code is currently functional.
 An ulterior motive for creating and distributing Cenote-Taker2 is to facilitate annotation and deposition of viral genomes into GenBank where they can be used by the scientific public. Therefore, I hope you consider depositing the submittable outputs (.sqn) after reviewing them. I am not affiliated with GenBank. See the [Cenote-Taker2 wiki](https://github.com/mtisza1/Cenote-Taker2/wiki) for useful information on using the pipeline (e.g. expected outputs) and screeds on myriad topics.
 
-![alt text](https://github.com/mtisza1/Cenote-Taker2/blob/master/cenote-taker_logo.PNG)
+![alt text](../master/cenote-taker_logo.PNG)
 
 # Install Using Conda
 
@@ -54,7 +54,7 @@ bash cenote_install1.sh /path/to/better/directory
 ```
 
 
-![alt text](https://github.com/mtisza1/Cenote-Taker2/blob/master/cenote-taker_figure_200318.PNG)
+![alt text](../master/cenote-taker_figure_200318.PNG)
 
 # Running Cenote-Taker2
 Cenote-Taker2 currently runs in a python wrapper. 
@@ -282,4 +282,4 @@ optional arguments:
   --blastp BLASTP       Do not use this argument as of now.
 ```
 
-![Directory Tree Image](https://github.com/mtisza1/Cenote-Taker2/blob/master/cenote-taker2_directory_tree2.PNG)
+![Directory Tree Image](../master/cenote-taker2_directory_tree2.PNG)
