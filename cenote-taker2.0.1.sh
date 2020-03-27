@@ -446,7 +446,8 @@ if [ ! -z "$CIRCLES_AND_ITRS" ] ; then
 				bioawk -c fastx '{ print $name, $seq, length($seq) }' ${nucl_fa%.fasta}.nucl_orfs.fa | grep -f ${nucl_fa%.fasta}.starting_orf.txt | sed '/--/d' | head -n1 | awk '{print ">"$1, $3; print $2}' > ${nucl_fa%.fasta}.starting_orf.1.fa ;
 				circlator fixstart --genes_fa ${nucl_fa%.fasta}.starting_orf.1.fa $nucl_fa ${nucl_fa%.fasta}.rotate ;
 			else
-				mv $nucl_fa ${nucl_fa%.fasta}.no_good_ORFs.fasta
+				head -n2 ${nucl_fa%.fasta}.nucl_orfs.fa | sed '/--/d' > ${nucl_fa%.fasta}.starting_orf.1.fa ;
+				circlator fixstart --genes_fa ${nucl_fa%.fasta}.starting_orf.1.fa $nucl_fa ${nucl_fa%.fasta}.rotate ;
 			fi
 		fi
 	done
