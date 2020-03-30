@@ -190,7 +190,9 @@ if [ $PROPHAGE == "False" ] ; then
 	echo "prophages not being pruned"
 
 else
-	python ${CENOTE_SCRIPT_DIR}/cenote_virus_segments_V6.py
+	for VSEQ in *virus_signal.seq ; do
+		python ${CENOTE_SCRIPT_DIR}/cenote_virus_segments_V6.py $VSEQ
+	done
 
 	# reformat .fastas to get viral segments of prophage
 	VIR_COUNTER=0 
