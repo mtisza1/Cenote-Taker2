@@ -65,7 +65,7 @@ else
 
 	for feat_tbl2 in *.final.tbl ; do
 		if [ -s ${feat_tbl2%.final.tbl}.gtf ] ; then
-			rm ${feat_tbl2%.final.tbl}.gtf
+			rm -f ${feat_tbl2%.final.tbl}.gtf
 		fi
 		grep "^[0-9]" -A3 $feat_tbl2 | sed '/--/d' | sed 's/ /_/g' | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n		//g' | while read LINE ; do
 			if echo $LINE | grep -q "CDS" ; then

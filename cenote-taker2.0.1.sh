@@ -184,7 +184,7 @@ if [ ${original_contigs: -6} == ".fasta" ]; then
 	bioawk -v run_var="$run_title" -v contig_cutoff="$LENGTH_MINIMUM" -c fastx '{ if(length($seq) > contig_cutoff) { print ">"run_var NR" "$name; print $seq }}' $original_contigs > ${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta ;
 	cd $run_title
 	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta ;
-	rm apc_aln*
+	rm -f apc_aln*
 	for fa1 in $run_title*.fa ; do 
 		mv $fa1 $run_title${fa1#$run_title.}sta ; 
 	done 
@@ -192,7 +192,7 @@ elif [ ${original_contigs: -6} == ".fastg" ]; then
 	bioawk -v contig_cutoff="$LENGTH_MINIMUM" -c fastx '{ if(length($seq) > contig_cutoff) {print }}' $original_contigs | grep "[a-zA-Z0-9]:\|[a-zA-Z0-9];" | grep -v "':" | awk '{ print ">"$1 ; print $2 }' | sed 's/:.*//g; s/;.*//g' | bioawk -v run_var="$run_title" -c fastx '{ print ">"run_var NR" "$name; print $seq }' > ${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta
 	cd $run_title
 	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta ;
-	rm apc_aln*
+	rm -f apc_aln*
 	for fa1 in $run_title*.fa ; do 
 		mv $fa1 $run_title${fa1#$run_title.}sta ; 
 	done 		
@@ -211,7 +211,7 @@ for CIRCLE1 in *.fasta ; do
 		mv $CIRCLE1 ${CIRCLE1%.fasta}.too_short.fasta 
 	fi
 done
-rm *.too_short.fasta
+rm -f *.too_short.fasta
 
 # Aligning reads to contigs
 if [ ! -s "$F_READS" ] ; then
@@ -235,7 +235,7 @@ else
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: running BBTools Pileup " $MDYT
 	pileup.sh in=reads_to_all_contigs_over${LENGTH_MINIMUM}nt.sam out=reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt
-	rm reads_to_all_contigs_over${LENGTH_MINIMUM}nt.sam
+	rm -f reads_to_all_contigs_over${LENGTH_MINIMUM}nt.sam
 fi
 
 
@@ -349,7 +349,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 		echo "$CONTIGS_NON_CIRCULAR" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.AA.sorted.fasta
 	else
 		echo "$(tput setaf 5) Incorrect argument given for virus_domain_db variable. Try -standard, -with_rdrp_retro, -all_common as arguments. For this run, no contigs with viral domains but without circularity or ITRs will be detected $(tput sgr 0)"
-		rm ./*{0..9}.fasta
+		rm -f ./*{0..9}.fasta
 		break
 	fi
 	for NO_END in $CONTIGS_NON_CIRCULAR ; do 
@@ -384,7 +384,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 			mv ${NO_END%.fasta}.AA.sorted.fasta ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.AA.sorted.fasta
 		else 
 			cat $NO_END >> non_viral_domains_contigs.fna
-			rm $NO_END
+			rm -f $NO_END
 		fi
 	done
 fi
@@ -559,7 +559,7 @@ if [ -n "$CIRCLES_AND_ITRS" ]; then
 		echo "$CIRCLES_AND_ITRS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.rotate.AA.hmmscan.out --cpu 1 -E 1e-8 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.rotate.AA.sorted.fasta
 	else
 		echo "$(tput setaf 5) Incorrect argument given for virus_domain_db variable. Try standard, rna_virus, all_common as arguments. For this run, no contigs with viral domains but without circularity or ITRs will be detected $(tput sgr 0)"
-		rm ./*{0..9}.fasta
+		rm -f ./*{0..9}.fasta
 		break
 	fi
 
@@ -974,24 +974,24 @@ for dark_orf in $dark_orf_list ; do
 		echo "$(tput setaf 5)Running HHsearch on "$dark_orf" now.$(tput sgr 0)"
 		${CENOTE_SCRIPT_DIR}/hh-suite/build/src/hhsearch -i $dark_orf -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o ${dark_orf%.for_hhpred.fasta}.out.hhr -cpu $CPU -maxmem $MEM -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1  ;
 		cat ${dark_orf%.for_hhpred.fasta}.out.hhr >> ${dark_orf%.rotate*.for_hhpred.fasta}.rotate.out_all.hhr ;
-		rm ${dark_orf%.for_hhpred.fasta}.out.hhr 
+		rm -f ${dark_orf%.for_hhpred.fasta}.out.hhr 
 		cat $dark_orf >> ${dark_orf%.rotate*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
-		rm $dark_orf
+		rm -f $dark_orf
 	elif [[ $HHSUITE_TOOL = "hhblits" ]] ; then
 		echo "$(tput setaf 5)Running HHblits on "$dark_orf" now.$(tput sgr 0)"
 		${CENOTE_SCRIPT_DIR}/hh-suite/build/src/hhblits -i $dark_orf -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o ${dark_orf%.for_hhpred.fasta}.out.hhr -cpu $CPU -maxmem $MEM -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1  ;
 		cat ${dark_orf%.for_hhpred.fasta}.out.hhr >> ${dark_orf%.rotate*.for_hhpred.fasta}.rotate.out_all.hhr ;
-		rm ${dark_orf%.for_hhpred.fasta}.out.hhr 
+		rm -f ${dark_orf%.for_hhpred.fasta}.out.hhr 
 		cat $dark_orf >> ${dark_orf%.rotate*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
-		rm $dark_orf
+		rm -f $dark_orf
 	else
 		echo "$(tput setaf 5) Valid option for HHsuite tool (i.e. -hhsearch or -hhblits) was not provided. Skipping step for "$dark_orf" $(tput sgr 0)"
 		cat $dark_orf >> ${dark_orf%.rotate*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
-		rm $dark_orf
+		rm -f $dark_orf
 	fi
 done
 
-rm *.rotate.AA.fasta
+rm -f *.rotate.AA.fasta
 
 # Generating tbl file from HHsearch results
 echo "$(tput setaf 5) Starting perl script to make tbl from HHsearch output $(tput sgr 0)"
@@ -1048,7 +1048,7 @@ for feat_tbl4 in *.int2.tbl ; do
 
 done
 
-rm *tmp.tbl
+rm -f *tmp.tbl
 
 for feat_tbl2 in *.comb3.tbl ; do 
 	if grep -i -q "CRESS\|genomovir\|circovir\|bacilladnavir\|redondovir\|nanovir\|geminivir\|smacovir" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
@@ -1121,7 +1121,7 @@ COMB3_COUNT=$( ls ${run_title}*.comb3.tbl | wc -l )
 	if [[ $COMB3_COUNT -gt 0 ]] ; then
 	for feat_tbl2 in *.comb3.tbl ; do
 		if [ -s ${feat_tbl2%.comb3.tbl}.gtf ] ; then
-			rm ${feat_tbl2%.comb3.tbl}.gtf
+			rm -f ${feat_tbl2%.comb3.tbl}.gtf
 		fi
 		grep "^[0-9]" -A3 $feat_tbl2 | sed '/--/d' | sed 's/ /_/g' | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n		//g' | while read LINE ; do
 			if echo $LINE | grep -q "CDS" ; then
@@ -1728,10 +1728,10 @@ echo "$(tput setaf 3) Summary file made: ${run_title}.tsv $(tput sgr 0)"
 
 echo "removing ancillary files"
 
-rm *.all_start_stop.txt *.bad_starts.txt *.comb.tbl *.comb2.tbl *.good_start_orfs.txt *.hypo_start_stop.txt *.nucl_orfs.fa *.remove_hypo.txt *.log *.promer.contigs_with_ends.fa *.promer.promer *.out.hhr *.starting_orf.txt *.out.hhr *.nucl_orfs.txt *.called_hmmscan.txt *.hmmscan_replicate.out *.hmmscan.out *.rotate.no_hmmscan.fasta *.starting_orf.1.fa *.phan.*fasta 
-rm -r bt2_indices/
-rm other_contigs/*.AA.fasta other_contigs/*.AA.sorted.fasta other_contigs/*.out other_contigs/*.dat other_contigs/*called_hmmscan.txt 
-rm no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta no_end_contigs_with_viral_domain/*.comb*.tbl 
+rm -f *.all_start_stop.txt *.bad_starts.txt *.comb.tbl *.comb2.tbl *.good_start_orfs.txt *.hypo_start_stop.txt *.nucl_orfs.fa *.remove_hypo.txt *.log *.promer.contigs_with_ends.fa *.promer.promer *.out.hhr *.starting_orf.txt *.out.hhr *.nucl_orfs.txt *.called_hmmscan.txt *.hmmscan_replicate.out *.hmmscan.out *.rotate.no_hmmscan.fasta *.starting_orf.1.fa *.phan.*fasta 
+rm -rf bt2_indices/
+rm -f other_contigs/*.AA.fasta other_contigs/*.AA.sorted.fasta other_contigs/*.out other_contigs/*.dat other_contigs/*called_hmmscan.txt 
+rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta no_end_contigs_with_viral_domain/*.comb*.tbl 
 echo " "
 echo "$(tput setaf 3) "$run_title" $(tput sgr 0)"
 echo "$(tput setaf 3) >>>>>>CENOTE TAKER HAS FINISHED TAKING CENOTES<<<<<< $(tput sgr 0)"

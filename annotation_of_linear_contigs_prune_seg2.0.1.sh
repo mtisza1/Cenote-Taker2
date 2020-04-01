@@ -577,24 +577,24 @@ for dark_orf in $dark_orf_list ; do
 		echo "$(tput setaf 5)Running HHsearch on "$dark_orf" now.$(tput sgr 0)"
 		${CENOTE_SCRIPT_DIR}/hh-suite/build/src/hhsearch -i $dark_orf -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o ${dark_orf%.for_hhpred.fasta}.out.hhr -cpu $CPU -maxmem $MEM -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1  ;
 		cat ${dark_orf%.for_hhpred.fasta}.out.hhr >> ${dark_orf%.*.for_hhpred.fasta}.rotate.out_all.hhr ;
-		rm ${dark_orf%.for_hhpred.fasta}.out.hhr 
+		rm -f ${dark_orf%.for_hhpred.fasta}.out.hhr 
 		cat $dark_orf >> ${dark_orf%.*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
-		rm $dark_orf
+		rm -f $dark_orf
 	elif [[ $HHSUITE_TOOL = "hhblits" ]] ; then
 		echo "$(tput setaf 5)Running HHblits on "$dark_orf" now.$(tput sgr 0)"
 		${CENOTE_SCRIPT_DIR}/hh-suite/build/src/hhblits -i $dark_orf -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o ${dark_orf%.for_hhpred.fasta}.out.hhr -cpu $CPU -maxmem $MEM -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1  ;
 		cat ${dark_orf%.for_hhpred.fasta}.out.hhr >> ${dark_orf%.*.for_hhpred.fasta}.rotate.out_all.hhr ;
-		rm ${dark_orf%.for_hhpred.fasta}.out.hhr 
+		rm -f ${dark_orf%.for_hhpred.fasta}.out.hhr 
 		cat $dark_orf >> ${dark_orf%.*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
-		rm $dark_orf
+		rm -f $dark_orf
 	else
 		echo "$(tput setaf 5) Valid option for HHsuite tool (i.e. -hhsearch or -hhblits) was not provided. Skipping step for "$dark_orf" $(tput sgr 0)"
 		cat $dark_orf >> ${dark_orf%.*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
-		rm $dark_orf
+		rm -f $dark_orf
 	fi
 done
 
-rm *.out.hhr
+rm -f *.out.hhr
 
 # Generating tbl file from HHpred results
 perl ${CENOTE_SCRIPT_DIR}/hhpredreport2tbl_mt_annotation_pipe_biowulf1_gjs_edits.pl ;
@@ -682,7 +682,7 @@ echo "$(tput setaf 5) Making .gff files for each annotated sequence $(tput sgr 0
 
 for feat_tbl2 in *_vs[0-9].comb3.tbl ; do
 	if [ -s ${feat_tbl2%.comb3.tbl}.gtf ] ; then
-		rm ${feat_tbl2%.comb3.tbl}.gtf
+		rm -f ${feat_tbl2%.comb3.tbl}.gtf
 	fi
 	grep "^[0-9]" -A3 $feat_tbl2 | sed '/--/d' | sed 's/ /_/g' | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n		//g' | while read LINE ; do
 		if echo $LINE | grep -q "CDS" ; then
@@ -1114,7 +1114,7 @@ else
 	tbl2asn -V vb -t ${base_directory}/${template_file} -X C -p sequin_directory/ ;
 fi
 
-rm *.virus_signal.tab *.used_positions.txt *.phan.fasta *.phan.sort.fasta
+rm -f *.virus_signal.tab *.used_positions.txt *.phan.fasta *.phan.sort.fasta
 
 cd ..
 
