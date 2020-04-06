@@ -2,7 +2,8 @@
 Cenote-Taker2 is a pipeline for divergent virus discovery and annotation. See schematic.
 The code is currently functional.
 An ulterior motive for creating and distributing Cenote-Taker2 is to facilitate annotation and deposition of viral genomes into GenBank where they can be used by the scientific public. Therefore, I hope you consider depositing the submittable outputs (.sqn) after reviewing them. I am not affiliated with GenBank. See the [Cenote-Taker2 wiki](https://github.com/mtisza1/Cenote-Taker2/wiki) for useful information on using the pipeline (e.g. expected outputs) and screeds on myriad topics.
-
+Using a HPC with at least 16 CPUs and 16g of dedicated memory is strongly recommended for every run. (Annotation of a few selected genomes can be done with less memory/CPU) 
+I usually use 32 CPUs and 32 GB of memory for medium and large metagenomes. More resources would be helpful for extra-large metagenomes.
 ![alt text](../master/cenote-taker_logo.png)
 
 # Install Using Conda
@@ -17,8 +18,7 @@ An ulterior motive for creating and distributing Cenote-Taker2 is to facilitate 
 ```
 
 Likely, this will only work in Linux. 
-Using a HPC with at least 16 CPUs and 16g of dedicated memory is strongly recommended. (Annotation of a few selected genomes can be done with less memory/CPU) 
-I usually use 32 CPUs and 32 GB of memory for medium and large metagenomes. More resources would be helpful for extra-large metagenomes.
+
 ```diff
 - ALERT *** Because Cenote-Taker2 needs large high-quality 
 - sequence databases to work correctly, installation will take ~2 hours 
@@ -53,6 +53,33 @@ Otherwise specify an absolute path to a directory with >32GB of storage:
 bash cenote_install1.sh /path/to/better/directory
 ```
 
+# Bioconda installation
+
+A user has packaged Cenote-Taker2 in Bioconda for use by their institute. However, installation can be done by anyone using their package with a few commands. All the above alerts, requirements, and warnings still apply. This will also require a user to have 32GB of storage in their default conda environment directory.
+
+Commands:
+```
+conda create -n cenote-taker2 -c hcc -c conda-forge -c bioconda -c defaults cenote-taker2=2020.04.01
+
+conda activate cenote-taker2
+
+download-db.sh
+```
+
+The Krona database directory will then need to be manually downloaded and set up. This should work:
+```
+CT2_DIR=$PWD
+KRONA_DIR=$( which python | sed 's/bin\/python/opt\/krona/g' )
+cd ${KRONA_DIR}
+sh updateTaxonomy.sh
+cd ${KRONA_DIR}
+sh updateAccessions.sh
+cd ${CT2_DIR}
+```
+Discussion:
+[LINK](https://github.com/mtisza1/Cenote-Taker2/issues/1#issuecomment-608510204)
+
+
 
 ![alt text](../master/cenote-taker_figure_200318.png)
 
@@ -60,6 +87,9 @@ bash cenote_install1.sh /path/to/better/directory
 Cenote-Taker2 currently runs in a python wrapper. 
 1. Activate the Conda environment.
 ```
+Check environments:
+conda info --envs
+
 Default:
 conda activate cenote-taker2_env
 
