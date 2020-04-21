@@ -24,6 +24,8 @@ optional_args = parser.add_argument_group('Use options to pick databases to upda
 
 optional_args.add_argument("--hmm", dest="HMM_DB", type=str2bool, default=False, help=' Default: false... Set to: True -or- False')
 
+args = parser.parse_args()
+
 if str(args.HMM_DB) == True:
 	subprocess.call(['rm -r ', str(cenote_script_path) + '/hmmscan_DBs/'])
 	subprocess.call(['wget --directory-prefix=', str(cenote_script_path) + ' https://zenodo.org/record/3759823/files/hmmscan_DBs.tgz'])
