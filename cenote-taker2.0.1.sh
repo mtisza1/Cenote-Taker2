@@ -275,7 +275,7 @@ else
 	fi
 	if [ -s other_contigs/all_non_circular.fasta ] ; then
 		grep "^>" other_contigs/all_non_circular.fasta | sed 's/>//g' | cut -d " " -f1 | while read LINE ; do 
-			grep -A1 "$LINE [a-zA-Z]" other_contigs/all_non_circular.fasta > other_contigs/$LINE.fasta ; 
+			grep -A1 "$LINE [a-zA-Z0-9]" other_contigs/all_non_circular.fasta > other_contigs/$LINE.fasta ; 
 		done
 	fi
 
