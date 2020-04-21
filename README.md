@@ -4,6 +4,8 @@ The code is currently functional.
 An ulterior motive for creating and distributing Cenote-Taker2 is to facilitate annotation and deposition of viral genomes into GenBank where they can be used by the scientific public. Therefore, I hope you consider depositing the submittable outputs (.sqn) after reviewing them. I am not affiliated with GenBank. See the [Cenote-Taker2 wiki](https://github.com/mtisza1/Cenote-Taker2/wiki) for useful information on using the pipeline (e.g. expected outputs) and screeds on myriad topics.
 Using a HPC with at least 16 CPUs and 16g of dedicated memory is strongly recommended for every run. (Annotation of a few selected genomes can be done with less memory/CPU) 
 I usually use 32 CPUs and 32 GB of memory for medium and large metagenomes. More resources would be helpful for extra-large metagenomes.
+
+Update to HMM databases (hallmark genes, added some pVOGs) on April 21st, 2020. See instructions below to update your database.
 ![alt text](../master/cenote-taker_logo.png)
 
 # Install Using Conda
@@ -79,6 +81,16 @@ cd ${CT2_DIR}
 Discussion:
 [LINK](https://github.com/mtisza1/Cenote-Taker2/issues/1#issuecomment-608510204)
 
+## Updating databases
+
+As of now, only the HMM database has been updated from the original (update on April 21st, 2020). This update should only take a minute or two. Here's how you update (modify if your conda environment is different than below example):
+```
+load your conda environment:
+conda activate cenote-taker2_env
+
+run the update script:
+python update_ct2_databases.py --hmm True
+```
 
 
 ![alt text](../master/cenote-taker_figure_200318.png)
