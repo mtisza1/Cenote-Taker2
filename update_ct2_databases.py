@@ -26,7 +26,7 @@ optional_args.add_argument("--hmm", dest="HMM_DB", type=str2bool, default=False,
 
 args = parser.parse_args()
 
-print str(args.HMM_DB)
+print (str(args.HMM_DB))
 if str(args.HMM_DB) == "True":
 	print ("running HMM database update")
 	subprocess.run(['rm', '-r ', str(cenote_script_path) + '/hmmscan_DBs/'], shell=True)
