@@ -1664,7 +1664,7 @@ echo "$(tput setaf 3) Making a summary table of all viral contigs, if any. $(tpu
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: making summary table " $MDYT
 
-echo -e "Isolation source""\t""Completeness""\t""Cenote-taker contig name""\t""original contig name""\t""Length""\t""Element Name""\t""Topology""\t""Common Viral Domains""\t""BLASTP hit for Taxonomy""\t""BLASTN result (if any)" > ${run_title}.tsv
+echo -e "Isolation source""\t""Completeness""\t""Cenote-taker contig name""\t""original contig name""\t""Length""\t""Element Name""\t""Topology""\t""Common Viral Domains""\t""ORF caller used""\t""BLASTP hit for Taxonomy""\t""BLASTN result (if any)" > ${run_title}.tsv
 for i in sequin_directory/*.fsa ; do
 	if [ ! -z "$i" ] ;then
 		site=$( head -n1 $i | sed -e 's/.*isolation_source=\(.*\)\] \[isolate.*/\1/' )
@@ -1692,8 +1692,13 @@ for i in sequin_directory/*.fsa ; do
 		else
 			BLASTN_REPORT="no blastn"
 		fi
+		if [ -s ${j#sequin_directory/}.phan.fasta ] ; then
+			ORF_CALL="PHANOTATE"
+		else
+			ORF_CALL="Prodigal (meta)"
+		fi
 		#title=$( cat $site | awk '{print $1}' )
-		echo -e $site "\t""Complete genome (putative)""\t" $df_num "\t" $seq_name1 "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call2 "\t" $BLASTN_REPORT >> ${run_title}.tsv
+		echo -e $site "\t""Complete genome (putative)""\t" $df_num "\t" $seq_name1 "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $ORF_CALL "\t" $blast_call2 "\t" $BLASTN_REPORT >> ${run_title}.tsv
 	fi
 done
 
@@ -1728,7 +1733,12 @@ for i in no_end_contigs_with_viral_domain/sequin_directory/*.fsa ; do
 		else
 			BLASTN_REPORT="no blastn"
 		fi
-		echo -e $site "\t""Partial genome (putative)""\t" $df_num "\t" $seq_name1 "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $blast_call2 "\t" $BLASTN_REPORT >> ${run_title}.tsv
+		if [ -s no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.phan.fasta ] ; then
+			ORF_CALL="PHANOTATE"
+		else
+			ORF_CALL="Prodigal (meta)"
+		fi		
+		echo -e $site "\t""Partial genome (putative)""\t" $df_num "\t" $seq_name1 "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $ORF_CALL "\t" $blast_call2 "\t" $BLASTN_REPORT >> ${run_title}.tsv
 	fi
 done
 
@@ -1736,7 +1746,7 @@ echo "$(tput setaf 3) Summary file made: ${run_title}.tsv $(tput sgr 0)"
 
 echo "removing ancillary files"
 
-rm -f *.all_start_stop.txt *.bad_starts.txt *.comb.tbl *.comb2.tbl *.good_start_orfs.txt *.hypo_start_stop.txt *.nucl_orfs.fa *.remove_hypo.txt *.log *.promer.contigs_with_ends.fa *.promer.promer *.out.hhr *.starting_orf.txt *.out.hhr *.nucl_orfs.txt *.called_hmmscan.txt *.hmmscan_replicate.out *.hmmscan.out *.rotate.no_hmmscan.fasta *.starting_orf.1.fa *.phan.*fasta 
+rm -f *.all_start_stop.txt *.bad_starts.txt *.comb.tbl *.comb2.tbl *.good_start_orfs.txt *.hypo_start_stop.txt *.nucl_orfs.fa *.remove_hypo.txt *.log *.promer.contigs_with_ends.fa *.promer.promer *.out.hhr *.starting_orf.txt *.out.hhr *.nucl_orfs.txt *.called_hmmscan.txt *.hmmscan_replicate.out *.hmmscan.out *.rotate.no_hmmscan.fasta *.starting_orf.1.fa *.phan.*fasta *used_positions.txt *.prodigal.for_prodigal.fa *.prodigal.gff *.trnascan-se2.txt *.for_blastp.txt *.for_hhpred.txt circular_contigs_spades_names.txt
 rm -rf bt2_indices/
 rm -f other_contigs/*.AA.fasta other_contigs/*.AA.sorted.fasta other_contigs/*.out other_contigs/*.dat other_contigs/*called_hmmscan.txt 
 rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta no_end_contigs_with_viral_domain/*.comb*.tbl 

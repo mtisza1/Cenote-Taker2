@@ -121,7 +121,7 @@ cd ${CT2_DIR}
 if [ -s hmmscan_DBs/useful_hmms_baits_and_not2a.h3p ] ; then
 	echo "HMM databases appear to be already present"
 else
-	wget https://zenodo.org/record/3660539/files/hmmscan_DBs.tgz
+	wget https://zenodo.org/record/3759823/files/hmmscan_DBs.tgz
 	tar -xvf hmmscan_DBs.tgz
 	rm hmmscan_DBs.tgz
 fi
