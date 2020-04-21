@@ -6,6 +6,8 @@ Using a HPC with at least 16 CPUs and 16g of dedicated memory is strongly recomm
 I usually use 32 CPUs and 32 GB of memory for medium and large metagenomes. More resources would be helpful for extra-large metagenomes.
 
 Update to HMM databases (hallmark genes, added some pVOGs) on April 21st, 2020. See instructions below to update your database.
+
+
 ![alt text](../master/cenote-taker_logo.png)
 
 # Install Using Conda
