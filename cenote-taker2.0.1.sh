@@ -713,12 +713,20 @@ PROTEIN_NO_HMMSCAN2=$( ls *.rotate.no_hmmscan2.fasta )
 if [ -n "$PROTEIN_NO_HMMSCAN2" ]; then
 
 	echo "$(tput setaf 5) Continuing to RPS-BLAST NCBI CDD domains database for each ORF in viral circular/ITR contigs...$(tput sgr 0)" 
-	echo "$PROTEIN_NO_HMMSCAN2" | sed 's/.rotate.no_hmmscan2.fasta//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_threads 1 -line_length 100 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -query {}.rotate.no_hmmscan2.fasta -out {}.rotate.AA.rpsblast.out ;
+	echo "$PROTEIN_NO_HMMSCAN2" | sed 's/.rotate.no_hmmscan2.fasta//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_threads 1 -line_length 100 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {}.rotate.no_hmmscan2.fasta -out {}.rotate.AA.rpsblast.out ;
 	echo "$(tput setaf 5)RPS-BLAST of viral circular/ITR contigs complete.$(tput sgr 0)"
 	echo " "
 else
 	echo "$(tput setaf 4) no ORFs for CD-HIT from viral circular/ITR contigs. all ORFs may have been called with HMMSCAN.$(tput sgr 0)"
 	echo " "
+fi
+
+CDD_OUT=$( ls *.rotate.AA.rpsblast.out )
+if [ -n "$CDD_OUT" ]; then
+	for CDD in $CDD_OUT ; do
+		awk '{ if ($0 ~ /^>/) {printf $0 ; getline; print $0} else { print $0}}' $CDD > ${CDD}.tmp
+		mv ${CDD}.tmp $CDD
+	done
 fi
 #rm ${nucl_fa%.fasta}.nucl_orfs.fa ${nucl_fa%.fasta}.rotate.detailed.log ${nucl_fa%.fasta}.rotate.log ${nucl_fa%.fasta}.rotate.promer.promer ${nucl_fa%.fasta}.rotate.promer.contigs_with_ends.fa ${nucl_fa%.fasta}.rotate.prodigal.for_prodigal.fa ${nucl_fa%.fasta}.rotate.prodigal.prodigal.gff;
 

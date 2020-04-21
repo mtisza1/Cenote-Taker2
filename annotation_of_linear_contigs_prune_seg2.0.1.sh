@@ -77,7 +77,7 @@ else
 	done
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: running RPSBLAST on each sequence " $MDYT
-	time ls *.no_hmmscan2.fasta | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -query {} -line_length 200 -out {}.rpsb.out ; echo "$(tput setaf 5)RPS-BLAST of "{}" complete.$(tput sgr 0)"
+	time ls *.no_hmmscan2.fasta | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {} -line_length 200 -out {}.rpsb.out ; echo "$(tput setaf 5)RPS-BLAST of "{}" complete.$(tput sgr 0)"
 
 	for RPSB in *.no_hmmscan2.fasta.rpsb.out ; do 
 		mv $RPSB ${RPSB%.no_hmmscan2.fasta.rpsb.out}.rotate.AA.rpsblast.out
@@ -363,7 +363,7 @@ for vd_fa in $virus_seg_fastas ; do
 	if [ -s "${vd_fa%.fna}.no_hmmscan2.fasta" ]; then
 
 		echo "$(tput setaf 5)"$vd_fa" Continuing to RPS-BLAST NCBI CDD domains database for each ORF...$(tput sgr 0)" 
-		rpsblast -evalue 1e-4 -num_descriptions 5 -num_threads $CPU -line_length 100 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -query ${vd_fa%.fna}.no_hmmscan2.fasta -out ${vd_fa%.fna}.rotate.AA.rpsblast.out ;
+		rpsblast -evalue 1e-4 -num_descriptions 5 -num_threads $CPU -line_length 100 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query ${vd_fa%.fna}.no_hmmscan2.fasta -out ${vd_fa%.fna}.rotate.AA.rpsblast.out ;
 		echo "$(tput setaf 5)RPS-BLAST of "${vd_fa%.fna}.no_hmmscan2.fasta" complete.$(tput sgr 0)"
 		echo " "
 	else
@@ -371,6 +371,14 @@ for vd_fa in $virus_seg_fastas ; do
 		echo " "
 	fi
 done
+
+CDD_OUT=$( ls *.rotate.AA.rpsblast.out )
+if [ -n "$CDD_OUT" ]; then
+	for CDD in $CDD_OUT ; do
+		awk '{ if ($0 ~ /^>/) {printf $0 ; getline; print $0} else { print $0}}' $CDD > ${CDD}.tmp
+		mv ${CDD}.tmp $CDD
+	done
+fi
 
 perl ${CENOTE_SCRIPT_DIR}/rpsblastreport2tbl_mt_annotation_pipe_biowulf.pl ;
 for vd_fa in $virus_seg_fastas ; do

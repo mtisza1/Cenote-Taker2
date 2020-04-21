@@ -24,11 +24,18 @@ else
 	done
 
 
-	time ls *.AA.fasta | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -query {} -line_length 100 -out {}.rpsblast1.out
+	time ls *.AA.fasta | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {} -line_length 100 -out {}.rpsblast1.out
 
 		echo "$(tput setaf 5)RPS-BLAST of putative non-viral contigs complete.$(tput sgr 0)"
 		echo " "
 
+	CDD_OUT=$( ls *.rpsblast1.out )
+	if [ -n "$CDD_OUT" ]; then
+		for CDD in $CDD_OUT ; do
+			awk '{ if ($0 ~ /^>/) {printf $0 ; getline; print $0} else { print $0}}' $CDD > ${CDD}.tmp
+			mv ${CDD}.tmp $CDD
+		done
+	fi
 	perl ${CENOTE_SCRIPT_DIR}/rpsblastreport2tbl_mt_sketch_contigs1.pl ;
 
 	echo "$(tput setaf 5) Looking for tRNAs in contigs; non-circular/non-ITR contigs without viral domains  $(tput sgr 0)"
