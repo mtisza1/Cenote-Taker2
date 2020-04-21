@@ -87,6 +87,9 @@ Discussion:
 
 As of now, only the HMM database has been updated from the original (update on April 21st, 2020). This update should only take a minute or two. Here's how you update (modify if your conda environment is different than below example):
 ```
+update Cenote-Taker2 (change to main repo directory):
+git pull
+
 load your conda environment:
 conda activate cenote-taker2_env
 
