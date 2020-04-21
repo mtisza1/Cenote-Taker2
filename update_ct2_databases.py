@@ -27,8 +27,8 @@ optional_args.add_argument("--hmm", dest="HMM_DB", type=str2bool, default=False,
 args = parser.parse_args()
 
 if str(args.HMM_DB) == "True":
-	subprocess.call(['rm -r ', str(cenote_script_path) + '/hmmscan_DBs/'])
-	subprocess.call(['wget --directory-prefix=', str(cenote_script_path) + ' https://zenodo.org/record/3759823/files/hmmscan_DBs.tgz'])
-	subprocess.call(['tar -xvf hmmscan_DBs.tgz'])
-	subprocess.call(['rm hmmscan_DBs.tgz'])
+	subprocess.run(['rm', '-r ', str(cenote_script_path) + '/hmmscan_DBs/'])
+	subprocess.run(['wget', '--directory-prefix=' + str(cenote_script_path), 'https://zenodo.org/record/3759823/files/hmmscan_DBs.tgz'])
+	subprocess.run(['tar', '-xvf', 'hmmscan_DBs.tgz'])
+	subprocess.run(['rm', 'hmmscan_DBs.tgz'])
 
