@@ -10,13 +10,13 @@ vd_fastas=$( ls *.fna )
 if [ $PROPHAGE == "False" ] ; then
 	echo "prophages not being pruned"
 	for NO_END in $vd_fastas ; do
-		cp $NO_END ${NO_END%.fna}_vs1.fna
+		cp $NO_END ${NO_END%.fna}_vs01.fna
 	done
 else
 	for NO_END in $vd_fastas ; do
 		LENGTH_SEQ=$( bioawk -c fastx '{print length($seq)}' $NO_END )
 		if [[ "$LENGTH_SEQ" -lt 10000 ]] ; then 
-			cp $NO_END ${NO_END%.fna}_vs1.fna
+			cp $NO_END ${NO_END%.fna}_vs01.fna
 			echo "$NO_END is too short to prune chromosomal regions"
 		elif [[ "$LENGTH_SEQ" -gt 10000 ]] || [[ "$LENGTH_SEQ" == 10000 ]] ; then
 			MDYT=$( date +"%m-%d-%y---%T" )
@@ -204,14 +204,15 @@ else
 			
 			if [[ $CHUNK_VIR -gt $LIN_MINIMUM_DOMAINS ]] || [ $CHUNK_VIR == $LIN_MINIMUM_DOMAINS ] ; then 
 				let VIR_COUNTER=VIR_COUNTER+1 ;
+				VIR_VALUE=$( printf "%02d" $VIR_COUNTER)
 				CHUNK_LENGTH=$(( ${CHUNK_END}-${CHUNK_START} ))
-				bioawk -v chunk_startq="$CHUNK_START" -v chunk_lengthq="$CHUNK_LENGTH" -v parent="${CHUNKS%.virus_signal.seq_chunk_coordinates.csv}" -c fastx '{ print ">"parent"_putative_virus"NR ; print substr($seq, chunk_startq, chunk_lengthq)}' ${CHUNKS%.virus_signal.seq_chunk_coordinates.csv}.fna > ${CHUNKS%.virus_signal.seq_chunk_coordinates.csv}_vs${VIR_COUNTER}.fna
+				bioawk -v chunk_startq="$CHUNK_START" -v chunk_endq="$CHUNK_END" -v chunk_lengthq="$CHUNK_LENGTH" -v parent="${CHUNKS%.virus_signal.seq_chunk_coordinates.csv}" -v good_chunk="$VIR_VALUE" -c fastx '{ print ">"parent"_putative_virus"good_chunk" "chunk_startq"-"chunk_endq ; print substr($seq, chunk_startq, chunk_lengthq)}' ${CHUNKS%.virus_signal.seq_chunk_coordinates.csv}.fna > ${CHUNKS%.virus_signal.seq_chunk_coordinates.csv}_vs${VIR_VALUE}.fna
 			fi
 		done
 	done
 fi
 
-virus_seg_fastas=$( ls *_vs[0-9].fna )
+virus_seg_fastas=$( ls *_vs[0-9][0-9].fna )
 
 echo "$(tput setaf 5) Trying to classify non-circular/non-ITR contigs with viral domains $(tput sgr 0)"
 
@@ -306,7 +307,7 @@ for NO_END in $virus_seg_fastas ; do
 			START_BASE=$( echo $LINE | sed 's/.*START=\(.*\)\] \[.*/\1/' ) ; 
 			ORF_NAME=$( echo $LINE | cut -d " " -f1 | sed 's/\(.*\)\.[0-9].*_1/\1/' ) ; 
 			END_BASE=$( echo $LINE | cut -d " " -f1 | sed 's/.*\(\.[0-9].*_1\)/\1/' | sed 's/_1//g; s/\.//g' ) ; 
-			ORIG_CONTIG=$( grep ">" ${NO_END%_vs[0-9].fna}.fna | cut -d " " -f2 ) ; 
+			ORIG_CONTIG=$( grep ">" ${NO_END%_vs[0-9][0-9].fna}.fna | cut -d " " -f2 ) ; 
 			AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ; 
 			let COUNTER=COUNTER+1 ; 
 			echo ">"${ORF_NAME}"_"${COUNTER} "["$START_BASE" - "$END_BASE"]" $ORIG_CONTIG ; echo $AA_SEQ ; 
@@ -392,7 +393,7 @@ done
 echo "$(tput setaf 5) BLASTP Genbank nr non-circular/non-ITR contigs with viral domains $(tput sgr 0)"
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: running BLASTP " $MDYT
-for feat_tbl1 in *_vs[0-9].NT.tbl ; do
+for feat_tbl1 in *_vs[0-9][0-9].NT.tbl ; do
 	grep -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Domain of unknown function' -e 'product	gp' -B2 $feat_tbl1 | grep "^[0-9]" | awk '{print $1 " - " $2}' > ${feat_tbl1%.NT.tbl}.for_blastp.txt ;
 	grep -f ${feat_tbl1%.NT.tbl}.for_blastp.txt -A1 ${feat_tbl1%.NT.tbl}.no_hmmscan2.fasta | sed '/--/d' > ${feat_tbl1%.NT.tbl}.rps_nohits.fasta ;
 	if [ $BLASTP == "conduct_blastp" ] ; then		
@@ -408,7 +409,7 @@ for feat_tbl1 in *_vs[0-9].NT.tbl ; do
 done
 
 perl ${CENOTE_SCRIPT_DIR}/blastpreport2tbl_mt_annotation_pipe_biowulf2.pl ;
-for feat_tbl1 in *_vs[0-9].NT.tbl ; do
+for feat_tbl1 in *_vs[0-9][0-9].NT.tbl ; do
 if [ -s "${feat_tbl1%.NT.tbl}.BLASTP.tbl" ]; then
 	echo "$(tput setaf 5)"${feat_tbl1%.NT.tbl}": tbl made from BLASTP hits. Splitting fasta files for HHsearch...$(tput sgr 0)"
 else
@@ -422,9 +423,9 @@ echo "time update: running tRNAscan-SE, linear contigs " $MDYT
 for GENOME_NAME in $virus_seg_fastas ; do
 	tRNAscan-SE -Q -G -o $GENOME_NAME.trnascan-se2.txt $GENOME_NAME
 	
-	if grep -q "${GENOME_NAME%_vs[0-9].fna}" $GENOME_NAME.trnascan-se2.txt ;then
+	if grep -q "${GENOME_NAME%_vs[0-9][0-9].fna}" $GENOME_NAME.trnascan-se2.txt ;then
 
-		grep "${GENOME_NAME%_vs[0-9].fna}" $GENOME_NAME.trnascan-se2.txt | while read LINE ; do 
+		grep "${GENOME_NAME%_vs[0-9][0-9].fna}" $GENOME_NAME.trnascan-se2.txt | while read LINE ; do 
 			TRNA_START=$( echo $LINE | cut -d " " -f3 ) ; 
 			TRNA_END=$( echo $LINE | cut -d " " -f4 ) ; 
 			TRNA_NUMBER=$( echo $LINE | cut -d " " -f2 ) ; 
@@ -497,7 +498,7 @@ done
 
 echo "$(tput setaf 5) Removing 'hypothetical' ORFs-within-ORFs; non-circular/non-ITR contigs with viral domains  $(tput sgr 0)"
 
-for feat_tbl3 in *_vs[0-9].int.tbl ; do
+for feat_tbl3 in *_vs[0-9][0-9].int.tbl ; do
 	grep "^[0-9]" $feat_tbl3 | awk '{FS="\t"; OFS="\t"} {print $1, $2}' > ${feat_tbl3%.int.tbl}.all_start_stop.txt ;
 	cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read linev ; do
 		all_start=$( echo $linev | cut -d " " -f1 )
@@ -567,7 +568,7 @@ done
 
 echo "$(tput setaf 5) Parsing ORFs for HHsearch ; non-circular/non-ITR contigs with viral domains  $(tput sgr 0)"
 
-for blastp_tbl1 in *_vs[0-9].int2.tbl ; do
+for blastp_tbl1 in *_vs[0-9][0-9].int2.tbl ; do
 	grep -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Uncharacterized conserved protein' -e 'unknown' -e 'Uncharacterised protein' -e 'product	gp' -B2 $blastp_tbl1 | grep "^[0-9]" | awk '{print $1 " - " $2}' > ${blastp_tbl1%.int2.tbl}.for_hhpred.txt ;
 	grep -f ${blastp_tbl1%.int2.tbl}.for_hhpred.txt -A1 ${blastp_tbl1%.int2.tbl}.rps_nohits.fasta | sed '/--/d' > ${blastp_tbl1%.int2.tbl}.blast_hypo.fasta ;
 	csplit -z ${blastp_tbl1%.int2.tbl}.blast_hypo.fasta '/>/' '{*}' --prefix=${blastp_tbl1%.int2.tbl}. --suffix-format=%02d.for_hhpred.fasta; 
@@ -612,7 +613,7 @@ sed 's/OS=.*//g; s/ ;//g; s/similar to AA sequence:UniProtKB:>\([0-9][A-Z].*\)/p
 done
 
 
-for feat_tbl4 in *_vs[0-9].int2.tbl ; do 
+for feat_tbl4 in *_vs[0-9][0-9].int2.tbl ; do 
 	if [ -s "${feat_tbl4%.int2.tbl}.HH2.tbl" ] && [ -s "$feat_tbl4" ] ; then
 		head -n1 $feat_tbl4 > ${feat_tbl4%.int2.tbl}.comb3.tbl
 		grep -v -e 'hypothetical protein' -e 'unnamed protein product' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Domain of unknown function' -e 'product	gp' -e 'putative phage protein' $feat_tbl4 | grep -A1 -B2 'product' | grep -v ">Feature" | sed '/--/d' >> ${feat_tbl4%.int2.tbl}.comb3.tbl
@@ -623,7 +624,7 @@ for feat_tbl4 in *_vs[0-9].int2.tbl ; do
 done
 
 # re-taxonomy for contigs by using putatively most appropriate gene 
-for feat_tbl2 in *_vs[0-9].comb3.tbl ; do 
+for feat_tbl2 in *_vs[0-9][0-9].comb3.tbl ; do 
 	if grep -i -q "CRESS\|genomovir\|circovir\|bacilladnavir\|redondovir\|nanovir\|geminivir\|smacovir" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
 		echo ${feat_tbl2%.comb3.tbl}" is a CRESS virus of some kind"
 	else
@@ -688,7 +689,7 @@ echo "$(tput setaf 5) Making GFF file of annotations; non-circular/non-ITR conti
 
 echo "$(tput setaf 5) Making .gff files for each annotated sequence $(tput sgr 0)"
 
-for feat_tbl2 in *_vs[0-9].comb3.tbl ; do
+for feat_tbl2 in *_vs[0-9][0-9].comb3.tbl ; do
 	if [ -s ${feat_tbl2%.comb3.tbl}.gtf ] ; then
 		rm -f ${feat_tbl2%.comb3.tbl}.gtf
 	fi
@@ -736,9 +737,9 @@ fi
 echo "$(tput setaf 5) making .tbl, .cmt, and .fsa files for sequin; non-circular/non-ITR contigs with viral domains  $(tput sgr 0)"
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: making nomeclature and fsa file, linear contigs " $MDYT
-for feat_tbl2 in *_vs[0-9].comb3.tbl ; do 
+for feat_tbl2 in *_vs[0-9][0-9].comb3.tbl ; do 
 	file_core=${feat_tbl2%.comb3.tbl}
-	orig_core=${file_core%_vs[0-9]}
+	orig_core=${file_core%_vs[0-9][0-9]}
 	file_numbers=$( echo ${orig_core: -3} | sed 's/[a-z]//g' | sed 's/[A-Z]//g' )
 	tax_info=${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 	if grep -q "Anellovir" $tax_info ; then
@@ -1049,8 +1050,8 @@ for feat_tbl2 in *_vs[0-9].comb3.tbl ; do
 	tax_guess=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ) ; 
 	perc_id=$( head -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | sed 's/ /-/g' | awk '{FS="\t"; OFS="\t"} {print $2" "$3}' | sed 's/-/ /g' ) ;
 	rand_id=$( head /dev/urandom | tr -dc A-Za-z0-9 | head -c 3 ; echo '' )
-	if [ -s "${feat_tbl2%_vs[0-9].comb3.tbl}.fna" ] ; then
-		seq_name1=$( head -n1 ${feat_tbl2%_vs[0-9].comb3.tbl}.fna | sed 's/>//g; s/|.*//g' | cut -d " " -f2 )
+	if [ -s "${feat_tbl2%_vs[0-9][0-9].comb3.tbl}.fna" ] ; then
+		seq_name1=$( head -n1 ${feat_tbl2%_vs[0-9][0-9].comb3.tbl}.fna | sed 's/>//g; s/|.*//g' | cut -d " " -f2 )
 	else
 		seq_name1=$( head -n1 ${feat_tbl2%.comb3.tbl}.fna | sed 's/>//g; s/|.*//g' | cut -d " " -f2 )
 	fi
@@ -1096,7 +1097,7 @@ done
 
 #making cmt file for assembly data
 for nucl_fa in $virus_seg_fastas ; do
-	input_contig_name=$( head -n1 ${nucl_fa%_vs[0-9].fna}.fna | cut -d " " -f1 | sed 's/|.*//g; s/>//g' ) 
+	input_contig_name=$( head -n1 ${nucl_fa%_vs[0-9][0-9].fna}.fna | cut -d " " -f1 | sed 's/|.*//g; s/>//g' ) 
 	echo $input_contig_name
 	if [ -s ../reads_to_all_contigs_over${circ_length_cutoff}nt.coverage.txt ] ; then
 		COVERAGE=$( grep "$input_contig_name	" ../reads_to_all_contigs_over${length_cutoff}nt.coverage.txt | cut -f2 )
