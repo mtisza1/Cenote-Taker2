@@ -32,7 +32,7 @@ foreach my$RPSBlastReport (@BlastOutput){
 		}
 		elsif($line =~ m/\Q***** No hits found *****\E/){
 			print OUTPUT "\n\t\t\tproduct\thypothetical protein";
-			print OUTPUT "\n\t\t\tinference\tNo RPS-BLAST hit";			
+			print OUTPUT "\n\t\t\tnote\tNo RPS-BLAST hit";			
 		}
 		elsif($line =~ m/\>(\S+) (\Qcd\E\d+), (\S+), (.+)(\[|\.|\n)/){
 			print OUTPUT "\n\t\t\tproduct\t$3";
