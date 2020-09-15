@@ -362,9 +362,10 @@ done
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: running RPSBLAST, linear contigs " $MDYT
 
-time echo "$virus_seg_fastas" | sed 's/\.fna//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {}.fna -line_length 200 -out {}.rpsb.out ; echo "$(tput setaf 5)RPS-BLAST of "{}" complete.$(tput sgr 0)"
+time echo "$virus_seg_fastas" | sed 's/\.fna//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {}.no_hmmscan2.fasta -line_length 200 -out {}.rpsb.out ; 
+echo "$(tput setaf 5)RPS-BLAST of linear contigs complete.$(tput sgr 0)"
 for RPSB in $virus_seg_fastas ; do 
-	mv ${RPSB%fna}.rpsb.out ${RPSB%fna}.rotate.AA.rpsblast.out
+	mv ${RPSB%fna}rpsb.out ${RPSB%fna}rotate.AA.rpsblast.out
 done
 
 
