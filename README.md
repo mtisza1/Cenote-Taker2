@@ -155,7 +155,9 @@ usage: run_cenote-taker2.0.1.py [-h]
                                 [--blastp BLASTP]
 
 Cenote-Taker2 is a pipeline for virus discovery and thorough annotation of
-viral contigs and genomes.
+viral contigs and genomes. Visit https://github.com/mtisza1/Cenote-Taker2 and
+https://github.com/mtisza1/Cenote-Taker2/wiki to find answers and submit
+issues
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -207,14 +209,16 @@ optional arguments:
                         Default: 1000 Minimum length of non-circualr contigs
                         to be checked for viral hallmark genes.
   --virus_domain_db VIRUS_DOMAIN_DB
-                        default: standard 'standard' database: mostly DNA
-                        virus hallmark genes (i.e. genes with known function
-                        and exclusively found in viral genomes) with very low
-                        false discovery rate. 'rna_virus' database: For RNA
-                        sequencing data only. Includes RdRp and capsid genes
-                        of RNA viruses. Moderate false discovery rate due to
-                        structural similarity between RdRp genes and e.g.
-                        transposon-encoded RT genes
+                        default: standard 'standard' database: all virus (DNA
+                        and RNA) hallmark genes (i.e. genes with known
+                        function as virion structural, packaging, replication,
+                        or maturation proteins specifically encoded by virus
+                        genomes) with very low false discovery rate.
+                        'rna_virus' database: For RNA virus hallmarks only.
+                        Includes RdRp and capsid genes of RNA viruses. Low
+                        false discovery rate due to structural similarity
+                        between RdRp genes and e.g. transposon-encoded RT
+                        genes
   --lin_minimum_hallmark_genes LIN_MINIMUM_DOMAINS
                         Default: 1 Number of detected viral hallmark genes on
                         a non-circular contig to be considered viral and
