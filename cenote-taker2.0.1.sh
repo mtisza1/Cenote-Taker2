@@ -1663,72 +1663,78 @@ MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: making summary table " $MDYT
 
 echo -e "Isolation source""\t""Completeness""\t""Cenote-taker contig name""\t""original contig name""\t""Length""\t""Element Name""\t""Topology""\t""Common Viral Domains""\t""ORF caller used""\t""BLASTP hit for Taxonomy""\t""BLASTN result (if any)" > ${run_title}.tsv
-for i in sequin_directory/*.fsa ; do
-	if [ ! -z "$i" ] ;then
-		site=$( head -n1 $i | sed -e 's/.*isolation_source=\(.*\)\] \[isolate.*/\1/' )
-		df_num=$( head -n1 $i | sed -e 's/>\(.*[0-9].*\)\ \[note= .*/\1/' )
-		topologyq=$( head -n1 $i | sed -e 's/.*topology=\(.*\)\] \[Bioproject.*/\1/' )
-		tax_call=$( head -n1 $i | sed -e 's/.*organism=\(.*\)\] \[moltype=.*/\1/' )
-		if grep -q "highly similar to sequence" $i ; then
-			blast_call1=$( head -n1 $i | sed -e 's/.*note=highly similar to sequence \(.*\)\] \[organism=.*/\1/' )
-			blast_call2=$( echo "CLOSE SIMILARITY TO:" $blast_call1 )
-		else
-			blast_call2=$( head -n1 $i | sed -e 's/.*closest relative: \(.*\)\] \[organism=.*/\1/' )
+circular_fsas=$( ls sequin_directory/*.fsa )
+if [ ! -z "$circular_fsas" ] ;then
+	for i in sequin_directory/*.fsa ; do
+		if [ ! -z "$i" ] ;then
+			site=$( head -n1 $i | sed -e 's/.*isolation_source=\(.*\)\] \[isolate.*/\1/' )
+			df_num=$( head -n1 $i | sed -e 's/>\(.*[0-9].*\)\ \[note= .*/\1/' )
+			topologyq=$( head -n1 $i | sed -e 's/.*topology=\(.*\)\] \[Bioproject.*/\1/' )
+			tax_call=$( head -n1 $i | sed -e 's/.*organism=\(.*\)\] \[moltype=.*/\1/' )
+			if grep -q "highly similar to sequence" $i ; then
+				blast_call1=$( head -n1 $i | sed -e 's/.*note=highly similar to sequence \(.*\)\] \[organism=.*/\1/' )
+				blast_call2=$( echo "CLOSE SIMILARITY TO:" $blast_call1 )
+			else
+				blast_call2=$( head -n1 $i | sed -e 's/.*closest relative: \(.*\)\] \[organism=.*/\1/' )
+			fi
+			length=$( bioawk -c fastx '{ print length($seq)}' $i )
+			echo $df_num, $topologyq, $tax_call, $length, $blast_call
+			j=${i%.fsa} ; 
+			DOMAIN_COUNT=$( cat ${j#sequin_directory/}.rotate.AA.called_hmmscan.txt | wc -l )
+			seq_name1=$( head -n1 ${j#sequin_directory/}.fasta  | sed 's/>//g; s/|.*//g' | cut -d " " -f2 ) ; 
+			if [ -s ${j#sequin_directory/}.blastn.out ] ; then
+				BLASTN_REPORT=$( head -n1 ${j#sequin_directory/}.blastn.out )
+			else
+				BLASTN_REPORT="no blastn"
+			fi
+			if [ -s ${j#sequin_directory/}.phan.fasta ] ; then
+				ORF_CALL="PHANOTATE"
+			else
+				ORF_CALL="Prodigal (meta)"
+			fi
+			#title=$( cat $site | awk '{print $1}' )
+			echo -e $site "\t""Complete genome (putative)""\t" $df_num "\t" $seq_name1 "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $ORF_CALL "\t" $blast_call2 "\t" $BLASTN_REPORT >> ${run_title}.tsv
 		fi
-		length=$( bioawk -c fastx '{ print length($seq)}' $i )
-		echo $df_num, $topologyq, $tax_call, $length, $blast_call
-		j=${i%.fsa} ; 
-		DOMAIN_COUNT=$( cat ${j#sequin_directory/}.rotate.AA.called_hmmscan.txt | wc -l )
-		seq_name1=$( head -n1 ${j#sequin_directory/}.fasta  | sed 's/>//g; s/|.*//g' | cut -d " " -f2 ) ; 
-		if [ -s ${j#sequin_directory/}.blastn.out ] ; then
-			BLASTN_REPORT=$( head -n1 ${j#sequin_directory/}.blastn.out )
-		else
-			BLASTN_REPORT="no blastn"
-		fi
-		if [ -s ${j#sequin_directory/}.phan.fasta ] ; then
-			ORF_CALL="PHANOTATE"
-		else
-			ORF_CALL="Prodigal (meta)"
-		fi
-		#title=$( cat $site | awk '{print $1}' )
-		echo -e $site "\t""Complete genome (putative)""\t" $df_num "\t" $seq_name1 "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $ORF_CALL "\t" $blast_call2 "\t" $BLASTN_REPORT >> ${run_title}.tsv
-	fi
-done
+	done
+fi
 
-for i in no_end_contigs_with_viral_domain/sequin_directory/*.fsa ; do
-	if [ ! -z "$i" ] ;then
-		site=$( head -n1 $i | sed -e 's/.*isolation_source=\(.*\)\] \[isolate.*/\1/' )
-		if grep -q "highly similar to sequence" $i ; then
-			df_num=$( head -n1 $i | sed -e 's/>\(.*[0-9].*\)\ \[note=highly similar.*/\1/' )
-		else
-			df_num=$( head -n1 $i | sed -e 's/>\(.*[0-9].*\)\ \[note= this.*/\1/' )
+linear_fsas=$( ls no_end_contigs_with_viral_domain/sequin_directory/*.fsa )
+if [ ! -z "$linear_fsas" ] ;then
+	for i in no_end_contigs_with_viral_domain/sequin_directory/*.fsa ; do
+		if [ ! -z "$i" ] ;then
+			site=$( head -n1 $i | sed -e 's/.*isolation_source=\(.*\)\] \[isolate.*/\1/' )
+			if grep -q "highly similar to sequence" $i ; then
+				df_num=$( head -n1 $i | sed -e 's/>\(.*[0-9].*\)\ \[note=highly similar.*/\1/' )
+			else
+				df_num=$( head -n1 $i | sed -e 's/>\(.*[0-9].*\)\ \[note= this.*/\1/' )
+			fi
+			topologyq=$( head -n1 $i | sed -e 's/.*topology=\(.*\)\] \[Bioproject.*/\1/' )
+			tax_call=$( head -n1 $i | sed -e 's/.*organism=\(.*\)\] \[moltype=.*/\1/' )
+			if grep -q "highly similar to sequence" $i ; then
+				blast_call1=$( head -n1 $i | sed -e 's/.*note=highly similar to sequence \(.*\)\] \[note= .*/\1/' )
+				blast_call2=$( echo "CLOSE SIMILARITY TO:" $blast_call1 )
+			else
+				blast_call2=$( head -n1 $i | sed -e 's/.*closest relative: \(.*\)\] \[organism=.*/\1/' )
+			fi
+			length=$( bioawk -c fastx '{ print length($seq)}' $i )
+			echo $df_num, $topologyq, $tax_call, $length, $blast_call
+			j=${i%.fsa} ; 
+			DOMAIN_COUNT=$( cat no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.AA.hmmscan2.sort.out | wc -l )
+			seq_name1=$( head -n1 no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.fna  | sed 's/>//g; s/|.*//g' | cut -d " " -f2 ) ; 
+			if [ -s no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.blastn.out ] ; then
+				BLASTN_REPORT=$( head -n1 no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.blastn.out )
+			else
+				BLASTN_REPORT="no blastn"
+			fi
+			if [ -s no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.phan.fasta ] ; then
+				ORF_CALL="PHANOTATE"
+			else
+				ORF_CALL="Prodigal (meta)"
+			fi		
+			echo -e $site "\t""Partial genome (putative)""\t" $df_num "\t" $seq_name1 "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $ORF_CALL "\t" $blast_call2 "\t" $BLASTN_REPORT >> ${run_title}.tsv
 		fi
-		topologyq=$( head -n1 $i | sed -e 's/.*topology=\(.*\)\] \[Bioproject.*/\1/' )
-		tax_call=$( head -n1 $i | sed -e 's/.*organism=\(.*\)\] \[moltype=.*/\1/' )
-		if grep -q "highly similar to sequence" $i ; then
-			blast_call1=$( head -n1 $i | sed -e 's/.*note=highly similar to sequence \(.*\)\] \[note= .*/\1/' )
-			blast_call2=$( echo "CLOSE SIMILARITY TO:" $blast_call1 )
-		else
-			blast_call2=$( head -n1 $i | sed -e 's/.*closest relative: \(.*\)\] \[organism=.*/\1/' )
-		fi
-		length=$( bioawk -c fastx '{ print length($seq)}' $i )
-		echo $df_num, $topologyq, $tax_call, $length, $blast_call
-		j=${i%.fsa} ; 
-		DOMAIN_COUNT=$( cat no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.AA.hmmscan2.sort.out | wc -l )
-		seq_name1=$( head -n1 no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.fna  | sed 's/>//g; s/|.*//g' | cut -d " " -f2 ) ; 
-		if [ -s no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.blastn.out ] ; then
-			BLASTN_REPORT=$( head -n1 no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.blastn.out )
-		else
-			BLASTN_REPORT="no blastn"
-		fi
-		if [ -s no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.phan.fasta ] ; then
-			ORF_CALL="PHANOTATE"
-		else
-			ORF_CALL="Prodigal (meta)"
-		fi		
-		echo -e $site "\t""Partial genome (putative)""\t" $df_num "\t" $seq_name1 "\t" $length "\t" $tax_call "\t" $topologyq "\t" $DOMAIN_COUNT "\t" $ORF_CALL "\t" $blast_call2 "\t" $BLASTN_REPORT >> ${run_title}.tsv
-	fi
-done
+	done
+fi
 
 echo "$(tput setaf 3) Summary file made: ${run_title}.tsv $(tput sgr 0)"
 
