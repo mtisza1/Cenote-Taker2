@@ -18,7 +18,7 @@ pathname = os.path.dirname(sys.argv[0])
 cenote_script_path = os.path.abspath(pathname)      
 print(cenote_script_path) 
 
-parser = argparse.ArgumentParser(description='Update databases associated with Cenote-Taker2. HMM (hmmer) databases: updated April 21st, 2020. CDD (hhsuite) database: not updated from original. PFAM (hhsuite) database: not updated from original. PDB (hhsuite) database: not updated from original. CDD (rpsblast) database: not updated from original. Taxonomy (BLAST) databases: not updated from original.')
+parser = argparse.ArgumentParser(description='Update databases associated with Cenote-Taker2. HMM (hmmer) databases: updated September 15th, 2020. CDD (hhsuite) database: not updated from original. PFAM (hhsuite) database: not updated from original. PDB (hhsuite) database: not updated from original. CDD (rpsblast) database: not updated from original. Taxonomy (BLAST) databases: not updated from original.')
 
 optional_args = parser.add_argument_group('Use options to pick databases to update.')
 

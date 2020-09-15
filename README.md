@@ -5,7 +5,7 @@ An ulterior motive for creating and distributing Cenote-Taker2 is to facilitate 
 Using a HPC with at least 16 CPUs and 16g of dedicated memory is strongly recommended for every run. (Annotation of a few selected genomes can be done with less memory/CPU) 
 I usually use 32 CPUs and 32 GB of memory for medium and large metagenomes. More resources would be helpful for extra-large metagenomes.
 
-Update to HMM databases (hallmark genes, added some pVOGs) on April 21st, 2020. See instructions below to update your database.
+Update to HMM databases (hallmark genes) occurred on September 15th, 2020. See instructions below to update your database.
 
 
 ![alt text](../master/cenote-taker_logo.png)
@@ -85,7 +85,7 @@ Discussion:
 
 ## Updating databases
 
-As of now, only the HMM database has been updated from the original (update on April 21st, 2020). This update should only take a minute or two. Here's how you update (modify if your conda environment is different than below example):
+As of now, only the HMM database has been updated from the original (update on September 15th, 2020). This update should only take a minute or two. Here's how you update (modify if your conda environment is different than below example):
 ```
 update Cenote-Taker2 (change to main repo directory):
 git pull
@@ -97,7 +97,7 @@ run the update script:
 python update_ct2_databases.py --hmm True
 ```
 
-
+## Schematic
 ![alt text](../master/cenote-taker_figure_200318.png)
 
 # Running Cenote-Taker2
@@ -328,5 +328,5 @@ optional arguments:
                         space are required for copying the databases)
   --blastp BLASTP       Do not use this argument as of now.
 ```
-
+## Directory Tree
 ![Directory Tree Image](../master/cenote-taker2_directory_tree2.png)
