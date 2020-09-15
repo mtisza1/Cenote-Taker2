@@ -1461,8 +1461,6 @@ COMB3_COUNT=$( ls ${run_title}*.comb3.tbl | wc -l )
 			vir_name="ssRNA virus" ;
 		elif grep -q "unclassified RNA virus" $tax_info ; then
 			vir_name="unclassified RNA viruse" ;
-		elif grep -q "Satellite" $tax_info ; then
-			vir_name="Satellite virus" ;
 		elif grep -q "unclassified ssDNA bacterial virus" $tax_info ; then
 			vir_name="unclassified ssDNA bacterial virus" ;
 		elif grep -q "phage" $tax_info ; then
@@ -1668,22 +1666,17 @@ echo -e "Isolation source""\t""Completeness""\t""Cenote-taker contig name""\t""o
 for i in sequin_directory/*.fsa ; do
 	if [ ! -z "$i" ] ;then
 		site=$( head -n1 $i | sed -e 's/.*isolation_source=\(.*\)\] \[isolate.*/\1/' )
-		echo $site
 		df_num=$( head -n1 $i | sed -e 's/>\(.*[0-9].*\)\ \[note= .*/\1/' )
-		echo $df_num
 		topologyq=$( head -n1 $i | sed -e 's/.*topology=\(.*\)\] \[Bioproject.*/\1/' )
-		echo $topologyq
 		tax_call=$( head -n1 $i | sed -e 's/.*organism=\(.*\)\] \[moltype=.*/\1/' )
-		echo $tax_call
 		if grep -q "highly similar to sequence" $i ; then
 			blast_call1=$( head -n1 $i | sed -e 's/.*note=highly similar to sequence \(.*\)\] \[organism=.*/\1/' )
 			blast_call2=$( echo "CLOSE SIMILARITY TO:" $blast_call1 )
 		else
 			blast_call2=$( head -n1 $i | sed -e 's/.*closest relative: \(.*\)\] \[organism=.*/\1/' )
 		fi
-		echo $blast_call
 		length=$( bioawk -c fastx '{ print length($seq)}' $i )
-		echo length
+		echo $df_num, $topologyq, $tax_call, $length, $blast_call
 		j=${i%.fsa} ; 
 		DOMAIN_COUNT=$( cat ${j#sequin_directory/}.rotate.AA.called_hmmscan.txt | wc -l )
 		seq_name1=$( head -n1 ${j#sequin_directory/}.fasta  | sed 's/>//g; s/|.*//g' | cut -d " " -f2 ) ; 
@@ -1705,26 +1698,21 @@ done
 for i in no_end_contigs_with_viral_domain/sequin_directory/*.fsa ; do
 	if [ ! -z "$i" ] ;then
 		site=$( head -n1 $i | sed -e 's/.*isolation_source=\(.*\)\] \[isolate.*/\1/' )
-		echo $site
 		if grep -q "highly similar to sequence" $i ; then
 			df_num=$( head -n1 $i | sed -e 's/>\(.*[0-9].*\)\ \[note=highly similar.*/\1/' )
 		else
 			df_num=$( head -n1 $i | sed -e 's/>\(.*[0-9].*\)\ \[note= this.*/\1/' )
 		fi
-		echo $df_num
 		topologyq=$( head -n1 $i | sed -e 's/.*topology=\(.*\)\] \[Bioproject.*/\1/' )
-		echo $topologyq
 		tax_call=$( head -n1 $i | sed -e 's/.*organism=\(.*\)\] \[moltype=.*/\1/' )
-		echo $tax_call
 		if grep -q "highly similar to sequence" $i ; then
 			blast_call1=$( head -n1 $i | sed -e 's/.*note=highly similar to sequence \(.*\)\] \[note= .*/\1/' )
 			blast_call2=$( echo "CLOSE SIMILARITY TO:" $blast_call1 )
 		else
 			blast_call2=$( head -n1 $i | sed -e 's/.*closest relative: \(.*\)\] \[organism=.*/\1/' )
 		fi
-		echo $blast_call
 		length=$( bioawk -c fastx '{ print length($seq)}' $i )
-		echo $length
+		echo $df_num, $topologyq, $tax_call, $length, $blast_call
 		j=${i%.fsa} ; 
 		DOMAIN_COUNT=$( cat no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.AA.hmmscan2.sort.out | wc -l )
 		seq_name1=$( head -n1 no_end_contigs_with_viral_domain/${j#no_end_contigs_with_viral_domain/sequin_directory/}.fna  | sed 's/>//g; s/|.*//g' | cut -d " " -f2 ) ; 
@@ -1751,7 +1739,7 @@ rm -rf bt2_indices/
 rm -f other_contigs/*.AA.fasta other_contigs/*.AA.sorted.fasta other_contigs/*.out other_contigs/*.dat other_contigs/*called_hmmscan.txt 
 rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta no_end_contigs_with_viral_domain/*.comb*.tbl 
 echo " "
-echo "$(tput setaf 3) "$run_title" $(tput sgr 0)"
+echo "$(tput setaf 3)output directory: "$run_title" $(tput sgr 0)"
 echo "$(tput setaf 3) >>>>>>CENOTE TAKER HAS FINISHED TAKING CENOTES<<<<<< $(tput sgr 0)"
 
 

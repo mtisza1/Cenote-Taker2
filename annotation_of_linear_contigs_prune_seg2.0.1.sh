@@ -49,7 +49,7 @@ else
 
 			MDYT=$( date +"%m-%d-%y---%T" )
 			echo "time update: HMMSCAN of common viral domains beginning" $MDYT
-			hmmscan --tblout ${NO_END%.fna}.AA.hmmscan2.out --cpu $CPU -E 1e-6 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a ${NO_END%.fna}.AA.sorted.fasta
+			hmmscan --tblout ${NO_END%.fna}.AA.hmmscan2.out --cpu $CPU -E 1e-8 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a ${NO_END%.fna}.AA.sorted.fasta
 			grep -v "^#" ${NO_END%.fna}.AA.hmmscan2.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${NO_END%.fna}.AA.hmmscan2.sort.out
 			if [ ! -z "${NO_END%.fna}.AA.hmmscan2.sort.out" ] ; then
 				cut -f3 ${NO_END%.fna}.AA.hmmscan2.sort.out | awk '{ print $0" " }' > ${NO_END%.fna}.AA.called_hmmscan2.txt ; 
@@ -332,7 +332,7 @@ for NO_END in $virus_seg_fastas ; do
 			echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ; echo $AA_SEQ ; 
 		done > ${NO_END%.fna}.AA.fasta
 	fi
-	hmmscan --tblout ${NO_END%.fna}.AA.hmmscan2.out --cpu $CPU -E 1e-6 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a ${NO_END%.fna}.AA.fasta
+	hmmscan --tblout ${NO_END%.fna}.AA.hmmscan2.out --cpu $CPU -E 1e-8 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a ${NO_END%.fna}.AA.fasta
 	grep -v "^#" ${NO_END%.fna}.AA.hmmscan2.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${NO_END%.fna}.AA.hmmscan2.sort.out
 		echo $NO_END "contains at least one viral or plasmid domain"
 	if [ ! -z "${NO_END%.fna}.AA.hmmscan2.sort.out" ] ; then
@@ -576,28 +576,33 @@ echo "$(tput setaf 5) Conducting HHsearch on remaining ORFs; non-circular/non-IT
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: running hhsearch or hhblits, linear contigs " $MDYT
 
-for dark_orf in $dark_orf_list ; do
-	if  [[ $HHSUITE_TOOL = "hhsearch" ]] ; then
-
+if  [[ $HHSUITE_TOOL = "hhsearch" ]] ; then
+	for dark_orf in $dark_orf_list ; do
 		echo "$(tput setaf 5)Running HHsearch on "$dark_orf" now.$(tput sgr 0)"
 		${CENOTE_SCRIPT_DIR}/hh-suite/build/src/hhsearch -i $dark_orf -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o ${dark_orf%.for_hhpred.fasta}.out.hhr -cpu $CPU -maxmem $MEM -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1  ;
 		cat ${dark_orf%.for_hhpred.fasta}.out.hhr >> ${dark_orf%.*.for_hhpred.fasta}.rotate.out_all.hhr ;
 		rm -f ${dark_orf%.for_hhpred.fasta}.out.hhr 
 		cat $dark_orf >> ${dark_orf%.*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
 		rm -f $dark_orf
-	elif [[ $HHSUITE_TOOL = "hhblits" ]] ; then
+	done
+elif [[ $HHSUITE_TOOL = "hhblits" ]] ; then
+	for dark_orf in $dark_orf_list ; do
+
 		echo "$(tput setaf 5)Running HHblits on "$dark_orf" now.$(tput sgr 0)"
 		${CENOTE_SCRIPT_DIR}/hh-suite/build/src/hhblits -i $dark_orf -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o ${dark_orf%.for_hhpred.fasta}.out.hhr -cpu $CPU -maxmem $MEM -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1  ;
 		cat ${dark_orf%.for_hhpred.fasta}.out.hhr >> ${dark_orf%.*.for_hhpred.fasta}.rotate.out_all.hhr ;
 		rm -f ${dark_orf%.for_hhpred.fasta}.out.hhr 
 		cat $dark_orf >> ${dark_orf%.*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
 		rm -f $dark_orf
-	else
-		echo "$(tput setaf 5) Valid option for HHsuite tool (i.e. -hhsearch or -hhblits) was not provided. Skipping step for "$dark_orf" $(tput sgr 0)"
+	done
+else
+	echo "$(tput setaf 5) Valid option for HHsuite tool (i.e. -hhsearch or -hhblits) was not provided. Skipping step $(tput sgr 0)"
+	for dark_orf in $dark_orf_list ; do
 		cat $dark_orf >> ${dark_orf%.*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
 		rm -f $dark_orf
-	fi
-done
+	done
+fi
+
 
 rm -f *.out.hhr
 
@@ -605,7 +610,7 @@ rm -f *.out.hhr
 perl ${CENOTE_SCRIPT_DIR}/hhpredreport2tbl_mt_annotation_pipe_biowulf1_gjs_edits.pl ;
 
 for HH_tbl1 in *.HH.tbl ; do 
-sed 's/OS=.*//g; s/ ;//g; s/similar to AA sequence:UniProtKB:>\([0-9][A-Z].*\)/protein motif:PDB:\1/g; s/UniProtKB:>tr|.*|\(.\)/UniProtKB:\1/g; s/similar to AA sequence:UniProtKB:>\([a-z].*\)/protein motif:Scop:\1/g; s/similar to AA sequence:UniProtKB:>\(PF.*\)/protein motif:PFAM:\1/g; s/ is .*//g; s/ are .*//g' $HH_tbl1 | sed '/product/ s/; [a-zA-Z0-9_]\{1,20\}//g; s/;.*//g' > ${HH_tbl1%.HH.tbl}.HH2.tbl
+	sed 's/OS=.*//g; s/ ;//g; s/similar to AA sequence:UniProtKB:>\([0-9][A-Z].*\)/protein motif:PDB:\1/g; s/UniProtKB:>tr|.*|\(.\)/UniProtKB:\1/g; s/similar to AA sequence:UniProtKB:>\([a-z].*\)/protein motif:Scop:\1/g; s/similar to AA sequence:UniProtKB:>\(PF.*\)/protein motif:PFAM:\1/g; s/ is .*//g; s/ are .*//g' $HH_tbl1 | sed '/product/ s/; [a-zA-Z0-9_]\{1,20\}//g; s/;.*//g' > ${HH_tbl1%.HH.tbl}.HH2.tbl
 done
 
 
@@ -627,6 +632,7 @@ for feat_tbl2 in *_vs[0-9][0-9].comb3.tbl ; do
 		CONJ_COUNT=$( grep -i "virb\|type-IV\|secretion system\|conjuga\|transposon\|tra[a-z] \|trb[b-z]\|pilus" $feat_tbl2 | wc -l )
 		STRUCTURAL_COUNT=$( grep -i "capsid\|terminase\|portal\|baseplate\|base plate\|tail\|collar\|zot\|zonular\|minor coat\|packaging\|	virion protein" $feat_tbl2 | wc -l )
 		if [[ $CONJ_COUNT -gt 0 ]] && [[ $STRUCTURAL_COUNT == 0 ]] ; then
+			echo "based on gene composition (has no virion genes, but has conjugation system genes), "${feat_tbl2%.comb3.tbl}" is being called a conjugative transposon"
 			TAX_ORF="Conjugative Transposon"
 		elif grep -i -q "zot\|zonular" $feat_tbl2 ; then
 			TAX_ORF="Inoviridae"
@@ -644,7 +650,8 @@ for feat_tbl2 in *_vs[0-9][0-9].comb3.tbl ; do
 			TAX_ORF=$( grep -i -B1 "baseplate\|base-plate\|base plate" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
 		elif grep -i -q "tail" $feat_tbl2 ; then
 			TAX_ORF=$( grep -i -B1 "tail" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
-		else TAX_ORF="No_suitable_orf"
+		else 
+			TAX_ORF="No_suitable_orf"
 		fi
 		if [ "$TAX_ORF" == "No_suitable_orf" ] ; then
 			echo "TAX_ORF is empty"
@@ -1024,8 +1031,6 @@ for feat_tbl2 in *_vs[0-9][0-9].comb3.tbl ; do
 		vir_name="ssRNA virus" ;
 	elif grep -q "unclassified RNA virus" $tax_info ; then
 		vir_name="unclassified RNA virus" ;
-	elif grep -q "Satellite" $tax_info ; then
-		vir_name="Satellite virus" ;
 	elif grep -q "unclassified ssDNA bacterial virus" $tax_info ; then
 		vir_name="unclassified ssDNA bacterial virus" ;
 	elif grep -q "phage" $tax_info ; then
