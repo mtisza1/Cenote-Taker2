@@ -28,10 +28,10 @@ args = parser.parse_args()
 
 print (str(args.HMM_DB))
 if str(args.HMM_DB) == "True":
-	print ("running HMM database update")
-	subprocess.call(['rm', '-r', str(cenote_script_path) + '/hmmscan_DBs/'])
-	subprocess.call(['wget', '--directory-prefix=' + str(cenote_script_path), 'https://zenodo.org/record/4031657/files/hmmscan_DBs.tgz'])
-	subprocess.call(['tar', '-xvf', 'hmmscan_DBs.tgz'])
+    print ("running HMM database update")
+    subprocess.call(['rm', '-r', str(cenote_script_path) + '/hmmscan_DBs/'])
+    subprocess.call(['wget', '--directory-prefix=' + str(cenote_script_path), 'https://zenodo.org/record/4031657/files/hmmscan_DBs.tgz'])
+    subprocess.call(['tar', '-xvf', 'hmmscan_DBs.tgz'])
     subprocess.call(['mv', '200915_update_hmm_db', 'hmmscan_DBs'])
-	subprocess.call(['rm', 'hmmscan_DBs.tgz'])
+    subprocess.call(['rm', 'hmmscan_DBs.tgz'])
 
