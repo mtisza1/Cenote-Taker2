@@ -7,6 +7,9 @@ I usually use 32 CPUs and 32 GB of memory for medium and large metagenomes. More
 
 Update to HMM databases (hallmark genes) occurred on September 15th, 2020. See instructions below to update your database.
 
+Read the preprint on [BioRxiv](https://www.biorxiv.org/content/10.1101/2020.09.15.298943v1).
+
+
 
 ![alt text](../master/cenote-taker_logo.png)
 
