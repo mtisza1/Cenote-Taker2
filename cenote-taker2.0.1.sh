@@ -91,6 +91,7 @@ if [ "${SCRATCH_DIR}" == "none" ] ; then
 	CD_HHSUITE="${CENOTE_SCRIPT_DIR}/NCBI_CD/NCBI_CD"
 	PFAM_HHSUITE="${CENOTE_SCRIPT_DIR}/pfam_32_db/pfam"
 	PDB_HHSUITE="${CENOTE_SCRIPT_DIR}/pdb70/pdb70"
+	echo "HHsuite database locations:"
 	echo $CD_HHSUITE
 	echo $PFAM_HHSUITE
 	echo $PDB_HHSUITE
@@ -185,32 +186,42 @@ if [ ${original_contigs: -6} == ".fasta" ]; then
 	cd $run_title
 	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta ;
 	rm -f apc_aln*
-	for fa1 in $run_title*.fa ; do 
-		mv $fa1 $run_title${fa1#$run_title.}sta ; 
-	done 
+	APC_CIRCS=$( find * -maxdepth 0 -type f -name "${run_title}*.fa" )
+	if [ ! -z "$APC_CIRCS" ] ;then
+		for fa1 in $APC_CIRCS ; do 
+			mv $fa1 $run_title${fa1#$run_title.}sta ; 
+		done 
+	else
+		echo "No circular contigs detected."
+	fi
 elif [ ${original_contigs: -6} == ".fastg" ]; then
 	bioawk -v contig_cutoff="$LENGTH_MINIMUM" -c fastx '{ if(length($seq) > contig_cutoff) {print }}' $original_contigs | grep "[a-zA-Z0-9]:\|[a-zA-Z0-9];" | grep -v "':" | awk '{ print ">"$1 ; print $2 }' | sed 's/:.*//g; s/;.*//g' | bioawk -v run_var="$run_title" -c fastx '{ print ">"run_var NR" "$name; print $seq }' > ${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta
 	cd $run_title
 	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta ;
 	rm -f apc_aln*
-	for fa1 in $run_title*.fa ; do 
-		mv $fa1 $run_title${fa1#$run_title.}sta ; 
-	done 		
+	APC_CIRCS=$( find -maxdepth 0 * -type f -name "${run_title}*.fa" )
+	if [ ! -z "$APC_CIRCS" ] ;then
+		for fa1 in $APC_CIRCS ; do 
+			mv $fa1 $run_title${fa1#$run_title.}sta ; 
+		done 
+	else
+		echo "No circular contigs detected."
+	fi	
 else
 	echo "$(tput setaf 4)File with .fasta of .fastg extension not detected as first input. Exiting.$(tput sgr 0)" ;
 	exit
 fi
 
-# Changing to output directory
-cd $run_title
-
 # Removing cirles that are smaller than user specified cutoff
-for CIRCLE1 in *.fasta ; do
-	CIRCLE1_LENGTH=$( bioawk -c fastx '{print length($seq) }' $CIRCLE1 )
-	if [[ $CIRCLE1_LENGTH -lt $circ_length_cutoff ]] ; then
-		mv $CIRCLE1 ${CIRCLE1%.fasta}.too_short.fasta 
-	fi
-done
+CIRC_CONTIGS=$( find * -maxdepth 0 -type f -name "*.fasta" )
+if [ ! -z "$CIRC_CONTIGS" ] ;then
+	for CIRCLE1 in $CIRC_CONTIGS ; do
+		CIRCLE1_LENGTH=$( bioawk -c fastx '{print length($seq) }' $CIRCLE1 )
+		if [[ $CIRCLE1_LENGTH -lt $circ_length_cutoff ]] ; then
+			mv $CIRCLE1 ${CIRCLE1%.fasta}.too_short.fasta 
+		fi
+	done
+fi
 rm -f *.too_short.fasta
 
 # Aligning reads to contigs
@@ -240,7 +251,7 @@ fi
 
 
 # Detecting whether any circular contigs were present
-original_fastas=$( ls *.fasta )
+original_fastas=$( find -maxdepth 0 * -type f -name "*.fasta" )
 # "$(tput setaf 5)$var1$(tput sgr 0)"
 
 if [ -z "$original_fastas" ] ; then
@@ -284,7 +295,7 @@ fi
 echo "$(tput setaf 4)Looking for ITRs in non-circular contigs $(tput sgr 0)" 
 
 cd other_contigs
-CONTIGS_NON_CIRCULAR=$( ls *[0-9].fasta )
+CONTIGS_NON_CIRCULAR=$( find * -maxdepth 0 -type f -name "*[0-9].fasta" )
 
 if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 	MDYT=$( date +"%m-%d-%y---%T" )
@@ -342,13 +353,15 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 		# Taking arguments for "virus specific" database and conducting hmmscan
 	if  [[ $virus_domain_db = "standard" ]] ; then
 		echo "$CONTIGS_NON_CIRCULAR" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.AA.sorted.fasta
-		echo "$CONTIGS_NON_CIRCULAR" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.AA.sorted.fasta		
+		echo "$CONTIGS_NON_CIRCULAR" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.AA.sorted.fasta	
+	elif [[ $virus_domain_db = "virion" ]]; then
+		echo "$CONTIGS_NON_CIRCULAR" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.AA.sorted.fasta		
 	elif [[ $virus_domain_db = "rna_virus" ]]; then
 		echo "$CONTIGS_NON_CIRCULAR" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/rna_virus_rdrp_capsid_hmms1 {}.AA.sorted.fasta
 	elif [[ $virus_domain_db = "all_common" ]]; then
 		echo "$CONTIGS_NON_CIRCULAR" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.AA.sorted.fasta
 	else
-		echo "$(tput setaf 5) Incorrect argument given for virus_domain_db variable. Try -standard, -with_rdrp_retro, -all_common as arguments. For this run, no contigs with viral domains but without circularity or ITRs will be detected $(tput sgr 0)"
+		echo "$(tput setaf 5) Incorrect argument given for virus_domain_db variable. Try standard, virion, rna_virus, or all_common as arguments. For this run, no contigs with viral domains but without circularity or ITRs will be detected $(tput sgr 0)"
 		rm -f ./*{0..9}.fasta
 		break
 	fi
@@ -371,7 +384,6 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 			echo $NO_END "contains at least $LIN_MINIMUM_DOMAINS viral structural domain(s)"
 
 			cat ${NO_END%.fasta}.AA.hmmscan.sort.out ${NO_END%.fasta}.AA.hmmscan_replicate.sort.out | sort -u -k3,3 | cut -f3 > ${NO_END%.fasta}.rotate.AA.called_hmmscan.txt ; 
-			# Mike's note, 191122: not sure I need the next 2 lines
 			grep -v -f ${NO_END%.fasta}.rotate.AA.called_hmmscan.txt ${NO_END%.fasta}.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.no_hmmscan1.fasta
 			echo ">Feature "${NO_END%.fasta}" Table1" > ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.SCAN.tbl
 
@@ -392,7 +404,7 @@ fi
 
 cd ..
 echo "$(tput setaf 4) transferring ITR-containing contigs to the main directory for full annotation$(tput sgr 0)"
-ITR_ELEMENTS=$( ls ITR_containing_contigs/*.fasta | sed 's/ITR_containing_contigs\///g' )
+ITR_ELEMENTS=$( find * -maxdepth 1 -type f -wholename "ITR_containing_contigs/*.fasta" | sed 's/ITR_containing_contigs\///g' )
 if [ ! -z "$ITR_ELEMENTS" ] ; then
 	for ITR_CONTIG in $ITR_ELEMENTS ; do
 		echo $ITR_CONTIG "has ITRs"
@@ -400,7 +412,7 @@ if [ ! -z "$ITR_ELEMENTS" ] ; then
 	done
 fi
 # 1 rotate circles
-CIRCLES_AND_ITRS=$( ls | grep "${run_title}[0-9]\{1,6\}.fasta$" )
+CIRCLES_AND_ITRS=$( find * -maxdepth 0 -type f -regextype sed -regex "${run_title}[0-9]\{1,6\}.fasta" )
 
 # Rotating each sequence to put a non-intragenic start codon as the first basepair of the contig
 MDYT=$( date +"%m-%d-%y---%T" )
@@ -455,93 +467,96 @@ fi
 
 # 2 blastx
 # Performing BLASTX of each contig against database of viral and plasmid proteins to guess taxonomy
+if [ ! -z "$CIRCLES_AND_ITRS" ] ; then 
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: running BLASTX, circular and ITR contigs " $MDYT
-for nucl_fa in $CIRCLES_AND_ITRS ; do
-if [ -s "${nucl_fa%.fasta}.rotate.fasta" ]; then
-	echo "$(tput setaf 5)Guessing taxonomy for sequence "${nucl_fa%.fasta}.rotate.fasta" by BLASTX against virus and plasmid protein database.$(tput sgr 0)"
-	blastx -evalue 1e-4 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query ${nucl_fa%.fasta}.rotate.fasta -out ${nucl_fa%.fasta}.tax_guide.blastx.out ;
-	if [ ! -s "${nucl_fa%.fasta}.tax_guide.blastx.out" ]; then
-		echo "No homologues found" > ${nucl_fa%.fasta}.tax_guide.blastx.out ;
-	elif grep -i -q "circovir\|genomovir\|geminivir\|nanovir\|redondovir\|bacilladnavir\|smacovir" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then 
-		EVALUE=$( head -n1 "${nucl_fa%.fasta}.tax_guide.blastx.out" | cut -f4 ) ; 
-		NEW_TAX=$( head -n1 ${nucl_fa%.fasta}.tax_guide.blastx.out | awk -v VALUE="$EVALUE" '{if (VALUE>1e-50) { print $0 ; print "CRESS virus" } else { print $0}}' )
-		echo "$NEW_TAX" > ${nucl_fa%.fasta}.tax_guide.blastx.out ;
-		if grep -q "CRESS virus" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
-			echo ${nucl_fa%.fasta} "is a CRESS virus"
+	for nucl_fa in $CIRCLES_AND_ITRS ; do
+		if [ -s "${nucl_fa%.fasta}.rotate.fasta" ]; then
+			echo "$(tput setaf 5)Guessing taxonomy for sequence "${nucl_fa%.fasta}.rotate.fasta" by BLASTX against virus and plasmid protein database.$(tput sgr 0)"
+			blastx -evalue 1e-4 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query ${nucl_fa%.fasta}.rotate.fasta -out ${nucl_fa%.fasta}.tax_guide.blastx.out ;
+			if [ ! -s "${nucl_fa%.fasta}.tax_guide.blastx.out" ]; then
+				echo "No homologues found" > ${nucl_fa%.fasta}.tax_guide.blastx.out ;
+			elif grep -i -q "circovir\|genomovir\|geminivir\|nanovir\|redondovir\|bacilladnavir\|smacovir" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then 
+				EVALUE=$( head -n1 "${nucl_fa%.fasta}.tax_guide.blastx.out" | cut -f4 ) ; 
+				NEW_TAX=$( head -n1 ${nucl_fa%.fasta}.tax_guide.blastx.out | awk -v VALUE="$EVALUE" '{if (VALUE>1e-50) { print $0 ; print "CRESS virus" } else { print $0}}' )
+				echo "$NEW_TAX" > ${nucl_fa%.fasta}.tax_guide.blastx.out ;
+				if grep -q "CRESS virus" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
+					echo ${nucl_fa%.fasta} "is a CRESS virus"
+				else
+					echo "$(tput setaf 5)"$nucl_fa" likely represents a novel virus or plasmid. Getting hierarchical taxonomy info.$(tput sgr 0)"
+					ktClassifyBLAST -o ${nucl_fa%.fasta}.tax_guide.blastx.tab ${nucl_fa%.fasta}.tax_guide.blastx.out
+					taxid=$( tail -n1 ${nucl_fa%.fasta}.tax_guide.blastx.tab | cut -f2 )
+					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fasta}.tax_guide.blastx.out	
+				fi
+			elif grep -q "virophage" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
+				echo "Virophage" >> ${nucl_fa%.fasta}.tax_guide.blastx.out
+			elif grep -q "adinto" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
+				echo "Adintovirus" >> ${nucl_fa%.fasta}.tax_guide.blastx.out
+			elif grep -i -q "polinton" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
+				echo "Polinton-like virus" >> ${nucl_fa%.fasta}.tax_guide.blastx.out
+			else
+				echo "$(tput setaf 5)"$nucl_fa" likely represents a novel virus or plasmid. Getting hierarchical taxonomy info.$(tput sgr 0)"
+				ktClassifyBLAST -o ${nucl_fa%.fasta}.tax_guide.blastx.tab ${nucl_fa%.fasta}.tax_guide.blastx.out
+				taxid=$( tail -n1 ${nucl_fa%.fasta}.tax_guide.blastx.tab | cut -f2 )
+				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fasta}.tax_guide.blastx.out
+			fi
 		else
-			echo "$(tput setaf 5)"$nucl_fa" likely represents a novel virus or plasmid. Getting hierarchical taxonomy info.$(tput sgr 0)"
-			ktClassifyBLAST -o ${nucl_fa%.fasta}.tax_guide.blastx.tab ${nucl_fa%.fasta}.tax_guide.blastx.out
-			taxid=$( tail -n1 ${nucl_fa%.fasta}.tax_guide.blastx.tab | cut -f2 )
-			efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fasta}.tax_guide.blastx.out	
-		fi
-	elif grep -q "virophage" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
-		echo "Virophage" >> ${nucl_fa%.fasta}.tax_guide.blastx.out
-	elif grep -q "adinto" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
-		echo "Adintovirus" >> ${nucl_fa%.fasta}.tax_guide.blastx.out
-	elif grep -i -q "polinton" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
-		echo "Polinton-like virus" >> ${nucl_fa%.fasta}.tax_guide.blastx.out
-	else
-		echo "$(tput setaf 5)"$nucl_fa" likely represents a novel virus or plasmid. Getting hierarchical taxonomy info.$(tput sgr 0)"
-		ktClassifyBLAST -o ${nucl_fa%.fasta}.tax_guide.blastx.tab ${nucl_fa%.fasta}.tax_guide.blastx.out
-		taxid=$( tail -n1 ${nucl_fa%.fasta}.tax_guide.blastx.tab | cut -f2 )
-		efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fasta}.tax_guide.blastx.out
-	fi
-else
-	echo "$(tput setaf 4)"$nucl_fa" could not be rotated. Likely there were no ORFs of at least 100AA.$(tput sgr 0)" 
+			echo "$(tput setaf 4)"$nucl_fa" could not be rotated. Likely there were no ORFs of at least 100AA.$(tput sgr 0)" 
 
+		fi
+	done
 fi
-done
 
 # 3 ORF calling
-# Extracting ORFs >240bp, (>90bp for inoviruses/plasmids)
-MDYT=$( date +"%m-%d-%y---%T" )
-echo "time update: Calling ORFs with PHANOTATE or getorf " $MDYT
-for nucl_fa in $CIRCLES_AND_ITRS ; do
-if [ -s "${nucl_fa%.fasta}.rotate.fasta" ]; then
-	echo "$(tput setaf 5)"$nucl_fa" taxonomy guessed. Continuing to ORF translation...$(tput sgr 0)"
+if [ ! -z "$CIRCLES_AND_ITRS" ] ; then 
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "time update: Calling ORFs with PHANOTATE or getorf " $MDYT
+	for nucl_fa in $CIRCLES_AND_ITRS ; do
+		if [ -s "${nucl_fa%.fasta}.rotate.fasta" ]; then
+			echo "$(tput setaf 5)"$nucl_fa" taxonomy guessed. Continuing to ORF translation...$(tput sgr 0)"
 
-	if grep -i -q "Caudovir\|Ackermannvir\|Herellevir\|Corticovir\|Levivir\|Tectivir\|crAss-like virus\|CrAssphage\|Cyanophage\|Microvir\microphage\|Siphoviridae\|Myoviridae\|phage\|Podovir\|Halovir\|sphaerolipovir\|pleolipovir\|plasmid\|Inovir\|Ampullavir\|Bicaudavir\|Fusellovir\|Guttavir\|Ligamenvir\|Plasmavir\|Salterprovir\|Cystovir" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
+			if grep -i -q "Caudovir\|Ackermannvir\|Herellevir\|Corticovir\|Levivir\|Tectivir\|crAss-like virus\|CrAssphage\|Cyanophage\|Microvir\microphage\|Siphoviridae\|Myoviridae\|phage\|Podovir\|Halovir\|sphaerolipovir\|pleolipovir\|plasmid\|Inovir\|Ampullavir\|Bicaudavir\|Fusellovir\|Guttavir\|Ligamenvir\|Plasmavir\|Salterprovir\|Cystovir" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
 
-		${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o ${nucl_fa%.fasta}.phan.fasta ${nucl_fa%.fasta}.rotate.fasta ; 
-		if [ "$ENFORCE_START_CODON" == "True" ] ; then
-			sed 's/ /@/g' ${nucl_fa%.fasta}.phan.fasta | bioawk -c fastx '{ print }' | awk '{ if ($2 ~ /^[ATCG]TG/) { print ">"$1 ; print $2 }}' | sed 's/@/ /g' > ${nucl_fa%.fasta}.phan.sort.fasta
-		else
-			sed 's/ /@/g' ${nucl_fa%.fasta}.phan.fasta | bioawk -c fastx '{ print }' | awk '{ print ">"$1 ; print $2 }' | sed 's/@/ /g' > ${nucl_fa%.fasta}.phan.sort.fasta
-		fi				
-		transeq -frame 1 -table 11 -sequence ${nucl_fa%.fasta}.phan.sort.fasta -outseq ${nucl_fa%.fasta}.trans.fasta ;
-		# put emboss transeq in directory 
-		COUNTER=0 ;  
-		bioawk -c fastx '{print}' ${nucl_fa%.fasta}.trans.fasta | while read LINE ; do 
-			START_BASE=$( echo $LINE | sed 's/.*START=\(.*\)\] \[.*/\1/' ) ; 
-			ORF_NAME=$( echo $LINE | cut -d " " -f1 | sed 's/\(.*\)\.[0-9].*_1/\1/' ) ; 
-			END_BASE=$( echo $LINE | cut -d " " -f1 | sed 's/.*\(\.[0-9].*_1\)/\1/' | sed 's/_1//g; s/\.//g' ) ; 
-			ORIG_CONTIG=$( grep ">" $nucl_fa | cut -d " " -f2 ) ; 
-			AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ; 
-			let COUNTER=COUNTER+1 ; 
-			echo ">"${ORF_NAME}"_"${COUNTER} "["$START_BASE" - "$END_BASE"]" $ORIG_CONTIG  ; echo $AA_SEQ ; 
-		done > ${nucl_fa%.fasta}.rotate.AA.fasta
+				${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o ${nucl_fa%.fasta}.phan.fasta ${nucl_fa%.fasta}.rotate.fasta ; 
+				if [ "$ENFORCE_START_CODON" == "True" ] ; then
+					sed 's/ /@/g' ${nucl_fa%.fasta}.phan.fasta | bioawk -c fastx '{ print }' | awk '{ if ($2 ~ /^[ATCG]TG/) { print ">"$1 ; print $2 }}' | sed 's/@/ /g' > ${nucl_fa%.fasta}.phan.sort.fasta
+				else
+					sed 's/ /@/g' ${nucl_fa%.fasta}.phan.fasta | bioawk -c fastx '{ print }' | awk '{ print ">"$1 ; print $2 }' | sed 's/@/ /g' > ${nucl_fa%.fasta}.phan.sort.fasta
+				fi				
+				transeq -frame 1 -table 11 -sequence ${nucl_fa%.fasta}.phan.sort.fasta -outseq ${nucl_fa%.fasta}.trans.fasta ;
+				# put emboss transeq in directory 
+				COUNTER=0 ;  
+				bioawk -c fastx '{print}' ${nucl_fa%.fasta}.trans.fasta | while read LINE ; do 
+					START_BASE=$( echo $LINE | sed 's/.*START=\(.*\)\] \[.*/\1/' ) ; 
+					ORF_NAME=$( echo $LINE | cut -d " " -f1 | sed 's/\(.*\)\.[0-9].*_1/\1/' ) ; 
+					END_BASE=$( echo $LINE | cut -d " " -f1 | sed 's/.*\(\.[0-9].*_1\)/\1/' | sed 's/_1//g; s/\.//g' ) ; 
+					ORIG_CONTIG=$( grep ">" $nucl_fa | cut -d " " -f2 ) ; 
+					AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ; 
+					let COUNTER=COUNTER+1 ; 
+					echo ">"${ORF_NAME}"_"${COUNTER} "["$START_BASE" - "$END_BASE"]" $ORIG_CONTIG  ; echo $AA_SEQ ; 
+				done > ${nucl_fa%.fasta}.rotate.AA.fasta
 
-	else
-		prodigal -a ${nucl_fa%.fasta}.rotate.prodigal.fasta -i ${nucl_fa%.fasta}.rotate.fasta -p meta -c
-		sed 's/ /@/g' ${nucl_fa%.fasta}.rotate.prodigal.fasta | bioawk -c fastx '{print}' | while read LINE ; do 
-			ORIENTATION=$( echo "$LINE" | cut -d "#" -f 4 | sed 's/@//g' ) ;
-			if [[ "$ORIENTATION" == 1 ]] ; then
-				START_BASE=$( echo "$LINE" | cut -d "#" -f 2 | sed 's/@//g' ) ; 
-				END_BASE=$( echo "$LINE" | cut -d "#" -f 3 | sed 's/@//g' ) ; 
 			else
-				START_BASE=$( echo "$LINE" | cut -d "#" -f 3 | sed 's/@//g' ) ; 
-				END_BASE=$( echo "$LINE" | cut -d "#" -f 2 | sed 's/@//g' ) ; 
-			fi	
-			ORF_NAME=$( echo "$LINE" | cut -d "#" -f 1 | sed 's/@//g; s/\./_/g' ) ; 
-			AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ;
-			echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ; echo $AA_SEQ ; 
-		done > ${nucl_fa%.fasta}.rotate.AA.fasta
-	fi
+				prodigal -a ${nucl_fa%.fasta}.rotate.prodigal.fasta -i ${nucl_fa%.fasta}.rotate.fasta -p meta -c
+				sed 's/ /@/g' ${nucl_fa%.fasta}.rotate.prodigal.fasta | bioawk -c fastx '{print}' | while read LINE ; do 
+					ORIENTATION=$( echo "$LINE" | cut -d "#" -f 4 | sed 's/@//g' ) ;
+					if [[ "$ORIENTATION" == 1 ]] ; then
+						START_BASE=$( echo "$LINE" | cut -d "#" -f 2 | sed 's/@//g' ) ; 
+						END_BASE=$( echo "$LINE" | cut -d "#" -f 3 | sed 's/@//g' ) ; 
+					else
+						START_BASE=$( echo "$LINE" | cut -d "#" -f 3 | sed 's/@//g' ) ; 
+						END_BASE=$( echo "$LINE" | cut -d "#" -f 2 | sed 's/@//g' ) ; 
+					fi	
+					ORF_NAME=$( echo "$LINE" | cut -d "#" -f 1 | sed 's/@//g; s/\./_/g' ) ; 
+					AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ;
+					echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ; echo $AA_SEQ ; 
+				done > ${nucl_fa%.fasta}.rotate.AA.fasta
+			fi
 
-	bioawk -c fastx '{FS="\t"; OFS=" "} {print ">"$name $3, $4, $5, $6, $7; print $seq}' ${nucl_fa%.fasta}.rotate.AA.fasta > ${nucl_fa%.fasta}.rotate.AA.sorted.fasta ;
+			bioawk -c fastx '{FS="\t"; OFS=" "} {print ">"$name $3, $4, $5, $6, $7; print $seq}' ${nucl_fa%.fasta}.rotate.AA.fasta > ${nucl_fa%.fasta}.rotate.AA.sorted.fasta ;
+		fi
+	done
 fi
-done
 
 # 4 hhmscan circles/ITRs
 # Conducting HMMER search on curated database
@@ -552,13 +567,15 @@ if [ -n "$CIRCLES_AND_ITRS" ]; then
 	echo "$(tput setaf 5)Continuing to HMMSCAN (HMMER) of circular/ITR contigs on custom viral conserved protein model database for each ORF...$(tput sgr 0)" 
 	if  [[ $virus_domain_db = "standard" ]] ; then
 		echo "$CIRCLES_AND_ITRS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.rotate.AA.hmmscan.out --cpu 1 -E 1e-8 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.rotate.AA.sorted.fasta
-		echo "$CIRCLES_AND_ITRS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.rotate.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.rotate.AA.sorted.fasta		
+		echo "$CIRCLES_AND_ITRS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.rotate.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.rotate.AA.sorted.fasta	
+	elif [[ $virus_domain_db = "virion" ]]; then
+		echo "$CIRCLES_AND_ITRS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.rotate.AA.hmmscan.out --cpu 1 -E 1e-8 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.rotate.AA.sorted.fasta
 	elif [[ $virus_domain_db = "rna_virus" ]]; then
 		echo "$CIRCLES_AND_ITRS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.rotate.AA.hmmscan.out --cpu 1 -E 1e-8 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/rna_virus_rdrp_capsid_hmms1 {}.rotate.AA.sorted.fasta
 	elif [[ $virus_domain_db = "all_common" ]]; then
 		echo "$CIRCLES_AND_ITRS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.rotate.AA.hmmscan.out --cpu 1 -E 1e-8 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.rotate.AA.sorted.fasta
 	else
-		echo "$(tput setaf 5) Incorrect argument given for virus_domain_db variable. Try standard, rna_virus, all_common as arguments. For this run, no contigs with viral domains but without circularity or ITRs will be detected $(tput sgr 0)"
+		echo "$(tput setaf 5) Incorrect argument given for virus_domain_db variable. Try standard, virion, rna_virus, or all_common as arguments. For this run, no contigs with virus hallmark genes will be detected $(tput sgr 0)"
 		rm -f ./*{0..9}.fasta
 		break
 	fi
@@ -631,12 +648,15 @@ if [ -n "$CIRCLES_AND_ITRS" ]; then
 	done
 fi
 
-cat *.no_baits.fna >> other_contigs/non_viral_domains_contigs.fna
+NO_BAITS=$( find * -maxdepth 0 -type f -name "*.no_baits.fna" )
+if [ ! -z "$NO_BAITS" ] ; then 
+	cat *.no_baits.fna >> other_contigs/non_viral_domains_contigs.fna
+fi
+
 # 5 blastn
 
-
-# Checking whether any circular contigs are >90% identical to any sequence in NCBI nt database using BLASTN.
-DOMAINED_CIRCLES_AND_ITRS=$( ls | grep "${run_title}[0-9]\{1,6\}.fasta$" )
+# Checking whether any circular contigs are >90% identical to any sequence in given database using BLASTN.
+DOMAINED_CIRCLES_AND_ITRS=$( find * -maxdepth 0 -type f -regextype sed -regex "${run_title}[0-9]\{1,6\}.fasta" )
 
 echo " " 
 if [ -z "$DOMAINED_CIRCLES_AND_ITRS" ] ; then
@@ -648,8 +668,8 @@ else
 	echo "$DOMAINED_CIRCLES_AND_ITRS"
 fi
 echo " "
-BLASTN_LIST=$( ls ${BLASTN_DB}*.nsq | wc -l )
-if [[ "$BLASTN_LIST" -gt 1 ]] || [[ "$BLASTN_LIST" == 1 ]] ;then 
+
+if [ -s ${BLASTN_DB}*.nsq ] ; then 
 	if [ ! -z "$DOMAINED_CIRCLES_AND_ITRS" ] ; then 
 		#mkdir circles_of_known_viruses
 		#mkdir circles_of_chromosomal_elements
@@ -702,14 +722,15 @@ fi
 
 echo " "
 
-NEW_FASTAS=$( ls | grep "${run_title}[0-9]\{1,6\}.fasta$" )
+NEW_FASTAS=$( find * -maxdepth 0 -type f -regextype sed -regex "${run_title}[0-9]\{1,6\}.fasta" )
 
 echo "$NEW_FASTAS"
 
 # Conducting RPS-BLAST against CDD on translated ORFs
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: running RPSBLAST " $MDYT
-PROTEIN_NO_HMMSCAN2=$( ls *.rotate.no_hmmscan2.fasta )
+PROTEIN_NO_HMMSCAN2=$( find * -maxdepth 0 -type f -name "*.rotate.no_hmmscan2.fasta" )
+
 if [ -n "$PROTEIN_NO_HMMSCAN2" ]; then
 
 	echo "$(tput setaf 5) Continuing to RPS-BLAST NCBI CDD domains database for each ORF in viral circular/ITR contigs...$(tput sgr 0)" 
@@ -721,7 +742,7 @@ else
 	echo " "
 fi
 
-CDD_OUT=$( ls *.rotate.AA.rpsblast.out )
+CDD_OUT=$( find * -maxdepth 0 -type f -name "*.rotate.AA.rpsblast.out" )
 if [ -n "$CDD_OUT" ]; then
 	for CDD in $CDD_OUT ; do
 		awk '{ if ($0 ~ /^>/) {printf $0 ; getline; print $0} else { print $0}}' $CDD > ${CDD}.tmp
@@ -736,268 +757,287 @@ echo "$(tput setaf 5) Starting perl script to make tbl from RPS-BLAST output $(t
 
 perl ${CENOTE_SCRIPT_DIR}/rpsblastreport2tbl_mt_annotation_pipe_biowulf.pl ;
 
-for nucl_fa in $NEW_FASTAS ; do 
-if [ -s "${nucl_fa%.fasta}.NT.tbl" ]; then
-	echo "$(tput setaf 5)"$nucl_fa" tbl made from RPS-BLAST hits...$(tput sgr 0)"
-else
-	echo "$(tput setaf 4) RPS-BLAST tbl for "$nucl_fa" not detected.$(tput sgr 0)"
+if [ -n "$NEW_FASTAS" ]; then
+	for nucl_fa in $NEW_FASTAS ; do 
+		if [ -s "${nucl_fa%.fasta}.NT.tbl" ]; then
+			echo "$(tput setaf 5)"$nucl_fa" tbl made from RPS-BLAST hits...$(tput sgr 0)"
+		else
+			echo "$(tput setaf 4) RPS-BLAST tbl for "$nucl_fa" not detected.$(tput sgr 0)"
+		fi
+	done
 fi
-done
 
 # Conducting BLASTP on ORFs unrecognized by RPS-BLAST (nr virus or nr all database)
-MDYT=$( date +"%m-%d-%y---%T" )
-echo "time update: running BLASTP on circular and ITR contigs " $MDYT
-for feat_tbl1 in *.NT.tbl ; do
-	grep -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Domain of unknown function' -e 'product	gp' -B2 $feat_tbl1 | grep "^[0-9]" | awk '{print $1 " - " $2}' > ${feat_tbl1%.NT.tbl}.for_blastp.txt ;
-	grep -f ${feat_tbl1%.NT.tbl}.for_blastp.txt -A1 ${feat_tbl1%.NT.tbl}.rotate.AA.sorted.fasta | sed '/--/d' > ${feat_tbl1%.NT.tbl}.rotate.rps_nohits.fasta ;
-	if [ $BLASTP == "conduct_blastp" ] ; then
-
-		if grep -q "(plasmid)" ${feat_tbl1%.NT.tbl}.tax_guide.blastx.out ; then
-			if [ -s "${feat_tbl1%.NT.tbl}.rotate.rps_nohits.fasta" ]; then
-				echo "$(tput setaf 5)"$nucl_fa" is likely a plasmid... Continuing to BLASTP NCBI nr database for each ORF that had no hits in CDD...$(tput sgr 0)" 
-				blastp -evalue 1e-4 -num_descriptions 5 -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blastdb/nr -query ${feat_tbl1%.NT.tbl}.rotate.rps_nohits.fasta -out ${feat_tbl1%.NT.tbl}.rotate.blastp.out ;
-				echo "$(tput setaf 5)BLASTP of "${feat_tbl1%.NT.tbl}.rotate.rps_nohits.fasta" complete.$(tput sgr 0)"
+RPS_TBL=$( find * -maxdepth 0 -type f -name "*.NT.tbl" )
+if [ -n "$RPS_TBL" ] ; then
+	for feat_tbl1 in $RPS_TBL ; do
+		grep -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Domain of unknown function' -e 'product	gp' -B2 $feat_tbl1 | grep "^[0-9]" | awk '{print $1 " - " $2}' > ${feat_tbl1%.NT.tbl}.for_blastp.txt ;
+		grep -f ${feat_tbl1%.NT.tbl}.for_blastp.txt -A1 ${feat_tbl1%.NT.tbl}.rotate.AA.sorted.fasta | sed '/--/d' > ${feat_tbl1%.NT.tbl}.rotate.rps_nohits.fasta ;
+		if [ $BLASTP == "conduct_blastp" ] ; then
+			MDYT=$( date +"%m-%d-%y---%T" )
+			echo "time update: running BLASTP on circular and ITR contigs " $MDYT
+			if grep -q "(plasmid)" ${feat_tbl1%.NT.tbl}.tax_guide.blastx.out ; then
+				if [ -s "${feat_tbl1%.NT.tbl}.rotate.rps_nohits.fasta" ]; then
+					echo "$(tput setaf 5)"$nucl_fa" is likely a plasmid... Continuing to BLASTP NCBI nr database for each ORF that had no hits in CDD...$(tput sgr 0)" 
+					blastp -evalue 1e-4 -num_descriptions 5 -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blastdb/nr -query ${feat_tbl1%.NT.tbl}.rotate.rps_nohits.fasta -out ${feat_tbl1%.NT.tbl}.rotate.blastp.out ;
+					echo "$(tput setaf 5)BLASTP of "${feat_tbl1%.NT.tbl}.rotate.rps_nohits.fasta" complete.$(tput sgr 0)"
+				fi
+			else
+				if [ -s "${feat_tbl1%.NT.tbl}.rotate.rps_nohits.fasta" ]; then
+					echo "$(tput setaf 5)"$nucl_fa" is likely a virus... Continuing to BLASTP NCBI nr database for each ORF that had no hits in CDD...$(tput sgr 0)" 
+					blastp -evalue 1e-4 -num_descriptions 5 -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blastdb/viral -query ${feat_tbl1%.NT.tbl}.rotate.rps_nohits.fasta -out ${feat_tbl1%.NT.tbl}.rotate.blastp.out ;
+					echo "$(tput setaf 5)BLASTP of "${feat_tbl1%.NT.tbl}.rotate.rps_nohits.fasta" complete.$(tput sgr 0)"
+				fi
 			fi
 		else
-			if [ -s "${feat_tbl1%.NT.tbl}.rotate.rps_nohits.fasta" ]; then
-				echo "$(tput setaf 5)"$nucl_fa" is likely a virus... Continuing to BLASTP NCBI nr database for each ORF that had no hits in CDD...$(tput sgr 0)" 
-				blastp -evalue 1e-4 -num_descriptions 5 -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blastdb/viral -query ${feat_tbl1%.NT.tbl}.rotate.rps_nohits.fasta -out ${feat_tbl1%.NT.tbl}.rotate.blastp.out ;
-				echo "$(tput setaf 5)BLASTP of "${feat_tbl1%.NT.tbl}.rotate.rps_nohits.fasta" complete.$(tput sgr 0)"
-			fi
+			cp ${feat_tbl1%.NT.tbl}.rotate.rps_nohits.fasta ${feat_tbl1%.NT.tbl}.rotate.blast_hypo.fasta
 		fi
-	else
-		cp ${feat_tbl1%.NT.tbl}.rotate.rps_nohits.fasta ${feat_tbl1%.NT.tbl}.rotate.blast_hypo.fasta
-	fi
-done
+	done
+fi
 
 # Generating tbl file from BLASTP results
 echo "$(tput setaf 5) Starting perl script to make tbl from BLASTP output $(tput sgr 0)"
 
 perl ${CENOTE_SCRIPT_DIR}/blastpreport2tbl_mt_annotation_pipe_biowulf2.pl ;
-for feat_tbl1 in *.NT.tbl ; do
-if [ -s "${feat_tbl1%.NT.tbl}.BLASTP.tbl" ]; then
-	echo "$(tput setaf 5)"${feat_tbl1%.NT.tbl}": tbl made from BLASTP hits. Splitting fasta files for HHsearch...$(tput sgr 0)"
-else
-	echo "$(tput setaf 4) BLASTP tbl for "${feat_tbl1%.NT.tbl}" not detected.$(tput sgr 0)"
+
+if [ -n "$RPS_TBL" ] ; then
+	for feat_tbl1 in $RPS_TBL ; do
+		if [ -s "${feat_tbl1%.NT.tbl}.BLASTP.tbl" ]; then
+			echo "$(tput setaf 5)"${feat_tbl1%.NT.tbl}": tbl made from BLASTP hits. Splitting fasta files for HHsearch...$(tput sgr 0)"
+		else
+			echo "$(tput setaf 4) BLASTP tbl for "${feat_tbl1%.NT.tbl}" not detected.$(tput sgr 0)"
+		fi
+	done
 fi
-done
 
 # Detecting any tRNAs and making a tbl addenum file
-echo "$(tput setaf 5) Looking for tRNAs in dsDNA phage and large dsDNA viruses $(tput sgr 0)"
-MDYT=$( date +"%m-%d-%y---%T" )
-echo "time update: running tRNAscan-SE " $MDYT
-for GENOME_NAME in $NEW_FASTAS ; do
-	tRNAscan-SE -Q -G -o $GENOME_NAME.trnascan-se2.txt ${GENOME_NAME%.fasta}.rotate.fasta
-	
-	if grep -q "${GENOME_NAME%.fasta}" $GENOME_NAME.trnascan-se2.txt ;then
-		echo "$(tput setaf 5) "$GENOME_NAME" was found to encode tRNA(s); making .tbl file $(tput sgr 0)"
+if [ -n "$NEW_FASTAS" ]; then
+	echo "$(tput setaf 5) Looking for tRNAs in dsDNA phage and large dsDNA viruses $(tput sgr 0)"
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "time update: running tRNAscan-SE " $MDYT
+	for GENOME_NAME in $NEW_FASTAS ; do
+		tRNAscan-SE -Q -G -o $GENOME_NAME.trnascan-se2.txt ${GENOME_NAME%.fasta}.rotate.fasta
+		
+		if grep -q "${GENOME_NAME%.fasta}" $GENOME_NAME.trnascan-se2.txt ;then
+			echo "$(tput setaf 5) "$GENOME_NAME" was found to encode tRNA(s); making .tbl file $(tput sgr 0)"
 
-		grep "${GENOME_NAME%.fasta}" $GENOME_NAME.trnascan-se2.txt | while read LINE ; do 
-			TRNA_START=$( echo $LINE | cut -d " " -f3 ) ; 
-			TRNA_END=$( echo $LINE | cut -d " " -f4 ) ; 
-			TRNA_NUMBER=$( echo $LINE | cut -d " " -f2 ) ; 
-			TRNA_TYPE=$( echo $LINE | cut -d " " -f5 ) ; 
-			TRNA_SCORE=$( echo $LINE | cut -d " " -f9 ) ; 
-			echo -e "$TRNA_START\t""$TRNA_END\t""tRNA\n""\t\t\tgene\t""$GENOME_NAME""_tRNA$TRNA_NUMBER\n""\t\t\tproduct\t""tRNA-$TRNA_TYPE\n""\t\t\tinference\t""tRNAscan-SE score:$TRNA_SCORE" >> ${GENOME_NAME%.fasta}.trna.tbl; 
-		done
-	fi
-done
+			grep "${GENOME_NAME%.fasta}" $GENOME_NAME.trnascan-se2.txt | while read LINE ; do 
+				TRNA_START=$( echo $LINE | cut -d " " -f3 ) ; 
+				TRNA_END=$( echo $LINE | cut -d " " -f4 ) ; 
+				TRNA_NUMBER=$( echo $LINE | cut -d " " -f2 ) ; 
+				TRNA_TYPE=$( echo $LINE | cut -d " " -f5 ) ; 
+				TRNA_SCORE=$( echo $LINE | cut -d " " -f9 ) ; 
+				echo -e "$TRNA_START\t""$TRNA_END\t""tRNA\n""\t\t\tgene\t""$GENOME_NAME""_tRNA$TRNA_NUMBER\n""\t\t\tproduct\t""tRNA-$TRNA_TYPE\n""\t\t\tinference\t""tRNAscan-SE score:$TRNA_SCORE" >> ${GENOME_NAME%.fasta}.trna.tbl; 
+			done
+		fi
+	done
+fi
 
 echo "$(tput setaf 5) combining .tbl files that have been generated so far $(tput sgr 0)"
 
-for nucl_fa in $NEW_FASTAS ; do
-	if [ -s ${nucl_fa%.fasta}.NT.tbl ] && [ -s ${nucl_fa%.fasta}.SCAN.tbl ] && [ -s ${nucl_fa%.fasta}.BLASTP.tbl ] ; then
-		cat ${nucl_fa%.fasta}.BLASTP.tbl > ${nucl_fa%.fasta}.int.tbl
-		echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
-		grep -v -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'Predicted protein' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Domain of unknown function' -e 'product	gp' ${nucl_fa%.fasta}.NT.tbl | grep -A1 -B2 'product' | grep -v ">Feature" | sed '/--/d' >> ${nucl_fa%.fasta}.int.tbl ;
-		echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
-		cat ${nucl_fa%.fasta}.SCAN.tbl | grep -v ">Feature" >> ${nucl_fa%.fasta}.int.tbl
-		if [ -s ${nucl_fa%.fasta}.trna.tbl ] ; then
+if [ -n "$NEW_FASTAS" ]; then
+	for nucl_fa in $NEW_FASTAS ; do
+		if [ -s ${nucl_fa%.fasta}.NT.tbl ] && [ -s ${nucl_fa%.fasta}.SCAN.tbl ] && [ -s ${nucl_fa%.fasta}.BLASTP.tbl ] ; then
+			cat ${nucl_fa%.fasta}.BLASTP.tbl > ${nucl_fa%.fasta}.int.tbl
 			echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
-			cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
-		fi
-	elif [ -s ${nucl_fa%.fasta}.SCAN.tbl ] && [ -s ${nucl_fa%.fasta}.BLASTP.tbl ] ; then
-		cat ${nucl_fa%.fasta}.BLASTP.tbl > ${nucl_fa%.fasta}.int.tbl
-		echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
-		cat ${nucl_fa%.fasta}.SCAN.tbl | grep -v ">Feature" >> ${nucl_fa%.fasta}.int.tbl
-		if [ -s ${nucl_fa%.fasta}.trna.tbl ] ; then
+			grep -v -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'Predicted protein' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Domain of unknown function' -e 'product	gp' ${nucl_fa%.fasta}.NT.tbl | grep -A1 -B2 'product' | grep -v ">Feature" | sed '/--/d' >> ${nucl_fa%.fasta}.int.tbl ;
 			echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
-			cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
-		fi
-	elif [ -s ${nucl_fa%.fasta}.NT.tbl ] && [ -s ${nucl_fa%.fasta}.BLASTP.tbl ] ; then
-		cat ${nucl_fa%.fasta}.BLASTP.tbl > ${nucl_fa%.fasta}.int.tbl
-		echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
-		grep -v -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'Predicted protein' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Domain of unknown function' -e 'product	gp' ${nucl_fa%.fasta}.NT.tbl | grep -A1 -B2 'product' | grep -v ">Feature" | sed '/--/d' >> ${nucl_fa%.fasta}.int.tbl ;
-		if [ -s ${nucl_fa%.fasta}.trna.tbl ] ; then
+			cat ${nucl_fa%.fasta}.SCAN.tbl | grep -v ">Feature" >> ${nucl_fa%.fasta}.int.tbl
+			if [ -s ${nucl_fa%.fasta}.trna.tbl ] ; then
+				echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
+				cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
+			fi
+		elif [ -s ${nucl_fa%.fasta}.SCAN.tbl ] && [ -s ${nucl_fa%.fasta}.BLASTP.tbl ] ; then
+			cat ${nucl_fa%.fasta}.BLASTP.tbl > ${nucl_fa%.fasta}.int.tbl
 			echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
-			cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
-		fi
-	elif [ -s ${nucl_fa%.fasta}.NT.tbl ] && [ -s ${nucl_fa%.fasta}.SCAN.tbl ] ; then
-		cat ${nucl_fa%.fasta}.NT.tbl > ${nucl_fa%.fasta}.int.tbl
-		echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
-		cat ${nucl_fa%.fasta}.SCAN.tbl | grep -v ">Feature" >> ${nucl_fa%.fasta}.int.tbl
-		if [ -s ${nucl_fa%.fasta}.trna.tbl ] ; then
+			cat ${nucl_fa%.fasta}.SCAN.tbl | grep -v ">Feature" >> ${nucl_fa%.fasta}.int.tbl
+			if [ -s ${nucl_fa%.fasta}.trna.tbl ] ; then
+				echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
+				cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
+			fi
+		elif [ -s ${nucl_fa%.fasta}.NT.tbl ] && [ -s ${nucl_fa%.fasta}.BLASTP.tbl ] ; then
+			cat ${nucl_fa%.fasta}.BLASTP.tbl > ${nucl_fa%.fasta}.int.tbl
 			echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
-			cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
-		fi
-	elif [ -s ${nucl_fa%.fasta}.NT.tbl ] ; then
-		cat ${nucl_fa%.fasta}.NT.tbl > ${nucl_fa%.fasta}.int.tbl
-		if [ -s ${nucl_fa%.fasta}.trna.tbl ] ; then
+			grep -v -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'Predicted protein' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Domain of unknown function' -e 'product	gp' ${nucl_fa%.fasta}.NT.tbl | grep -A1 -B2 'product' | grep -v ">Feature" | sed '/--/d' >> ${nucl_fa%.fasta}.int.tbl ;
+			if [ -s ${nucl_fa%.fasta}.trna.tbl ] ; then
+				echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
+				cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
+			fi
+		elif [ -s ${nucl_fa%.fasta}.NT.tbl ] && [ -s ${nucl_fa%.fasta}.SCAN.tbl ] ; then
+			cat ${nucl_fa%.fasta}.NT.tbl > ${nucl_fa%.fasta}.int.tbl
 			echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
-			cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
-		fi
-	elif [ -s ${nucl_fa%.fasta}.SCAN.tbl ] ; then
-		echo ">Feature ${nucl_fa%.fasta} Table1" >> ${nucl_fa%.fasta}.int.tbl
-		echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
-		cat ${nucl_fa%.fasta}.SCAN.tbl >> ${nucl_fa%.fasta}.int.tbl
-		if [ -s ${nucl_fa%.fasta}.trna.tbl ] ; then
+			cat ${nucl_fa%.fasta}.SCAN.tbl | grep -v ">Feature" >> ${nucl_fa%.fasta}.int.tbl
+			if [ -s ${nucl_fa%.fasta}.trna.tbl ] ; then
+				echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
+				cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
+			fi
+		elif [ -s ${nucl_fa%.fasta}.NT.tbl ] ; then
+			cat ${nucl_fa%.fasta}.NT.tbl > ${nucl_fa%.fasta}.int.tbl
+			if [ -s ${nucl_fa%.fasta}.trna.tbl ] ; then
+				echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
+				cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
+			fi
+		elif [ -s ${nucl_fa%.fasta}.SCAN.tbl ] ; then
+			echo ">Feature ${nucl_fa%.fasta} Table1" >> ${nucl_fa%.fasta}.int.tbl
 			echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
-			cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
+			cat ${nucl_fa%.fasta}.SCAN.tbl >> ${nucl_fa%.fasta}.int.tbl
+			if [ -s ${nucl_fa%.fasta}.trna.tbl ] ; then
+				echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
+				cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
+			fi
+		elif [ -s ${nucl_fa%.fasta}.BLASTP.tbl ] ; then
+			cat ${nucl_fa%.fasta}.BLASTP.tbl > ${nucl_fa%.fasta}.int.tbl
+			if [ -s ${nucl_fa%.fasta}.trna.tbl ] ; then
+				echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
+				cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
+			fi
 		fi
-	elif [ -s ${nucl_fa%.fasta}.BLASTP.tbl ] ; then
-		cat ${nucl_fa%.fasta}.BLASTP.tbl > ${nucl_fa%.fasta}.int.tbl
-		if [ -s ${nucl_fa%.fasta}.trna.tbl ] ; then
-			echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
-			cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
-		fi
-	fi
-done
+	done
+fi
 
 
 # remove ORFs within ORFs that are 'hypothetical'
 echo "$(tput setaf 5) Removing ORFS within ORFs that are 'hypothetical' $(tput sgr 0)"
 
+INT_TBL=$( find * -maxdepth 0 -type f -name "*.int.tbl" )
+if [ -n "$INT_TBL" ] ; then
+	for feat_tbl3 in $INT_TBL ; do
+		grep "^[0-9]" $feat_tbl3 | awk '{FS="\t"; OFS="\t"} {print $1, $2}' > ${feat_tbl3%.int.tbl}.all_start_stop.txt ;
+		cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read linev ; do
+			all_start=$( echo $linev | cut -d " " -f1 )
+			all_end=$( echo $linev | cut -d " " -f2 )
+			if [[ "$all_end" -gt "$all_start" ]]; then
+				for ((counter_f=(( $all_start + 1 ));counter_f<=$all_end;counter_f++)); do
+					echo " " "$counter_f" " " >> ${feat_tbl3%.int.tbl}.used_positions.txt
+					
+				done
+			elif [[ "$all_start" -gt "$all_end" ]]; then
+				for ((counter_r=$all_end;counter_r<=(( $all_start - 1 ));counter_r++)) ; do
+					echo " " "$counter_r" " " >> ${feat_tbl3%.int.tbl}.used_positions.txt
+				done
+			fi
+		done
+		sed 's/(Fragment)//g; s/\. .*//g; s/{.*//g; s/\[.*//g; s/Putative hypothetical protein/hypothetical protein/g; s/Uncultured bacteri.*/hypothetical protein/g; s/RNA helicase$/helicase/g; s/Os.*/hypothetical protein/g; s/\.$//g; s/Unplaced genomic scaffold.*/hypothetical protein/g; s/Putative hypothetical protein/hypothetical protein/g; s/Contig.*/hypothetical protein/g; s/Uncharacterized protein/hypothetical protein/g; s/uncharacterized protein/hypothetical protein/g; s/Uncharacterised protein/hypothetical protein/g' $feat_tbl3 | sed '/--/d' > ${feat_tbl3%.int.tbl}.comb2.tbl ; 
+		grep -e 'hypothetical protein' -B2 ${feat_tbl3%.int.tbl}.comb2.tbl | grep "^[0-9]" | awk '{FS="\t"; OFS="\t"} {print $1, $2}' > ${feat_tbl3%.int.tbl}.hypo_start_stop.txt ;
 
-for feat_tbl3 in *.int.tbl ; do
-	grep "^[0-9]" $feat_tbl3 | awk '{FS="\t"; OFS="\t"} {print $1, $2}' > ${feat_tbl3%.int.tbl}.all_start_stop.txt ;
-	cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read linev ; do
-		all_start=$( echo $linev | cut -d " " -f1 )
-		all_end=$( echo $linev | cut -d " " -f2 )
-		if [[ "$all_end" -gt "$all_start" ]]; then
-			for ((counter_f=(( $all_start + 1 ));counter_f<=$all_end;counter_f++)); do
-				echo " " "$counter_f" " " >> ${feat_tbl3%.int.tbl}.used_positions.txt
-				
-			done
-		elif [[ "$all_start" -gt "$all_end" ]]; then
-			for ((counter_r=$all_end;counter_r<=(( $all_start - 1 ));counter_r++)) ; do
-				echo " " "$counter_r" " " >> ${feat_tbl3%.int.tbl}.used_positions.txt
-			done
-		fi
-	done
-	sed 's/(Fragment)//g; s/\. .*//g; s/{.*//g; s/\[.*//g; s/Putative hypothetical protein/hypothetical protein/g; s/Uncultured bacteri.*/hypothetical protein/g; s/RNA helicase$/helicase/g; s/Os.*/hypothetical protein/g; s/\.$//g; s/Unplaced genomic scaffold.*/hypothetical protein/g; s/Putative hypothetical protein/hypothetical protein/g; s/Contig.*/hypothetical protein/g; s/Uncharacterized protein/hypothetical protein/g; s/uncharacterized protein/hypothetical protein/g; s/Uncharacterised protein/hypothetical protein/g' $feat_tbl3 | sed '/--/d' > ${feat_tbl3%.int.tbl}.comb2.tbl ; 
-	grep -e 'hypothetical protein' -B2 ${feat_tbl3%.int.tbl}.comb2.tbl | grep "^[0-9]" | awk '{FS="\t"; OFS="\t"} {print $1, $2}' > ${feat_tbl3%.int.tbl}.hypo_start_stop.txt ;
-
-	# Remove redudant ORFs that are subORFs of ORFs overlapping the wrap-point
-	GENOME_LENGTH=$( bioawk -c fastx '{print length($seq)}' ${feat_tbl3%.int.tbl}.rotate.fasta )
-	cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read linet ; do
-		all_start=$( echo $linet | cut -d " " -f1 )
-		all_end=$( echo $linet | cut -d " " -f2 )
-		if [[ "$all_end" -gt "$GENOME_LENGTH" ]] ; then
-			cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read lineq ; do
-				q_end=$( echo $lineq | cut -d " " -f2 )
-				OVERWRAP_END=$(( $q_end + $GENOME_LENGTH ))
-				if [[ "$all_end" = "$OVERWRAP_END"  ]] ; then
-					echo "$lineq" >> ${feat_tbl3%.int.tbl}.remove_hypo.txt
-				fi
-			done
-		elif [[ "$all_start" -gt "$GENOME_LENGTH" ]] ; then
-			cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read lineq ; do
-				q_start=$( echo $lineq | cut -d " " -f2 )
-				OVERWRAP_START=$(( $q_start + $GENOME_LENGTH ))
-				if [[ "$all_start" = "$OVERWRAP_START"  ]] ; then
-					echo "$lineq" >> ${feat_tbl3%.int.tbl}.remove_hypo.txt
-				fi
-			done
-		fi
-	done
-
-
-	cat "${feat_tbl3%.int.tbl}.hypo_start_stop.txt" | while read liney ; do
-		loc_start=$( echo $liney | cut -d " " -f1 )
-		loc_end=$( echo $liney | cut -d " " -f2 )
-		loc1_start=$( echo " " "$loc_start" " " )
-		if grep -q "$loc1_start" ${feat_tbl3%.int.tbl}.used_positions.txt ; then 
-			echo $feat_tbl3
-			echo "$loc1_start"
-			if [[ "$loc_end" -gt "$loc_start" ]]; then
-				gen_len=$(( $loc_end - $loc_start ))
-
-				if [[ "$gen_len" -gt 1000 ]]; then
-					continue
-				else
-					f_end=$(( $loc_end + 1 ))
-					f1_end=$( echo " " "$f_end" " ")
-					echo "$f1_end"
-					if grep -q "$f1_end" ${feat_tbl3%.int.tbl}.used_positions.txt ; then
-						echo "removing hypo"
-						echo "$loc1_start" "start, " "$loc_end" "end, " 
-						echo "$liney" >> ${feat_tbl3%.int.tbl}.remove_hypo.txt
+		# Remove redudant ORFs that are subORFs of ORFs overlapping the wrap-point
+		GENOME_LENGTH=$( bioawk -c fastx '{print length($seq)}' ${feat_tbl3%.int.tbl}.rotate.fasta )
+		cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read linet ; do
+			all_start=$( echo $linet | cut -d " " -f1 )
+			all_end=$( echo $linet | cut -d " " -f2 )
+			if [[ "$all_end" -gt "$GENOME_LENGTH" ]] ; then
+				cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read lineq ; do
+					q_end=$( echo $lineq | cut -d " " -f2 )
+					OVERWRAP_END=$(( $q_end + $GENOME_LENGTH ))
+					if [[ "$all_end" = "$OVERWRAP_END"  ]] ; then
+						echo "$lineq" >> ${feat_tbl3%.int.tbl}.remove_hypo.txt
 					fi
-				fi
-			else
-				gen_len=$(( $loc_start - $loc_end ))
+				done
+			elif [[ "$all_start" -gt "$GENOME_LENGTH" ]] ; then
+				cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read lineq ; do
+					q_start=$( echo $lineq | cut -d " " -f2 )
+					OVERWRAP_START=$(( $q_start + $GENOME_LENGTH ))
+					if [[ "$all_start" = "$OVERWRAP_START"  ]] ; then
+						echo "$lineq" >> ${feat_tbl3%.int.tbl}.remove_hypo.txt
+					fi
+				done
+			fi
+		done
 
-				if [[ "$gen_len" -gt 1000 ]]; then
-					continue
-				else
-				r_end=$(( $loc_end - 1 ))
-				r1_end=$( echo " " "$r_end" " ")
 
-				echo "$r1_end"
-					if grep -q "$r1_end" ${feat_tbl3%.int.tbl}.used_positions.txt ; then
+		cat "${feat_tbl3%.int.tbl}.hypo_start_stop.txt" | while read liney ; do
+			loc_start=$( echo $liney | cut -d " " -f1 )
+			loc_end=$( echo $liney | cut -d " " -f2 )
+			loc1_start=$( echo " " "$loc_start" " " )
+			if grep -q "$loc1_start" ${feat_tbl3%.int.tbl}.used_positions.txt ; then 
+				echo $feat_tbl3
+				echo "$loc1_start"
+				if [[ "$loc_end" -gt "$loc_start" ]]; then
+					gen_len=$(( $loc_end - $loc_start ))
+
+					if [[ "$gen_len" -gt 1000 ]]; then
+						continue
+					else
+						f_end=$(( $loc_end + 1 ))
+						f1_end=$( echo " " "$f_end" " ")
+						echo "$f1_end"
+						if grep -q "$f1_end" ${feat_tbl3%.int.tbl}.used_positions.txt ; then
 							echo "removing hypo"
 							echo "$loc1_start" "start, " "$loc_end" "end, " 
 							echo "$liney" >> ${feat_tbl3%.int.tbl}.remove_hypo.txt
+						fi
+					fi
+				else
+					gen_len=$(( $loc_start - $loc_end ))
+
+					if [[ "$gen_len" -gt 1000 ]]; then
+						continue
+					else
+					r_end=$(( $loc_end - 1 ))
+					r1_end=$( echo " " "$r_end" " ")
+
+					echo "$r1_end"
+						if grep -q "$r1_end" ${feat_tbl3%.int.tbl}.used_positions.txt ; then
+								echo "removing hypo"
+								echo "$loc1_start" "start, " "$loc_end" "end, " 
+								echo "$liney" >> ${feat_tbl3%.int.tbl}.remove_hypo.txt
+						fi
 					fi
 				fi
 			fi
+		done
+		if [ -s "${feat_tbl3%.int.tbl}.remove_hypo.txt" ]; then
+			grep ">Feature" ${feat_tbl3%.int.tbl}.comb2.tbl | sed '/--/d' > ${feat_tbl3%.int.tbl}.int2.tbl
+			grep -v -f ${feat_tbl3%.int.tbl}.remove_hypo.txt ${feat_tbl3%.int.tbl}.comb2.tbl | grep "^[0-9]" -A3 | sed '/--/d' >> ${feat_tbl3%.int.tbl}.int2.tbl ;
+			else
+				cp ${feat_tbl3%.int.tbl}.comb2.tbl ${feat_tbl3%.int.tbl}.int2.tbl
 		fi
 	done
-	if [ -s "${feat_tbl3%.int.tbl}.remove_hypo.txt" ]; then
-		grep ">Feature" ${feat_tbl3%.int.tbl}.comb2.tbl | sed '/--/d' > ${feat_tbl3%.int.tbl}.int2.tbl
-		grep -v -f ${feat_tbl3%.int.tbl}.remove_hypo.txt ${feat_tbl3%.int.tbl}.comb2.tbl | grep "^[0-9]" -A3 | sed '/--/d' >> ${feat_tbl3%.int.tbl}.int2.tbl ;
-		else
-			cp ${feat_tbl3%.int.tbl}.comb2.tbl ${feat_tbl3%.int.tbl}.int2.tbl
-	fi
-done
+fi
 
 
 
 # Grabbing ORFs wihout BLASTP hits and separating them into individual files for HHsearch
 echo "$(tput setaf 5) Grabbing ORFs wihout BLASTP hits and separating them into individual files for HHsearch $(tput sgr 0)"
 
-for blastp_tbl1 in *.int2.tbl ; do
-	grep -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Uncharacterized conserved protein' -e 'unknown' -e 'Uncharacterised protein' -e 'product	gp' -e 'putative phage protein' -B2 $blastp_tbl1 | grep "^[0-9]" | awk '{print $1 " - " $2}' > ${blastp_tbl1%.int2.tbl}.for_hhpred.txt ;
-	grep -f ${blastp_tbl1%.int2.tbl}.for_hhpred.txt -A1 ${blastp_tbl1%.int2.tbl}.rotate.AA.sorted.fasta | sed '/--/d' > ${blastp_tbl1%.int2.tbl}.rotate.blast_hypo.fasta ;
-	csplit -z ${blastp_tbl1%.int2.tbl}.rotate.blast_hypo.fasta '/>/' '{*}' --prefix=${blastp_tbl1%.int2.tbl}.rotate --suffix-format=%02d.for_hhpred.fasta; 
-done
+INT2_TBL=$( find * -maxdepth 0 -type f -name "*.int2.tbl" )
+if [ -n "$INT2_TBL" ] ; then
+	for blastp_tbl1 in $INT2_TBL ; do
+		grep -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Uncharacterized conserved protein' -e 'unknown' -e 'Uncharacterised protein' -e 'product	gp' -e 'putative phage protein' -B2 $blastp_tbl1 | grep "^[0-9]" | awk '{print $1 " - " $2}' > ${blastp_tbl1%.int2.tbl}.for_hhpred.txt ;
+		grep -f ${blastp_tbl1%.int2.tbl}.for_hhpred.txt -A1 ${blastp_tbl1%.int2.tbl}.rotate.AA.sorted.fasta | sed '/--/d' > ${blastp_tbl1%.int2.tbl}.rotate.blast_hypo.fasta ;
+		csplit -z ${blastp_tbl1%.int2.tbl}.rotate.blast_hypo.fasta '/>/' '{*}' --prefix=${blastp_tbl1%.int2.tbl}.rotate --suffix-format=%02d.for_hhpred.fasta; 
+	done
+fi
 
 # Running HHsearch on remaining ORFs
-MDYT=$( date +"%m-%d-%y---%T" )
-echo "time update: running HHsearch or HHblits " $MDYT
-dark_orf_list=$( ls *.for_hhpred.fasta )
-
-for dark_orf in $dark_orf_list ; do
-	if  [[ $HHSUITE_TOOL = "hhsearch" ]] ; then
-		echo "$(tput setaf 5)Running HHsearch on "$dark_orf" now.$(tput sgr 0)"
-		${CENOTE_SCRIPT_DIR}/hh-suite/build/src/hhsearch -i $dark_orf -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o ${dark_orf%.for_hhpred.fasta}.out.hhr -cpu $CPU -maxmem $MEM -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1  ;
-		cat ${dark_orf%.for_hhpred.fasta}.out.hhr >> ${dark_orf%.rotate*.for_hhpred.fasta}.rotate.out_all.hhr ;
-		rm -f ${dark_orf%.for_hhpred.fasta}.out.hhr 
-		cat $dark_orf >> ${dark_orf%.rotate*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
-		rm -f $dark_orf
-	elif [[ $HHSUITE_TOOL = "hhblits" ]] ; then
-		echo "$(tput setaf 5)Running HHblits on "$dark_orf" now.$(tput sgr 0)"
-		${CENOTE_SCRIPT_DIR}/hh-suite/build/src/hhblits -i $dark_orf -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o ${dark_orf%.for_hhpred.fasta}.out.hhr -cpu $CPU -maxmem $MEM -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1  ;
-		cat ${dark_orf%.for_hhpred.fasta}.out.hhr >> ${dark_orf%.rotate*.for_hhpred.fasta}.rotate.out_all.hhr ;
-		rm -f ${dark_orf%.for_hhpred.fasta}.out.hhr 
-		cat $dark_orf >> ${dark_orf%.rotate*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
-		rm -f $dark_orf
-	else
-		echo "$(tput setaf 5) Valid option for HHsuite tool (i.e. -hhsearch or -hhblits) was not provided. Skipping step for "$dark_orf" $(tput sgr 0)"
-		cat $dark_orf >> ${dark_orf%.rotate*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
-		rm -f $dark_orf
-	fi
-done
+if  [[ $HHSUITE_TOOL = "hhsearch" ]] || [[ $HHSUITE_TOOL = "hhblits" ]] ; then
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "time update: running HHsearch or HHblits " $MDYT
+fi
+dark_orf_list=$( find * -maxdepth 0 -type f -name "*.for_hhpred.fasta" )
+if [ -n "$dark_orf_list" ] ; then
+	for dark_orf in $dark_orf_list ; do
+		if  [[ $HHSUITE_TOOL = "hhsearch" ]] ; then
+			echo "$(tput setaf 5)Running HHsearch on "$dark_orf" now.$(tput sgr 0)"
+			${CENOTE_SCRIPT_DIR}/hh-suite/build/src/hhsearch -i $dark_orf -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o ${dark_orf%.for_hhpred.fasta}.out.hhr -cpu $CPU -maxmem $MEM -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1  ;
+			cat ${dark_orf%.for_hhpred.fasta}.out.hhr >> ${dark_orf%.rotate*.for_hhpred.fasta}.rotate.out_all.hhr ;
+			rm -f ${dark_orf%.for_hhpred.fasta}.out.hhr 
+			cat $dark_orf >> ${dark_orf%.rotate*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
+			rm -f $dark_orf
+		elif [[ $HHSUITE_TOOL = "hhblits" ]] ; then
+			echo "$(tput setaf 5)Running HHblits on "$dark_orf" now.$(tput sgr 0)"
+			${CENOTE_SCRIPT_DIR}/hh-suite/build/src/hhblits -i $dark_orf -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o ${dark_orf%.for_hhpred.fasta}.out.hhr -cpu $CPU -maxmem $MEM -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1  ;
+			cat ${dark_orf%.for_hhpred.fasta}.out.hhr >> ${dark_orf%.rotate*.for_hhpred.fasta}.rotate.out_all.hhr ;
+			rm -f ${dark_orf%.for_hhpred.fasta}.out.hhr 
+			cat $dark_orf >> ${dark_orf%.rotate*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
+			rm -f $dark_orf
+		else
+			echo "$(tput setaf 5) Valid option for HHsuite tool (i.e. -hhsearch or -hhblits) was not provided. Skipping step for "$dark_orf" $(tput sgr 0)"
+			cat $dark_orf >> ${dark_orf%.rotate*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
+			rm -f $dark_orf
+		fi
+	done
+fi
 
 rm -f *.rotate.AA.fasta
 
@@ -1006,127 +1046,134 @@ echo "$(tput setaf 5) Starting perl script to make tbl from HHsearch output $(tp
 
 perl ${CENOTE_SCRIPT_DIR}/hhpredreport2tbl_mt_annotation_pipe_biowulf1_gjs_edits.pl ;
 
-for HH_tbl1 in *.HH.tbl ; do 
-sed 's/OS=.*//g; s/ ;//g; s/similar to AA sequence:UniProtKB:>\([0-9][A-Z].*\)/protein motif:PDB:\1/g; s/UniProtKB:>tr|.*|\(.\)/UniProtKB:\1/g; s/similar to AA sequence:UniProtKB:>\([a-z].*\)/protein motif:Scop:\1/g; s/similar to AA sequence:UniProtKB:>\(PF.*\)/protein motif:PFAM:\1/g; s/ is .*//g; s/ are .*//g' $HH_tbl1 | sed '/product/ s/; [a-zA-Z0-9_]\{1,20\}//g; s/;.*//g' > ${HH_tbl1%.HH.tbl}.HH2.tbl
-done
+HH_TBL=$( find * -maxdepth 0 -type f -name "*.HH.tbl" )
+if [ -n "$HH_TBL" ] ; then
+	for HH_tbl1 in $HH_TBL ; do 
+		sed 's/OS=.*//g; s/ ;//g; s/similar to AA sequence:UniProtKB:>\([0-9][A-Z].*\)/protein motif:PDB:\1/g; s/UniProtKB:>tr|.*|\(.\)/UniProtKB:\1/g; s/similar to AA sequence:UniProtKB:>\([a-z].*\)/protein motif:Scop:\1/g; s/similar to AA sequence:UniProtKB:>\(PF.*\)/protein motif:PFAM:\1/g; s/ is .*//g; s/ are .*//g' $HH_tbl1 | sed '/product/ s/; [a-zA-Z0-9_]\{1,20\}//g; s/;.*//g' > ${HH_tbl1%.HH.tbl}.HH2.tbl
+	done
+fi
 
 # Combining tbl files from all search results AND fix overlapping ORF module
 echo "$(tput setaf 5) Combining tbl files from all search results AND fix overlapping ORF module $(tput sgr 0)"
 
-for feat_tbl4 in *.int2.tbl ; do 
-	if [ -s "${feat_tbl4%.int2.tbl}.HH2.tbl" ] && [ -s "$feat_tbl4" ] ; then
-		head -n1 $feat_tbl4 > ${feat_tbl4%.int2.tbl}.comb3.tbl
-		grep -v -e 'hypothetical protein' -e 'unnamed protein product' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Domain of unknown function' -e 'product	gp' -e 'putative phage protein' $feat_tbl4 | grep -A1 -B2 'product' | grep -v ">Feature" | sed '/--/d; s/TPA_asm: //g; s/TPA://g' >> ${feat_tbl4%.int2.tbl}.comb3.tbl
-		sed 's/(Fragment)//g; s/\. .*//g; s/{.*//g; s/\[.*//g; s/Putative hypothetical protein/hypothetical protein/g; s/Uncultured bacteri.*/hypothetical protein/g; s/RNA helicase$/helicase/g; s/Os.*/hypothetical protein/g; s/\.$//g; s/Unplaced genomic scaffold.*/hypothetical protein/g; s/Putative hypothetical protein/hypothetical protein/g; s/Contig.*/hypothetical protein/g; s/Uncharacterized protein/hypothetical protein/g; s/uncharacterized protein/hypothetical protein/g; s/Uncharacterised protein/hypothetical protein/g; s/[bB]rain cDNA.*/hypothetical protein/g; s/(E\.C.*//g' ${feat_tbl4%.int2.tbl}.HH2.tbl | grep -v ">Feature" | sed '/--/d' >> ${feat_tbl4%.int2.tbl}.comb3.tbl ;
-		if [ -s "${feat_tbl4%.int2.tbl}.ITR.tbl" ] ; then
-			cat ${feat_tbl4%.int2.tbl}.ITR.tbl >> ${feat_tbl4%.int2.tbl}.comb3.tbl
-		fi
-	else
-		cat $feat_tbl4 | sed '/--/d; s/TPA_asm: //g; s/TPA://g' > ${feat_tbl4%.int2.tbl}.comb3.tbl
-		if [ -s "${feat_tbl4%.int2.tbl}.ITR.tbl" ] ; then
-			cat ${feat_tbl4%.int2.tbl}.ITR.tbl >> ${feat_tbl4%.int2.tbl}.comb3.tbl
-		fi
-	fi
-	GENOME_LENGTH=$( bioawk -c fastx '{print length($seq)}' ${feat_tbl4%.int2.tbl}.rotate.fasta )
-	grep "^[0-9]" ${feat_tbl4%.int2.tbl}.comb3.tbl | cut -f1,2 | while read LINE ; do 
-		START_SITE=$( echo $LINE | awk -v TOTAL_LENGTH="$GENOME_LENGTH" '{ if ($1>TOTAL_LENGTH) { print $1 } else {print "not_overlaps"}}' ) ; 
-		END_SITE=$( echo $LINE | awk -v TOTAL_LENGTH="$GENOME_LENGTH" '{ if ($2>TOTAL_LENGTH) { print $2 } else {print "not_overlaps"}}' ) ;
-		if [ "$START_SITE" != 'not_overlaps' ] || [ "$END_SITE" != 'not_overlaps' ] ; then
-#			echo $START_SITE
-#			echo $END_SITE
-#			echo $GENOME_LENGTH
-			if [ "$START_SITE" != 'not_overlaps' ] ; then
-				END_SITEQ=$( echo $LINE | awk '{ print $2 }' )				
-				NEW_START=$(( $START_SITE - $GENOME_LENGTH ))
-				FIRST_HALF=$( cat ${feat_tbl4%.int2.tbl}.comb3.tbl | sed "/$START_SITE	$END_SITEQ	CDS/q" | sed "s/$START_SITE	$END_SITEQ	CDS/$NEW_START	<1	CDS/g" )
-				#echo "$FIRST_HALF"
-				SECOND_HALF=$( cat ${feat_tbl4%.int2.tbl}.comb3.tbl | sed "s/$START_SITE	$END_SITE	CDS/$GENOME_LENGTH	$END_SITE/g" | sed -n '/</,$p' ) ;
-			elif [ "$END_SITE" != 'not_overlaps' ] ; then
-				START_SITEQ=$( echo $LINE | awk '{ print $1 }' )
-				NEW_END=$(( $END_SITE - $GENOME_LENGTH ))
-				FIRST_HALF=$( cat ${feat_tbl4%.int2.tbl}.comb3.tbl | sed "/$START_SITEQ	$END_SITE	CDS/q" | sed "s/$START_SITEQ	$END_SITE	CDS/$START_SITEQ	$GENOME_LENGTH	CDS/g" )
-				SECOND_HALF=$( cat ${feat_tbl4%.int2.tbl}.comb3.tbl | sed "s/$START_SITEQ	$END_SITE	CDS/<1	$NEW_END/g" | sed -n '/</,$p' )
+if [ -n "$INT2_TBL" ] ; then
+	for feat_tbl4 in $INT2_TBL ; do 
+		if [ -s "${feat_tbl4%.int2.tbl}.HH2.tbl" ] && [ -s "$feat_tbl4" ] ; then
+			head -n1 $feat_tbl4 > ${feat_tbl4%.int2.tbl}.comb3.tbl
+			grep -v -e 'hypothetical protein' -e 'unnamed protein product' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Domain of unknown function' -e 'product	gp' -e 'putative phage protein' $feat_tbl4 | grep -A1 -B2 'product' | grep -v ">Feature" | sed '/--/d; s/TPA_asm: //g; s/TPA://g' >> ${feat_tbl4%.int2.tbl}.comb3.tbl
+			sed 's/(Fragment)//g; s/\. .*//g; s/{.*//g; s/\[.*//g; s/Putative hypothetical protein/hypothetical protein/g; s/Uncultured bacteri.*/hypothetical protein/g; s/RNA helicase$/helicase/g; s/Os.*/hypothetical protein/g; s/\.$//g; s/Unplaced genomic scaffold.*/hypothetical protein/g; s/Putative hypothetical protein/hypothetical protein/g; s/Contig.*/hypothetical protein/g; s/Uncharacterized protein/hypothetical protein/g; s/uncharacterized protein/hypothetical protein/g; s/Uncharacterised protein/hypothetical protein/g; s/[bB]rain cDNA.*/hypothetical protein/g; s/(E\.C.*//g' ${feat_tbl4%.int2.tbl}.HH2.tbl | grep -v ">Feature" | sed '/--/d' >> ${feat_tbl4%.int2.tbl}.comb3.tbl ;
+			if [ -s "${feat_tbl4%.int2.tbl}.ITR.tbl" ] ; then
+				cat ${feat_tbl4%.int2.tbl}.ITR.tbl >> ${feat_tbl4%.int2.tbl}.comb3.tbl
 			fi
-			echo -e "$FIRST_HALF\n""$SECOND_HALF" > tempq.${feat_tbl4%.int2.tbl}.comb3.tbl
-			mv tempq.${feat_tbl4%.int2.tbl}.comb3.tbl ${feat_tbl4%.int2.tbl}.comb3.tbl
-
+		else
+			cat $feat_tbl4 | sed '/--/d; s/TPA_asm: //g; s/TPA://g' > ${feat_tbl4%.int2.tbl}.comb3.tbl
+			if [ -s "${feat_tbl4%.int2.tbl}.ITR.tbl" ] ; then
+				cat ${feat_tbl4%.int2.tbl}.ITR.tbl >> ${feat_tbl4%.int2.tbl}.comb3.tbl
+			fi
 		fi
+		GENOME_LENGTH=$( bioawk -c fastx '{print length($seq)}' ${feat_tbl4%.int2.tbl}.rotate.fasta )
+		grep "^[0-9]" ${feat_tbl4%.int2.tbl}.comb3.tbl | cut -f1,2 | while read LINE ; do 
+			START_SITE=$( echo $LINE | awk -v TOTAL_LENGTH="$GENOME_LENGTH" '{ if ($1>TOTAL_LENGTH) { print $1 } else {print "not_overlaps"}}' ) ; 
+			END_SITE=$( echo $LINE | awk -v TOTAL_LENGTH="$GENOME_LENGTH" '{ if ($2>TOTAL_LENGTH) { print $2 } else {print "not_overlaps"}}' ) ;
+			if [ "$START_SITE" != 'not_overlaps' ] || [ "$END_SITE" != 'not_overlaps' ] ; then
+	#			echo $START_SITE
+	#			echo $END_SITE
+	#			echo $GENOME_LENGTH
+				if [ "$START_SITE" != 'not_overlaps' ] ; then
+					END_SITEQ=$( echo $LINE | awk '{ print $2 }' )				
+					NEW_START=$(( $START_SITE - $GENOME_LENGTH ))
+					FIRST_HALF=$( cat ${feat_tbl4%.int2.tbl}.comb3.tbl | sed "/$START_SITE	$END_SITEQ	CDS/q" | sed "s/$START_SITE	$END_SITEQ	CDS/$NEW_START	<1	CDS/g" )
+					#echo "$FIRST_HALF"
+					SECOND_HALF=$( cat ${feat_tbl4%.int2.tbl}.comb3.tbl | sed "s/$START_SITE	$END_SITE	CDS/$GENOME_LENGTH	$END_SITE/g" | sed -n '/</,$p' ) ;
+				elif [ "$END_SITE" != 'not_overlaps' ] ; then
+					START_SITEQ=$( echo $LINE | awk '{ print $1 }' )
+					NEW_END=$(( $END_SITE - $GENOME_LENGTH ))
+					FIRST_HALF=$( cat ${feat_tbl4%.int2.tbl}.comb3.tbl | sed "/$START_SITEQ	$END_SITE	CDS/q" | sed "s/$START_SITEQ	$END_SITE	CDS/$START_SITEQ	$GENOME_LENGTH	CDS/g" )
+					SECOND_HALF=$( cat ${feat_tbl4%.int2.tbl}.comb3.tbl | sed "s/$START_SITEQ	$END_SITE	CDS/<1	$NEW_END/g" | sed -n '/</,$p' )
+				fi
+				echo -e "$FIRST_HALF\n""$SECOND_HALF" > tempq.${feat_tbl4%.int2.tbl}.comb3.tbl
+				mv tempq.${feat_tbl4%.int2.tbl}.comb3.tbl ${feat_tbl4%.int2.tbl}.comb3.tbl
 
-	done ; 
+			fi
 
-done
+		done ; 
+
+	done
+fi
 
 rm -f *tmp.tbl
-
-for feat_tbl2 in *.comb3.tbl ; do 
-	if grep -i -q "CRESS\|genomovir\|circovir\|bacilladnavir\|redondovir\|nanovir\|geminivir\|smacovir" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
-		echo ${feat_tbl2%.comb3.tbl}" is a CRESS virus of some kind"
-	else
-		CONJ_COUNT=$( grep -i "virb\|type-IV\|secretion system\|conjuga\|transposon\|tra[a-z] \|trb[b-z]\|pilus" $feat_tbl2 | wc -l )
-		STRUCTURAL_COUNT=$( grep -i "capsid\|terminase\|portal\|baseplate\|base plate\|tail\|collar\|zot\|zonular\|minor coat\|packaging\|	virion protein" $feat_tbl2 | wc -l )
-		if [[ $CONJ_COUNT -gt 0 ]] && [[ $STRUCTURAL_COUNT == 0 ]] ; then
-			TAX_ORF="Conjugative Transposon"
-		elif grep -i -q "zot\|zonular" $feat_tbl2 ; then
-			TAX_ORF="Inoviridae"
-		elif grep -i -q "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 ; then
-			TAX_ORF=$( grep -i -B1 "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
-		elif grep -i -q "dnab\|dna polymerase\|polb\|rdrp\|rna dependent rna polymerase" $feat_tbl2 ; then
-			TAX_ORF=$( grep -i -B1 "dnab\|dna polymerase\|polb\|rdrp\|rna dependent rna polymerase" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )			
-		elif grep -i -q "portal" $feat_tbl2 ; then
-			TAX_ORF=$( grep -i -B1 "portal" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )		
-		elif grep -i -q "rep \|replica\|repa " $feat_tbl2 ; then
-			TAX_ORF=$( grep -i -B1 "rep \|replica\|repa" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )	
-		elif grep -i -q "capsid\|cap \|stnv\|coat" $feat_tbl2 ; then
-			TAX_ORF=$( grep -i -B1 "capsid\|cap \|stnv\|coat" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
-		elif grep -i -q "baseplate\|base-plate\|base plate" $feat_tbl2 ; then
-			TAX_ORF=$( grep -i -B1 "baseplate\|base-plate\|base plate" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
-		elif grep -i -q "tail" $feat_tbl2 ; then
-			TAX_ORF=$( grep -i -B1 "tail" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
-		else TAX_ORF="No_suitable_orf"
-
-
-		fi
-		if [ "$TAX_ORF" == "No_suitable_orf" ] ; then
-			echo "No suitable taxomic ORF for ${feat_tbl2%.comb3.tbl}"
-		elif [ "$TAX_ORF" == "Conjugative Transposon" ] ; then
-			echo "${feat_tbl2%.comb3.tbl} looks like a conjugative transposon"
-			echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
-		elif [ "$TAX_ORF" == "Inoviridae" ] ; then
-			echo "${feat_tbl2%.comb3.tbl} looks like an Inovirus"
-			echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+COMB3_TBL=$( find * -maxdepth 0 -type f -name "*.comb3.tbl" )
+if [ -n "$COMB3_TBL" ] ; then
+	for feat_tbl2 in *.comb3.tbl ; do 
+		if grep -i -q "CRESS\|genomovir\|circovir\|bacilladnavir\|redondovir\|nanovir\|geminivir\|smacovir" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
+			echo ${feat_tbl2%.comb3.tbl}" is a CRESS virus of some kind"
 		else
+			CONJ_COUNT=$( grep -i "virb\|type-IV\|secretion system\|conjuga\|transposon\|tra[a-z] \|trb[b-z]\|pilus" $feat_tbl2 | wc -l )
+			STRUCTURAL_COUNT=$( grep -i "capsid\|terminase\|portal\|baseplate\|base plate\|tail\|collar\|zot\|zonular\|minor coat\|packaging\|	virion protein" $feat_tbl2 | wc -l )
+			if [[ $CONJ_COUNT -gt 0 ]] && [[ $STRUCTURAL_COUNT == 0 ]] ; then
+				TAX_ORF="Conjugative Transposon"
+			elif grep -i -q "zot\|zonular" $feat_tbl2 ; then
+				TAX_ORF="Inoviridae"
+			elif grep -i -q "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 ; then
+				TAX_ORF=$( grep -i -B1 "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
+			elif grep -i -q "dnab\|dna polymerase\|polb\|rdrp\|rna dependent rna polymerase" $feat_tbl2 ; then
+				TAX_ORF=$( grep -i -B1 "dnab\|dna polymerase\|polb\|rdrp\|rna dependent rna polymerase" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )			
+			elif grep -i -q "portal" $feat_tbl2 ; then
+				TAX_ORF=$( grep -i -B1 "portal" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )		
+			elif grep -i -q "rep \|replica\|repa " $feat_tbl2 ; then
+				TAX_ORF=$( grep -i -B1 "rep \|replica\|repa" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )	
+			elif grep -i -q "capsid\|cap \|stnv\|coat" $feat_tbl2 ; then
+				TAX_ORF=$( grep -i -B1 "capsid\|cap \|stnv\|coat" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
+			elif grep -i -q "baseplate\|base-plate\|base plate" $feat_tbl2 ; then
+				TAX_ORF=$( grep -i -B1 "baseplate\|base-plate\|base plate" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
+			elif grep -i -q "tail" $feat_tbl2 ; then
+				TAX_ORF=$( grep -i -B1 "tail" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
+			else TAX_ORF="No_suitable_orf"
 
-			grep -A1 "$TAX_ORF " ${feat_tbl2%.comb3.tbl}.rotate.AA.sorted.fasta | sed '/--/d' > ${feat_tbl2%.comb3.tbl}.tax_orf.fasta
-			if [[ $STRUCTURAL_COUNT == 1 ]] || [[ $STRUCTURAL_COUNT -gt 1 ]] ; then
-				blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_adinto_polinton_prot_190925 -query ${feat_tbl2%.comb3.tbl}.tax_orf.fasta -out ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
-			else
-				blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query ${feat_tbl2%.comb3.tbl}.tax_orf.fasta -out ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
+
 			fi
-			if [ ! -s "${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out" ]; then
-				echo "unclassified virus" > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
-			elif grep -q "virophage" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
-				echo "Virophage" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
-			elif grep -q "adinto" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
-				echo "Adintovirus" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
-			elif grep -i -q "polinton" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
-				echo "Polinton-like virus" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out				
+			if [ "$TAX_ORF" == "No_suitable_orf" ] ; then
+				echo "No suitable taxomic ORF for ${feat_tbl2%.comb3.tbl}"
+			elif [ "$TAX_ORF" == "Conjugative Transposon" ] ; then
+				echo "${feat_tbl2%.comb3.tbl} looks like a conjugative transposon"
+				echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+			elif [ "$TAX_ORF" == "Inoviridae" ] ; then
+				echo "${feat_tbl2%.comb3.tbl} looks like an Inovirus"
+				echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 			else
 
-				ktClassifyBLAST -o ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
-				taxid=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab | cut -f2 )
-				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+				grep -A1 "$TAX_ORF " ${feat_tbl2%.comb3.tbl}.rotate.AA.sorted.fasta | sed '/--/d' > ${feat_tbl2%.comb3.tbl}.tax_orf.fasta
+				if [[ $STRUCTURAL_COUNT == 1 ]] || [[ $STRUCTURAL_COUNT -gt 1 ]] ; then
+					blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_adinto_polinton_prot_190925 -query ${feat_tbl2%.comb3.tbl}.tax_orf.fasta -out ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
+				else
+					blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query ${feat_tbl2%.comb3.tbl}.tax_orf.fasta -out ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
+				fi
+				if [ ! -s "${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out" ]; then
+					echo "unclassified virus" > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
+				elif grep -q "virophage" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
+					echo "Virophage" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+				elif grep -q "adinto" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
+					echo "Adintovirus" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+				elif grep -i -q "polinton" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
+					echo "Polinton-like virus" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out				
+				else
+
+					ktClassifyBLAST -o ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+					taxid=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab | cut -f2 )
+					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+				fi
 			fi
 		fi
-	fi
-done
+	done
+fi
 
 
 
 # .gtf file maker
 echo "$(tput setaf 5) Making .gff files for each annotated sequence $(tput sgr 0)"
 
-COMB3_COUNT=$( ls ${run_title}*.comb3.tbl | wc -l )
-	if [[ $COMB3_COUNT -gt 0 ]] ; then
+COMB3_TBL=$( find * -maxdepth 0 -type f -name "*.comb3.tbl" )
+if [ -n "$COMB3_TBL" ] ; then
 	for feat_tbl2 in *.comb3.tbl ; do
 		if [ -s ${feat_tbl2%.comb3.tbl}.gtf ] ; then
 			rm -f ${feat_tbl2%.comb3.tbl}.gtf
@@ -1480,7 +1527,7 @@ COMB3_COUNT=$( ls ${run_title}*.comb3.tbl | wc -l )
 				vir_name="Circular genetic element" ;
 			fi
 		fi
-		echo $vir_name ;
+		#echo $vir_name ;
 		fsa_head=$( echo $vir_name " sp." )
 		tax_guess=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ) ; 
 		perc_id=$( head -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | sed 's/ /-/g' | awk '{FS="\t"; OFS="\t"} {print $2" "$3}' | sed 's/-/ /g' ) ;
@@ -1599,7 +1646,7 @@ COMB3_COUNT=$( ls ${run_title}*.comb3.tbl | wc -l )
 		echo $input_contig_name
 		if [ -s reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt ] ; then
 			COVERAGE=$( grep "$input_contig_name	" reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt | cut -f2 )
-			echo $COVERAGE
+			#echo $COVERAGE
 		else
 			COVERAGE="1"
 		fi
@@ -1634,7 +1681,8 @@ fi
 
 
 # script for annotating no_end contigs with viral domains
-LIST_OF_VIRAL_DOMAIN_CONTIGS=$( ls no_end_contigs_with_viral_domain/ | grep ".fna" )
+LIST_OF_VIRAL_DOMAIN_CONTIGS=$( find * -maxdepth 1 -type f -wholename "no_end_contigs_with_viral_domain/*fna" )
+
 if [ ! -z "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ;then
 	echo "$(tput setaf 3) Starting annotation of contigs with viral domains but are neither circular nor have ITRs $(tput sgr 0)"
 
@@ -1663,9 +1711,9 @@ MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: making summary table " $MDYT
 
 echo -e "Isolation source""\t""Completeness""\t""Cenote-taker contig name""\t""original contig name""\t""Length""\t""Element Name""\t""Topology""\t""Common Viral Domains""\t""ORF caller used""\t""BLASTP hit for Taxonomy""\t""BLASTN result (if any)" > ${run_title}.tsv
-circular_fsas=$( ls sequin_directory/*.fsa )
+circular_fsas=$( find * -maxdepth 1 -type f -wholename "sequin_directory/*.fsa" )
 if [ ! -z "$circular_fsas" ] ;then
-	for i in sequin_directory/*.fsa ; do
+	for i in $circular_fsas ; do
 		if [ ! -z "$i" ] ;then
 			site=$( head -n1 $i | sed -e 's/.*isolation_source=\(.*\)\] \[isolate.*/\1/' )
 			df_num=$( head -n1 $i | sed -e 's/>\(.*[0-9].*\)\ \[note= .*/\1/' )
@@ -1698,7 +1746,7 @@ if [ ! -z "$circular_fsas" ] ;then
 	done
 fi
 
-linear_fsas=$( ls no_end_contigs_with_viral_domain/sequin_directory/*.fsa )
+linear_fsas=$( find * -maxdepth 2 -type f -wholename "no_end_contigs_with_viral_domain/sequin_directory/*.fsa" )
 if [ ! -z "$linear_fsas" ] ;then
 	for i in no_end_contigs_with_viral_domain/sequin_directory/*.fsa ; do
 		if [ ! -z "$i" ] ;then
