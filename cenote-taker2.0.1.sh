@@ -212,6 +212,7 @@ else
 	exit
 fi
 
+echo "cenote-taker2" > ${run_title}.tsv
 # Removing cirles that are smaller than user specified cutoff
 CIRC_CONTIGS=$( find * -maxdepth 0 -type f -name "*.fasta" )
 if [ ! -z "$CIRC_CONTIGS" ] ;then
