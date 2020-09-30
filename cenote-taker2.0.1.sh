@@ -186,9 +186,9 @@ if [ ${original_contigs: -6} == ".fasta" ]; then
 	cd $run_title
 	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta ;
 	rm -f apc_aln*
-	APC_CIRCS=$( find * -maxdepth 0 -type f -name "${run_title}*.fa" )
-	if [ ! -z "$APC_CIRCS" ] ;then
-		for fa1 in $APC_CIRCS ; do 
+	#APC_CIRCS=$( find * -maxdepth 0 -type f -name "${run_title}*.fa" )
+	if [ -s ${run_title}*.fa ] ;then
+		for fa1 in ${run_title}*.fa ; do 
 			mv $fa1 $run_title${fa1#$run_title.}sta ; 
 		done 
 	else
@@ -199,9 +199,9 @@ elif [ ${original_contigs: -6} == ".fastg" ]; then
 	cd $run_title
 	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta ;
 	rm -f apc_aln*
-	APC_CIRCS=$( find * -maxdepth 0 * -type f -name "${run_title}*.fa" )
-	if [ ! -z "$APC_CIRCS" ] ;then
-		for fa1 in $APC_CIRCS ; do 
+	#APC_CIRCS=$( find * -maxdepth 0 * -type f -name "${run_title}*.fa" )
+	if [ -s ${run_title}*.fa ] ;then
+		for fa1 in ${run_title}*.fa ; do 
 			mv $fa1 $run_title${fa1#$run_title.}sta ; 
 		done 
 	else
@@ -510,7 +510,7 @@ fi
 # 3 ORF calling
 if [ ! -z "$CIRCLES_AND_ITRS" ] ; then 
 	MDYT=$( date +"%m-%d-%y---%T" )
-	echo "time update: Calling ORFs with PHANOTATE or getorf " $MDYT
+	echo "time update: Calling ORFs with PHANOTATE or prodigal " $MDYT
 	for nucl_fa in $CIRCLES_AND_ITRS ; do
 		if [ -s "${nucl_fa%.fasta}.rotate.fasta" ]; then
 			echo "$(tput setaf 5)"$nucl_fa" taxonomy guessed. Continuing to ORF translation...$(tput sgr 0)"
