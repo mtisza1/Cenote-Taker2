@@ -199,7 +199,7 @@ elif [ ${original_contigs: -6} == ".fastg" ]; then
 	cd $run_title
 	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta ;
 	rm -f apc_aln*
-	APC_CIRCS=$( find -maxdepth 0 * -type f -name "${run_title}*.fa" )
+	APC_CIRCS=$( find * -maxdepth 0 * -type f -name "${run_title}*.fa" )
 	if [ ! -z "$APC_CIRCS" ] ;then
 		for fa1 in $APC_CIRCS ; do 
 			mv $fa1 $run_title${fa1#$run_title.}sta ; 

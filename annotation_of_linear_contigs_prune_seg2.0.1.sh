@@ -407,9 +407,11 @@ if [ -n "$virus_seg_fastas" ] ; then
 fi
 RPS2_TBL=$( find * -maxdepth 0 -type f -name "*_vs[0-9][0-9].NT.tbl" )
 if [ -n "$RPS2_TBL" ] ; then
-	echo "$(tput setaf 5) BLASTP Genbank nr non-circular/non-ITR contigs with viral domains $(tput sgr 0)"
-	MDYT=$( date +"%m-%d-%y---%T" )
-	echo "time update: running BLASTP " $MDYT
+	if [ $BLASTP == "conduct_blastp" ] ; then
+		echo "$(tput setaf 5) BLASTP Genbank nr non-circular/non-ITR contigs with viral domains $(tput sgr 0)"
+		MDYT=$( date +"%m-%d-%y---%T" )
+		echo "time update: running BLASTP " $MDYT
+	fi
 	for feat_tbl1 in *_vs[0-9][0-9].NT.tbl ; do
 		grep -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Domain of unknown function' -e 'product	gp' -B2 $feat_tbl1 | grep "^[0-9]" | awk '{print $1 " - " $2}' > ${feat_tbl1%.NT.tbl}.for_blastp.txt ;
 		grep -f ${feat_tbl1%.NT.tbl}.for_blastp.txt -A1 ${feat_tbl1%.NT.tbl}.no_hmmscan2.fasta | sed '/--/d' > ${feat_tbl1%.NT.tbl}.rps_nohits.fasta ;
@@ -425,15 +427,16 @@ if [ -n "$RPS2_TBL" ] ; then
 		fi		
 	done
 
-
-	perl ${CENOTE_SCRIPT_DIR}/blastpreport2tbl_mt_annotation_pipe_biowulf2.pl ;
-	for feat_tbl1 in *_vs[0-9][0-9].NT.tbl ; do
-		if [ -s "${feat_tbl1%.NT.tbl}.BLASTP.tbl" ]; then
-			echo "$(tput setaf 5)"${feat_tbl1%.NT.tbl}": tbl made from BLASTP hits. Splitting fasta files for HHsearch...$(tput sgr 0)"
-		else
-			echo "$(tput setaf 4) BLASTP tbl for "${feat_tbl1%.NT.tbl}" not detected.$(tput sgr 0)"
-		fi
-	done
+	if [ $BLASTP == "conduct_blastp" ] ; then
+		perl ${CENOTE_SCRIPT_DIR}/blastpreport2tbl_mt_annotation_pipe_biowulf2.pl ;
+		for feat_tbl1 in *_vs[0-9][0-9].NT.tbl ; do
+			if [ -s "${feat_tbl1%.NT.tbl}.BLASTP.tbl" ]; then
+				echo "$(tput setaf 5)"${feat_tbl1%.NT.tbl}": tbl made from BLASTP hits. Splitting fasta files for HHsearch...$(tput sgr 0)"
+			else
+				echo "$(tput setaf 4) BLASTP tbl for "${feat_tbl1%.NT.tbl}" not detected.$(tput sgr 0)"
+			fi
+		done
+	fi
 fi
 
 if [ -n "$virus_seg_fastas" ] ; then
@@ -1135,6 +1138,7 @@ if [ -n "$COMB3_TBL" ] ; then
 			fi		
 		fi
 	done
+fi
 
 #making cmt file for assembly data
 if [ -n "$virus_seg_fastas" ] ; then
