@@ -251,7 +251,7 @@ fi
 
 
 # Detecting whether any circular contigs were present
-original_fastas=$( find -maxdepth 0 * -type f -name "*.fasta" )
+original_fastas=$( find * -maxdepth 0 -type f -name "*.fasta" )
 # "$(tput setaf 5)$var1$(tput sgr 0)"
 
 if [ -z "$original_fastas" ] ; then
