@@ -25,7 +25,7 @@ foreach my$BlastPReport (@BlastOutput){
 	open(OUTPUT, ">$Tbl");
 	print OUTPUT ">Feature $Label Table1";
 	while(defined(my$line = <MYFILE>)){
-		if($line =~ m/Query= (\w+) \[(\d+) - (\d+)\]/){
+		if($line =~ m/Query= ([^\s]+) \[(\d+) - (\d+)\]/){
 			print OUTPUT "\n$2\t$3\tCDS";
 			print OUTPUT "\n\t\t\tprotein_id\tlcl|$1";
 		}

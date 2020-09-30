@@ -27,7 +27,7 @@ foreach my$HHPredReport (@HHPredOutput){
 	my $some_bool = 0;
   my $last_record;
 	while(defined(my$line = <MYFILE>)){
-		if($line =~ m/Query         (\w+) \[(\d+) - (\d+)\]/){
+		if($line =~ m/Query         ([^\s]+) \[(\d+) - (\d+)\]/){
       if ($some_bool == 0 && defined($last_record)) {
         print OUTPUT $last_record;
       }        
