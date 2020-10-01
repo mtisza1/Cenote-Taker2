@@ -184,10 +184,11 @@ if [ ${original_contigs: -6} == ".fasta" ]; then
 	echo "$(tput setaf 5)File with .fasta extension detected, attempting to keep contigs over $LENGTH_MINIMUM nt and find circular sequences with apc.pl$(tput sgr 0)"
 	bioawk -v run_var="$run_title" -v contig_cutoff="$LENGTH_MINIMUM" -c fastx '{ if(length($seq) > contig_cutoff) { print ">"run_var NR" "$name; print $seq }}' $original_contigs > ${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta ;
 	cd $run_title
+	echo "cenote-taker2" > ${run_title}.tsv
 	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta ;
 	rm -f apc_aln*
-	#APC_CIRCS=$( find * -maxdepth 0 -type f -name "${run_title}*.fa" )
-	if [ -s ${run_title}*.fa ] ;then
+	APC_CIRCS=$( find * -maxdepth 0 -type f -name "${run_title}*.fa" )
+	if [ -n $APC_CIRCS ] ;then
 		for fa1 in ${run_title}*.fa ; do 
 			mv $fa1 $run_title${fa1#$run_title.}sta ; 
 		done 
@@ -197,10 +198,11 @@ if [ ${original_contigs: -6} == ".fasta" ]; then
 elif [ ${original_contigs: -6} == ".fastg" ]; then
 	bioawk -v contig_cutoff="$LENGTH_MINIMUM" -c fastx '{ if(length($seq) > contig_cutoff) {print }}' $original_contigs | grep "[a-zA-Z0-9]:\|[a-zA-Z0-9];" | grep -v "':" | awk '{ print ">"$1 ; print $2 }' | sed 's/:.*//g; s/;.*//g' | bioawk -v run_var="$run_title" -c fastx '{ print ">"run_var NR" "$name; print $seq }' > ${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta
 	cd $run_title
+	echo "cenote-taker2" > ${run_title}.tsv
 	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta ;
 	rm -f apc_aln*
-	#APC_CIRCS=$( find * -maxdepth 0 * -type f -name "${run_title}*.fa" )
-	if [ -s ${run_title}*.fa ] ;then
+	APC_CIRCS=$( find * -maxdepth 0 * -type f -name "${run_title}*.fa" )
+	if [ -n $APC_CIRCS ] ;then
 		for fa1 in ${run_title}*.fa ; do 
 			mv $fa1 $run_title${fa1#$run_title.}sta ; 
 		done 
@@ -212,7 +214,6 @@ else
 	exit
 fi
 
-echo "cenote-taker2" > ${run_title}.tsv
 # Removing cirles that are smaller than user specified cutoff
 CIRC_CONTIGS=$( find * -maxdepth 0 -type f -name "*.fasta" )
 if [ ! -z "$CIRC_CONTIGS" ] ;then
@@ -391,8 +392,12 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 			mv $NO_END ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.fna
 			mv ${NO_END%.fasta}.AA.hmmscan.out ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.AA.hmmscan.out
 			mv ${NO_END%.fasta}.AA.hmmscan.sort.out ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.AA.hmmscan.sort.out
-			mv ${NO_END%.fasta}.AA.hmmscan_replicate.out ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.AA.hmmscan_replicate.out
-			mv ${NO_END%.fasta}.AA.hmmscan_replicate.sort.out ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.AA.hmmscan_replicate.sort.out
+			if [ -s ${NO_END%.fasta}.AA.hmmscan_replicate.out ] ; then
+				mv ${NO_END%.fasta}.AA.hmmscan_replicate.out ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.AA.hmmscan_replicate.out
+			fi
+			if [ -s ${NO_END%.fasta}.AA.hmmscan_replicate.sort.out ] ; then
+				mv ${NO_END%.fasta}.AA.hmmscan_replicate.sort.out ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.AA.hmmscan_replicate.sort.out
+			fi
 
 			mv ${NO_END%.fasta}.AA.sorted.fasta ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.AA.sorted.fasta
 		else 
