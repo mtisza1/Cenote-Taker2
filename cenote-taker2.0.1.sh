@@ -128,7 +128,7 @@ fi
 
 
 MDYT=$( date +"%m-%d-%y---%T" )
-echo "time update: loading modules: " $MDYT
+echo "time update: locating inputs: " $MDYT
 
 # looking for template file and contigs in working directory, or else copying them there
 if [ -s ${base_directory}/${template_file} ] ; then 
@@ -371,16 +371,27 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 
 		if [[ $FOR_PLASMIDS = "True" ]]; then
 			grep -v "^#\|plasmid_clust" ${NO_END%.fasta}.AA.hmmscan.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${NO_END%.fasta}.AA.hmmscan.sort.out
-			grep -v "^#\|plasmid_clust" ${NO_END%.fasta}.AA.hmmscan_replicate.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${NO_END%.fasta}.AA.hmmscan_replicate.sort.out
+			if [ -s ${NO_END%.fasta}.AA.hmmscan_replicate.out ] ; then
+				grep -v "^#\|plasmid_clust" ${NO_END%.fasta}.AA.hmmscan_replicate.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${NO_END%.fasta}.AA.hmmscan_replicate.sort.out
+			fi
 		elif [[ $FOR_PLASMIDS = "False" ]]; then
 			grep -v "^#" ${NO_END%.fasta}.AA.hmmscan.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${NO_END%.fasta}.AA.hmmscan.sort.out
-			grep -v "^#" ${NO_END%.fasta}.AA.hmmscan_replicate.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${NO_END%.fasta}.AA.hmmscan_replicate.sort.out
+			if [ -s ${NO_END%.fasta}.AA.hmmscan_replicate.out ] ; then
+				grep -v "^#" ${NO_END%.fasta}.AA.hmmscan_replicate.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${NO_END%.fasta}.AA.hmmscan_replicate.sort.out
+			fi
 		else	
 			grep -v "^#" ${NO_END%.fasta}.AA.hmmscan.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${NO_END%.fasta}.AA.hmmscan.sort.out
-			grep -v "^#" ${NO_END%.fasta}.AA.hmmscan_replicate.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${NO_END%.fasta}.AA.hmmscan_replicate.sort.out			
+			if [ -s ${NO_END%.fasta}.AA.hmmscan_replicate.out ] ; then
+				grep -v "^#" ${NO_END%.fasta}.AA.hmmscan_replicate.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${NO_END%.fasta}.AA.hmmscan_replicate.sort.out
+			fi		
 		fi	
 
-		VIRAL_HALLMARK_COUNT=$( cat ${NO_END%.fasta}.AA.hmmscan.sort.out ${NO_END%.fasta}.AA.hmmscan_replicate.sort.out | sort -u -k3,3 | wc -l )
+		if [ -s ${NO_END%.fasta}.AA.hmmscan_replicate.out ] ; then
+			VIRAL_HALLMARK_COUNT=$( cat ${NO_END%.fasta}.AA.hmmscan.sort.out ${NO_END%.fasta}.AA.hmmscan_replicate.sort.out | sort -u -k3,3 | wc -l )
+		else
+			VIRAL_HALLMARK_COUNT=$( cat ${NO_END%.fasta}.AA.hmmscan.sort.out | sort -u -k3,3 | wc -l )
+		fi
+
 		if [ $VIRAL_HALLMARK_COUNT -gt $LIN_MINIMUM_DOMAINS ] || [ $VIRAL_HALLMARK_COUNT == $LIN_MINIMUM_DOMAINS ] ; then
 			
 			echo $NO_END "contains at least $LIN_MINIMUM_DOMAINS viral structural domain(s)"
@@ -675,7 +686,7 @@ else
 fi
 echo " "
 
-if [ -s ${BLASTN_DB}*.nsq ] ; then 
+if [ -s ${BLASTN_DB}.nsq ] || [ -s ${BLASTN_DB}.[0-9].nsq ]  ; then 
 	if [ ! -z "$DOMAINED_CIRCLES_AND_ITRS" ] ; then 
 		#mkdir circles_of_known_viruses
 		#mkdir circles_of_chromosomal_elements
@@ -1700,7 +1711,7 @@ if  [[ $handle_nonviral = "sketch_all" ]] ; then
 	echo "$(tput setaf 3) Sketching contigs without detectable virus domains or circularity or ITRs with RPS-BLAST $(tput sgr 0)"
 	. ${CENOTE_SCRIPT_DIR}/sketching_nonviral_contigs_2.0.1.sh
 elif [[ $handle_nonviral = "no_sketch_domainless" ]]; then
-	echo "$(tput setaf 3) The -no_sketch option was used, contigs without detectable virus domains or circularity or ITRs will not be sketched $(tput sgr 0)"
+	echo "$(tput setaf 3) The no_sketch option was used, contigs without detectable virus domains or circularity or ITRs will not be sketched $(tput sgr 0)"
 #elif [[ $handle_nonviral = "full_annotate_all" ]]; then
 #	echo "$(tput setaf 3) Fully annotating all contigs without detectable virus domains, circularity, or ITRs with RPS-BLAST $(tput sgr 0)"
 #	. ${CENOTE_SCRIPT_DIR}/full_annotate_of_putative_nonviral_contigs1.sh

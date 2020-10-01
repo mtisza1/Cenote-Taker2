@@ -235,8 +235,7 @@ if [ -n "$virus_seg_fastas" ] ; then
 	echo "time update: running BLASTN/BLASTX, linear contigs " $MDYT
 
 	for vd_fa in $virus_seg_fastas ; do
-		BLASTN_LIST=$( ls ${BLASTN_DB}*.nsq | wc -l )
-		if [[ "$BLASTN_LIST" -gt 1 ]] || [[ "$BLASTN_LIST" == 1 ]] ;then 
+		if [ -s ${BLASTN_DB}.nsq ] || [ -s ${BLASTN_DB}.[0-9].nsq ]  ; then  
 			if [[ $handle_knowns = "blast_knowns" ]] ; then
 				echo "starting BLASTN of non-circular contigs with viral domain(s)"
 				blastn -db ${BLASTN_DB} -query $vd_fa -evalue 1e-50 -num_threads $CPU -outfmt "6 qseqid sseqid stitle pident length qlen" -qcov_hsp_perc 50 -num_alignments 3 -out ${vd_fa%.fna}.blastn.out ;
@@ -350,7 +349,7 @@ if [ -n "$virus_seg_fastas" ] ; then
 		fi
 		hmmscan --tblout ${NO_END%.fna}.AA.hmmscan2.out --cpu $CPU -E 1e-8 ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a ${NO_END%.fna}.AA.fasta
 		grep -v "^#" ${NO_END%.fna}.AA.hmmscan2.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${NO_END%.fna}.AA.hmmscan2.sort.out
-			echo $NO_END "contains at least one viral or plasmid domain"
+			echo "$NO_END contains at least $LIN_MINIMUM_DOMAINS viral or plasmid domain(s)"
 		if [ ! -z "${NO_END%.fna}.AA.hmmscan2.sort.out" ] ; then
 			cut -f3 ${NO_END%.fna}.AA.hmmscan2.sort.out | awk '{ print $0" " }' > ${NO_END%.fna}.AA.called_hmmscan2.txt ; 
 
