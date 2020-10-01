@@ -395,8 +395,11 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 		if [ $VIRAL_HALLMARK_COUNT -gt $LIN_MINIMUM_DOMAINS ] || [ $VIRAL_HALLMARK_COUNT == $LIN_MINIMUM_DOMAINS ] ; then
 			
 			echo $NO_END "contains at least $LIN_MINIMUM_DOMAINS viral structural domain(s)"
-
-			cat ${NO_END%.fasta}.AA.hmmscan.sort.out ${NO_END%.fasta}.AA.hmmscan_replicate.sort.out | sort -u -k3,3 | cut -f3 > ${NO_END%.fasta}.rotate.AA.called_hmmscan.txt ; 
+			if [ -s ${NO_END%.fasta}.AA.hmmscan_replicate.out ] ; then
+				cat ${NO_END%.fasta}.AA.hmmscan.sort.out ${NO_END%.fasta}.AA.hmmscan_replicate.sort.out | sort -u -k3,3 | cut -f3 > ${NO_END%.fasta}.rotate.AA.called_hmmscan.txt ; 
+			else
+				cat ${NO_END%.fasta}.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 > ${NO_END%.fasta}.rotate.AA.called_hmmscan.txt ; 
+			fi
 			grep -v -f ${NO_END%.fasta}.rotate.AA.called_hmmscan.txt ${NO_END%.fasta}.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.no_hmmscan1.fasta
 			echo ">Feature "${NO_END%.fasta}" Table1" > ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.SCAN.tbl
 
@@ -601,16 +604,27 @@ if [ -n "$CIRCLES_AND_ITRS" ]; then
 		if [ -s "${nucl_fa%.fasta}.rotate.AA.sorted.fasta" ]; then
 			if [[ $FOR_PLASMIDS = "True" ]]; then
 				grep -v "^#\|plasmid_clust" ${nucl_fa%.fasta}.rotate.AA.hmmscan.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${nucl_fa%.fasta}.rotate.AA.hmmscan.sort.out
-				grep -v "^#\|plasmid_clust" ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.sort.out
+				if [ -s ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.sort.out ] ; then
+					grep -v "^#\|plasmid_clust" ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.sort.out
+				fi
 			elif [[ $FOR_PLASMIDS = "False" ]]; then
 				grep -v "^#" ${nucl_fa%.fasta}.rotate.AA.hmmscan.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${nucl_fa%.fasta}.rotate.AA.hmmscan.sort.out
-				grep -v "^#" ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.sort.out
+				if [ -s ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.sort.out ] ; then
+					grep -v "^#" ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.sort.out
+				fi
 			else	
 				grep -v "^#" ${nucl_fa%.fasta}.rotate.AA.hmmscan.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${nucl_fa%.fasta}.rotate.AA.hmmscan.sort.out
-				grep -v "^#" ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.sort.out		
+				if [ -s ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.sort.out ] ; then
+					grep -v "^#" ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.sort.out
+				fi	
 			fi	
 
-			cat ${nucl_fa%.fasta}.rotate.AA.hmmscan.sort.out ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.sort.out | sort -u -k3,3 | cut -f3 | awk '{ print $0" " }' > ${nucl_fa%.fasta}.rotate.AA.called_hmmscan.txt ; 
+			if [ -s ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.sort.out ] ; then
+				cat ${nucl_fa%.fasta}.rotate.AA.hmmscan.sort.out ${nucl_fa%.fasta}.rotate.AA.hmmscan_replicate.sort.out | sort -u -k3,3 | cut -f3 | awk '{ print $0" " }' > ${nucl_fa%.fasta}.rotate.AA.called_hmmscan.txt ; 
+			else
+				cat ${nucl_fa%.fasta}.rotate.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | awk '{ print $0" " }' > ${nucl_fa%.fasta}.rotate.AA.called_hmmscan.txt ; 
+			fi
+
 			CIRC_VIRAL_HALLMARK_COUNT=$( cat ${nucl_fa%.fasta}.rotate.AA.called_hmmscan.txt | wc -l )
 			if [ $CIRC_VIRAL_HALLMARK_COUNT -gt $CIRC_MINIMUM_DOMAINS ] || [ $CIRC_VIRAL_HALLMARK_COUNT == $CIRC_MINIMUM_DOMAINS ] ; then
 				grep -v -f ${nucl_fa%.fasta}.rotate.AA.called_hmmscan.txt ${nucl_fa%.fasta}.rotate.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ${nucl_fa%.fasta}.rotate.no_hmmscan.fasta
@@ -1059,7 +1073,7 @@ fi
 rm -f *.rotate.AA.fasta
 
 # Generating tbl file from HHsearch results
-echo "$(tput setaf 5) Starting perl script to make tbl from HHsearch output $(tput sgr 0)"
+#echo "$(tput setaf 5) Starting perl script to make tbl from HHsearch output $(tput sgr 0)"
 
 perl ${CENOTE_SCRIPT_DIR}/hhpredreport2tbl_mt_annotation_pipe_biowulf1_gjs_edits.pl ;
 

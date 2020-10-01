@@ -606,9 +606,10 @@ fi
 dark_orf_list=$( find * -maxdepth 0 -type f -name "*.for_hhpred.fasta" )
 if [ -n "$dark_orf_list" ] ; then
 	echo "$(tput setaf 5) Conducting HHsearch on remaining ORFs; non-circular/non-ITR contigs with viral domains  $(tput sgr 0)"
-
-	MDYT=$( date +"%m-%d-%y---%T" )
-	echo "time update: running hhsearch or hhblits, linear contigs " $MDYT
+	if  [[ $HHSUITE_TOOL = "hhsearch" ]] || [[ $HHSUITE_TOOL = "hhblits" ]] ; then
+		MDYT=$( date +"%m-%d-%y---%T" )
+		echo "time update: running hhsearch or hhblits, linear contigs " $MDYT
+	fi
 
 	if  [[ $HHSUITE_TOOL = "hhsearch" ]] ; then
 		for dark_orf in $dark_orf_list ; do
