@@ -1674,7 +1674,7 @@ if [ -n "$COMB3_TBL" ] ; then
 	#making cmt file for assembly data
 	for nucl_fa in $NEW_FASTAS ; do
 		input_contig_name=$( head -n1 $nucl_fa | cut -d " " -f 1 | sed 's/|.*//g; s/>//g' ) 
-		echo $input_contig_name
+		#echo $input_contig_name
 		if [ -s reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt ] ; then
 			COVERAGE=$( grep "$input_contig_name	" reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt | cut -f2 )
 			#echo $COVERAGE

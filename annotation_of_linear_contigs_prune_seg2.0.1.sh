@@ -1144,9 +1144,9 @@ fi
 if [ -n "$virus_seg_fastas" ] ; then
 	for nucl_fa in $virus_seg_fastas ; do
 		input_contig_name=$( head -n1 ${nucl_fa%_vs[0-9][0-9].fna}.fna | cut -d " " -f1 | sed 's/|.*//g; s/>//g' ) 
-		echo $input_contig_name
-		if [ -s ../reads_to_all_contigs_over${circ_length_cutoff}nt.coverage.txt ] ; then
-			COVERAGE=$( grep "$input_contig_name	" ../reads_to_all_contigs_over${length_cutoff}nt.coverage.txt | cut -f2 )
+		#echo $input_contig_name
+		if [ -s ../reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt ] ; then
+			COVERAGE=$( grep "$input_contig_name	" ../reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt | cut -f2 )
 			echo $COVERAGE
 		else
 			COVERAGE="1"
