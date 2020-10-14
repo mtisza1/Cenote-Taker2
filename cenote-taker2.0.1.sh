@@ -282,9 +282,19 @@ else
 		grep "^>" $CIRCLE | sed 's/|.*//g' >> circular_contigs_spades_names.txt
 	done
 	if [ ${original_contigs: -6} == ".fasta" ]; then
-		grep -v -f circular_contigs_spades_names.txt ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta | grep -A1 "^>" | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > other_contigs/all_non_circular.fasta
+		LINEAR_COUNT=$( grep -v -f circular_contigs_spades_names.txt ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta | grep -A1 "^>" | wc -l )
+		if [ $LINEAR_COUNT -ge 1 ] ; then
+			grep -v -f circular_contigs_spades_names.txt ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta | grep -A1 "^>" | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > other_contigs/all_non_circular.fasta
+		else
+			echo "No linear contigs over ${LENGTH_MINIMUM}nt found in run"
+		fi
 	elif [ ${original_contigs: -6} == ".fastg" ]; then
-		grep -v -f circular_contigs_spades_names.txt ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta | grep -A1 "^>" | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > other_contigs/all_non_circular.fasta
+		LINEAR_COUNT=$( grep -v -f circular_contigs_spades_names.txt ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta | grep -A1 "^>" | wc -l )
+		if [ $LINEAR_COUNT -ge 1 ] ; then		
+			grep -v -f circular_contigs_spades_names.txt ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta | grep -A1 "^>" | sed 's/--//g' | bioawk -v contig_cutoff="$linear_length_cutoff" -c fastx '{ if (length($seq) > contig_cutoff) { print ">"$name" "$4 ; print $seq }}' > other_contigs/all_non_circular.fasta
+		else
+			echo "No linear contigs over ${LENGTH_MINIMUM}nt found in run"
+		fi
 	fi
 	if [ -s other_contigs/all_non_circular.fasta ] ; then
 		grep "^>" other_contigs/all_non_circular.fasta | sed 's/>//g' | cut -d " " -f1 | while read LINE ; do 
