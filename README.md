@@ -54,10 +54,11 @@ The conda environment itself requires 32GB of space mostly due to the krona taxo
 
 ```
 If there is enough space in your default conda environment directory:
-bash cenote_install1.sh default
+bash cenote_install1.sh default 2>&1 | tee install_ct2.log
+(The "2>&1 | tee install_ct2.log" part isn't necessary, but it will save the installation notes/errors to a log file)
 
 Otherwise specify an absolute path to a directory with >32GB of storage:
-bash cenote_install1.sh /path/to/better/directory
+bash cenote_install1.sh /path/to/better/directory 2>&1 | tee install_ct2.log
 ```
 
 # Bioconda installation
@@ -119,6 +120,10 @@ conda activate /path/to/better/directory/cenote-taker2_env
 2. Run the python script (see options below).
 ```
 python /path/to/Cenote-Taker2/run_cenote-taker2.0.1.py
+
+(Or, if you want to save a log of the run (note that log files can get quite large))
+
+python /path/to/Cenote-Taker2/run_cenote-taker2.0.1.py 2>&1 | tee output.log
 ```
 
 

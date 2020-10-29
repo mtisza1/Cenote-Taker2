@@ -93,6 +93,10 @@ else
 		exit 
 	fi
 fi
+
+# installing fasthpath with pip to avoid extra channels in environment
+pip install fastpath 
+
 # getting hh-suite from github. The anaconda package of hh-suite causes conflicts
 if [ -s hh-suite/README.md ] ; then
 	echo "hh-suite already present"
