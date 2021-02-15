@@ -824,7 +824,7 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 			PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
 			START_BASEH=$( echo $PROTEIN_INFO | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
 			END_BASEH=$( echo $PROTEIN_INFO | sed 's/.*- \(.*\)\].*/\1/' ) ; 
-			if grep -q "$LINE " ${ROT_AAs%.sorted.AA.fasta}.AA.hmmscan.sort.out ; then
+			if grep -q "$LINE " ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out ; then
 
 				HMM_INFO=$( grep "$LINE " ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out | head -n1 | cut -d " " -f1 | sed 's/-/ /g; s/.*[0-9]\+\///g' ) ; 
 			else
@@ -1294,7 +1294,7 @@ echo " "
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: Finishing " $MDYT
 echo "$(tput setaf 3)output directory: "$run_title" $(tput sgr 0)"
-echo "$(tput setaf 3) >>>>>>CENOTE SHORTCUT HAS FINISHED SHORTCUTTING CENOTES<<<<<< $(tput sgr 0)"
+echo "$(tput setaf 3) >>>>>>CENOTE-TAKER 2 HAS FINISHED TAKING CENOTES<<<<<< $(tput sgr 0)"
 
 
 
