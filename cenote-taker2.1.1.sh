@@ -289,7 +289,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 	for NONCIR in $CONTIGS_NON_CIRCULAR ; do
 		LEN_CHECKQ=$( cat $NONCIR | bioawk -c fastx '{ if(length($seq) > 4000) { print $name }}' ) ; 
 		if [ ! -z "$LEN_CHECKQ" ] ; then
-			${CENOTE_SCRIPT_DIR}/irf307.linux.exe $NONCIR 2 3 5 80 10 40 500000 10000 -d -h
+			${CENOTE_SCRIPT_DIR}/irf307.linux.exe $NONCIR 2 3 5 80 10 40 500000 10000 -d -h >/dev/null 2>&1
 		fi
 	done
 	mkdir ../ITR_containing_contigs
@@ -338,8 +338,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 	done
 
 	MDYT=$( date +"%m-%d-%y---%T" )
-	echo "time update: splitting AA files from cellular genome into equal parts and running hmmscan against virus hallmark gene database: $virus_domain_db " $MDYT	
-	mkdir ../no_end_contigs_with_viral_domain
+	echo "time update: running linear contigs with hmmscan against virus hallmark gene database: $virus_domain_db " $MDYT	
 	cat $( find * -maxdepth 0 -type f -name "*.AA.sorted.fasta" ) > all_large_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_large_genome_proteins.AA.fasta | wc -l | bc )
 	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
@@ -606,13 +605,13 @@ if [ ! -z "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] && [ "$PROPHAGE" == "True" ] ;then
 fi
 
 if [ -d ${base_directory}/${run_title}/DTR_contigs_with_viral_domain ] ; then
-	cd ${base_directory}/${run_title}
+	cd ${base_directory}/${run_title}/DTR_contigs_with_viral_domain
 fi
 
 ### annotate circular sequences
 
 #-# rotate DTRs
-CIRCULAR_HALLMARK_CONTIGS=$( find * -maxdepth 0 -type f -name ".*fna" )
+CIRCULAR_HALLMARK_CONTIGS=$( find * -maxdepth 0 -type f -name "*fna" )
 if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 	for nucl_fa in $CIRCLES_AND_ITRS ; do
 		echo "$(tput setaf 5)rotating "$nucl_fa" to put an ORF at beginning of sequence so that no ORFs overlap the breakpoint $(tput sgr 0)"
