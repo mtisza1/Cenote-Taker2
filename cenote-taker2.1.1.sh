@@ -619,11 +619,11 @@ if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 	echo "circular hallmarks found"
 	echo $PWD
 	for nucl_fa in $CIRCULAR_HALLMARK_CONTIGS ; do
-		echo "$(tput setaf 5)rotating "$nucl_fa" to put an ORF at beginning of sequence so that no ORFs overlap the breakpoint $(tput sgr 0)"
-		getorf -circular -minsize 240 -table 11 -find 3 -sequence $nucl_fa -outseq ${nucl_fa%.fasta}.nucl_orfs.fa ; 
+		#echo "$(tput setaf 5)rotating "$nucl_fa" to put an ORF at beginning of sequence so that no ORFs overlap the breakpoint $(tput sgr 0)"
+		getorf -circular -minsize 240 -table 11 -find 3 -sequence $nucl_fa -outseq ${nucl_fa%.fna}.nucl_orfs.fa ; 
 
-		grep ">" ${nucl_fa%.fasta}.nucl_orfs.fa > ${nucl_fa%.fasta}.nucl_orfs.txt
-		cat "${nucl_fa%.fasta}.nucl_orfs.txt" | while read liner ; do
+		grep ">" ${nucl_fa%.fna}.nucl_orfs.fa > ${nucl_fa%.fna}.nucl_orfs.txt
+		cat "${nucl_fa%.fna}.nucl_orfs.txt" | while read liner ; do
 			start_base=$( echo $liner | sed 's/.*\[\(.*\) -.*/\1/' )
 			end_base=$( echo $liner | sed 's/.*- \(.*\)\].*/\1/' )
 			length=$(( $start_base-$end_base ))
@@ -631,32 +631,32 @@ if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 			if [ $abso_length -gt 239 ]; then
 				if [[ "$end_base" -gt "$start_base" ]]; then
 					for ((counter_f=(( $start_base + 1 ));counter_f<=(( $end_base + 3 ));counter_f++)); do
-						echo "$counter_f" >> ${nucl_fa%.fasta}.bad_starts.txt
+						echo "$counter_f" >> ${nucl_fa%.fna}.bad_starts.txt
 						
 					done
 				elif [[ "$start_base" -gt "$end_base" ]]; then
 					for ((counter_r=(( $end_base - 3 ));counter_r<=(( $start_base - 1 ));counter_r++)) ; do
-						echo "$counter_r" >> ${nucl_fa%.fasta}.bad_starts.txt
+						echo "$counter_r" >> ${nucl_fa%.fna}.bad_starts.txt
 					done
 				fi
 			fi
 		done
 
-		cat "${nucl_fa%.fasta}.nucl_orfs.txt" | while read liner ; do
+		cat "${nucl_fa%.fna}.nucl_orfs.txt" | while read liner ; do
 			starter_base=$( echo $liner | sed 's/.*\[\(.*\) -.*/\1/' )
-			if grep -q "$starter_base" ${nucl_fa%.fasta}.bad_starts.txt ; then
+			if grep -q "$starter_base" ${nucl_fa%.fna}.bad_starts.txt ; then
 				continue
 			else
-				echo $liner >> ${nucl_fa%.fasta}.good_start_orfs.txt
+				echo $liner >> ${nucl_fa%.fna}.good_start_orfs.txt
 			fi
 		done
-		if [ -s "${nucl_fa%.fasta}.good_start_orfs.txt" ]; then	
-			cut -d " " -f1 ${nucl_fa%.fasta}.good_start_orfs.txt | head -n1 | sed 's/>//g' > ${nucl_fa%.fasta}.starting_orf.txt
-			bioawk -c fastx '{ print $name, $seq, length($seq) }' ${nucl_fa%.fasta}.nucl_orfs.fa | grep -f ${nucl_fa%.fasta}.starting_orf.txt | sed '/--/d' | head -n1 | awk '{print ">"$1, $3; print $2}' > ${nucl_fa%.fasta}.starting_orf.1.fa ;
-			circlator fixstart --genes_fa ${nucl_fa%.fasta}.starting_orf.1.fa $nucl_fa ${nucl_fa%.fasta}.rotate ;
+		if [ -s "${nucl_fa%.fna}.good_start_orfs.txt" ]; then	
+			cut -d " " -f1 ${nucl_fa%.fna}.good_start_orfs.txt | head -n1 | sed 's/>//g' > ${nucl_fa%.fna}.starting_orf.txt
+			bioawk -c fastx '{ print $name, $seq, length($seq) }' ${nucl_fa%.fna}.nucl_orfs.fa | grep -f ${nucl_fa%.fna}.starting_orf.txt | sed '/--/d' | head -n1 | awk '{print ">"$1, $3; print $2}' > ${nucl_fa%.fna}.starting_orf.1.fa ;
+			circlator fixstart --genes_fa ${nucl_fa%.fna}.starting_orf.1.fa $nucl_fa ${nucl_fa%.fna}.rotate ;
 		else
-			head -n2 ${nucl_fa%.fasta}.nucl_orfs.fa | sed '/--/d' > ${nucl_fa%.fasta}.starting_orf.1.fa ;
-			circlator fixstart --genes_fa ${nucl_fa%.fasta}.starting_orf.1.fa $nucl_fa ${nucl_fa%.fasta}.rotate ;
+			head -n2 ${nucl_fa%.fna}.nucl_orfs.fa | sed '/--/d' > ${nucl_fa%.fna}.starting_orf.1.fa ;
+			circlator fixstart --genes_fa ${nucl_fa%.fna}.starting_orf.1.fa $nucl_fa ${nucl_fa%.fna}.rotate ;
 		fi
 	done
 fi
@@ -1250,6 +1250,7 @@ fi
 #-#- stopping point
 
 #-#- make gtf files
+cd ${base_directory}/${run_title}
 
 ### annotate ITR sequences
 
@@ -1289,6 +1290,8 @@ rm -f other_contigs/*.AA.fasta other_contigs/*.AA.sorted.fasta other_contigs/*.o
 rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta no_end_contigs_with_viral_domain/*.comb*.tbl 
 
 echo " "
+MDYT=$( date +"%m-%d-%y---%T" )
+echo "time update: Finishing " $MDYT
 echo "$(tput setaf 3)output directory: "$run_title" $(tput sgr 0)"
 echo "$(tput setaf 3) >>>>>>CENOTE SHORTCUT HAS FINISHED SHORTCUTTING CENOTES<<<<<< $(tput sgr 0)"
 
