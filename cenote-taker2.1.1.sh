@@ -703,7 +703,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 		fi
 	done
 	if [ -s DTR_seqs_for_phanotate.txt ] ; then
-		cat DTR_seqs_for_phanotate.txt | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU ${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o {}.phan.fasta {}
+		cat DTR_seqs_for_phanotate.txt | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU ${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o {}.phan.fasta {}.rotate.fasta
 		for PHAN in *.phan.fasta ; do 
 			if [ "$ENFORCE_START_CODON" == "True" ] ; then
 				sed 's/ /@/g' ${PHAN} | bioawk -c fastx '{ print }' | awk '{ if ($2 ~ /^[ATCG]TG/) { print ">"$1 ; print $2 }}' | sed 's/@/ /g' > ${PHAN%.fasta}.sort.fasta
@@ -725,7 +725,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 		done			
 	fi
 	if [ -s DTR_seqs_for_prodigal.txt ] ; then
-		cat DTR_seqs_for_phanotate.txt | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU prodigal -a {}.rotate.prodigal.fasta -i {}.rotate.fasta -p meta -c -q >/dev/null 2>&1
+		cat DTR_seqs_for_prodigal.txt | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU prodigal -a {}.rotate.prodigal.fasta -i {}.rotate.fasta -p meta -c -q >/dev/null 2>&1
 		for PROD in *rotate.prodigal.fasta ; do
 			sed 's/ /@/g' ${PROD} | bioawk -c fastx '{print}' | while read LINE ; do 
 				ORIENTATION=$( echo "$LINE" | cut -d "#" -f 4 | sed 's/@//g' ) ;
@@ -751,9 +751,9 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 fi
 
 #-# 4 hhmscan circles/DTRs
-ROTATE_SORT_AAs=$( find * -maxdepth 0 -type f -name "${run_title}*rotate.sorted.AA.fasta" )
+ROTATE_SORT_AAs=$( find * -maxdepth 0 -type f -name "${run_title}*rotate.AA.sorted.fasta" ) rotate.AA.sorted.fasta
 if [ -n "$ROTATE_SORT_AAs" ] ; then
-	cat $( find * -maxdepth 0 -type f -name "${run_title}*rotate.sorted.AA.fasta" ) > all_DTR_sort_genome_proteins.AA.fasta
+	cat $( find * -maxdepth 0 -type f -name "${run_title}*rotate.AA.sorted.fasta" ) > all_DTR_sort_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_DTR_sort_genome_proteins.AA.fasta | wc -l | bc )
 	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
 	if [ $AA_SEQS_PER_FILE = 0 ] ; then
@@ -791,7 +791,7 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 		cut -f3 SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
 			grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out > ${HIT}.rotate.AA.hmmscan.sort.out
 			grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 > ${HIT}.rotate.AA.called_hmmscan1.txt
-			grep -v -f ${HIT}.rotate.AA.called_hmmscan1.txt ${HIT}.rotate.sorted.AA.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.rotate.AA.no_hmmscan1.fasta
+			grep -v -f ${HIT}.rotate.AA.called_hmmscan1.txt ${HIT}.rotate.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.rotate.AA.no_hmmscan1.fasta
 		done
 
 	fi
@@ -817,9 +817,9 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 
 	fi
 	for ROT_AAs in $ROTATE_SORT_AAs ; do
-		echo ">Feature "${ROT_AAs%.rotate.sorted.AA.fasta}" Table1" > ${ROT_AAs%.rotate.sorted.AA.fasta}.SCAN.tbl
+		echo ">Feature "${ROT_AAs%.rotate.AA.sorted.fasta}" Table1" > ${ROT_AAs%.rotate.AA.sorted.fasta}.SCAN.tbl
 
-		cat ${ROT_AAs%.rotate.sorted.AA.fasta}*called_hmmscan*txt > ${ROT_AAs%.sorted.AA.fasta}.all_called_hmmscans.txt
+		cat ${ROT_AAs%.rotate.AA.sorted.fasta}*called_hmmscan*txt > ${ROT_AAs%.sorted.AA.fasta}.all_called_hmmscans.txt
 		cat ${ROT_AAs%.sorted.AA.fasta}.all_called_hmmscans.txt | while read LINE ; do 
 			PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
 			START_BASEH=$( echo $PROTEIN_INFO | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
@@ -832,13 +832,14 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 			fi
 			INFERENCEH=$( echo $HMM_INFO | cut -d " " -f1 ) ; 
 			PROTEIN_NAME=$( echo $HMM_INFO | cut -d " " -f2- ) ; 
-			echo -e "$START_BASEH\t""$END_BASEH\t""CDS\n""\t\t\tprotein_id\t""lcl|""$LINE\n""\t\t\tproduct\t""$PROTEIN_NAME\n""\t\t\tinference\t""similar to AA sequence:$INFERENCEH" >> ${ROT_AAs%.rotate.sorted.AA.fasta}.SCAN.tbl ;
+			echo -e "$START_BASEH\t""$END_BASEH\t""CDS\n""\t\t\tprotein_id\t""lcl|""$LINE\n""\t\t\tproduct\t""$PROTEIN_NAME\n""\t\t\tinference\t""similar to AA sequence:$INFERENCEH" >> ${ROT_AAs%.rotate.AA.sorted.fasta}.SCAN.tbl ;
 		done
 	done
 fi
 
 
-if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns"] ; then
+#- blastn all dtr seqs
+if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 	if [ -s ${BLASTN_DB}.nsq ] || [ -s ${BLASTN_DB}.[0-9].nsq ]  ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running BLASTN, circular and ITR contigs " $MDYT		
