@@ -613,6 +613,7 @@ fi
 ### annotate circular sequences
 
 #-# rotate DTRs
+rm -f *no_hmmscan1.fasta
 CIRCULAR_HALLMARK_CONTIGS=$( find * -maxdepth 0 -type f -name "*fna" )
 echo "annotate DTR part"
 if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
@@ -806,12 +807,12 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_HMM2_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_HMM2_proteins.AA.fasta
 		SPLIT_DTR_HMM2=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_HMM2_GENOME_AA_*.fasta" )
 		echo "$SPLIT_DTR_HMM2" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan2.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.fasta >/dev/null 2>&1
-		cat SPLIT_DTR_HMM2_GENOME_AA_*AA.hmmscan.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_HMM2_COMBINED.AA.hmmscan.sort.out
+		cat SPLIT_DTR_HMM2_GENOME_AA_*AA.hmmscan2.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out
 	fi
-	if [ -s SPLIT_DTR_HMM2_COMBINED.AA.hmmscan.sort.out ] ; then
-		cut -f3 SPLIT_DTR_HMM2_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
-			grep "${HIT}_" SPLIT_DTR_HMM2_COMBINED.AA.hmmscan.sort.out > ${HIT}.rotate.AA.hmmscan2.sort.out
-			grep "${HIT}_" SPLIT_DTR_HMM2_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 > ${HIT}.rotate.AA.called_hmmscan2.txt
+	if [ -s SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out ] ; then
+		cut -f3 SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
+			grep "${HIT}_" SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out > ${HIT}.rotate.AA.hmmscan2.sort.out
+			grep "${HIT}_" SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out | sort -u -k3,3 | cut -f3 > ${HIT}.rotate.AA.called_hmmscan2.txt
 			grep -v -f ${HIT}.rotate.AA.called_hmmscan2.txt ${HIT}.rotate.AA.no_hmmscan1.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.rotate.AA.no_hmmscan2.fasta
 		done
 
@@ -819,8 +820,8 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 	for ROT_AAs in $ROTATE_SORT_AAs ; do
 		echo ">Feature "${ROT_AAs%.rotate.AA.sorted.fasta}" Table1" > ${ROT_AAs%.rotate.AA.sorted.fasta}.SCAN.tbl
 
-		cat ${ROT_AAs%.rotate.AA.sorted.fasta}*called_hmmscan*txt > ${ROT_AAs%.sorted.AA.fasta}.all_called_hmmscans.txt
-		cat ${ROT_AAs%.sorted.AA.fasta}.all_called_hmmscans.txt | while read LINE ; do 
+		cat ${ROT_AAs%.rotate.AA.sorted.fasta}.*called_hmmscan*txt > ${ROT_AAs%.sorted.AA.fasta}.all_called_hmmscans.txt
+		cat ${ROT_AAs%.AA.sorted.fasta}.all_called_hmmscans.txt | while read LINE ; do 
 			PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
 			START_BASEH=$( echo $PROTEIN_INFO | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
 			END_BASEH=$( echo $PROTEIN_INFO | sed 's/.*- \(.*\)\].*/\1/' ) ; 
@@ -910,7 +911,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ]; then
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: running tRNAscan-SE " $MDYT
 	for GENOME_NAME in $ROTATED_DTR_CONTIGS ; do
-		tRNAscan-SE -Q -G -o ${GENOME_NAME}.trnascan-se2.txt ${GENOME_NAME}
+		tRNAscan-SE -Q -G -o ${GENOME_NAME}.trnascan-se2.txt ${GENOME_NAME} >/dev/null 2>&1
 		
 		if grep -q "${GENOME_NAME%.rotate.fasta}" ${GENOME_NAME}.trnascan-se2.txt ;then
 			#echo "$(tput setaf 5) "$GENOME_NAME" was found to encode tRNA(s); making .tbl file $(tput sgr 0)"
@@ -1239,7 +1240,7 @@ if [ -n "$COMB3_TBL" ] ; then
 					echo "Polinton-like virus" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out				
 				else
 
-					ktClassifyBLAST -o ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+					ktClassifyBLAST -o ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out 
 					taxid=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab | cut -f2 )
 					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 				fi
