@@ -819,9 +819,8 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 	fi
 	for ROT_AAs in $ROTATE_SORT_AAs ; do
 		echo ">Feature "${ROT_AAs%.rotate.AA.sorted.fasta}" Table1" > ${ROT_AAs%.rotate.AA.sorted.fasta}.SCAN.tbl
-
-		cat ${ROT_AAs%.rotate.AA.sorted.fasta}.*called_hmmscan*txt > ${ROT_AAs%.sorted.AA.fasta}.all_called_hmmscans.txt
-		cat ${ROT_AAs%.AA.sorted.fasta}.all_called_hmmscans.txt | while read LINE ; do 
+		cat $( find * -maxdepth 0 -type f -regextype sed -regex "${ROT_AAs%.rotate.AA.sorted.fasta}.*called_hmmscan.*txt" ) > ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt
+		cat ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt | while read LINE ; do 
 			PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
 			START_BASEH=$( echo $PROTEIN_INFO | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
 			END_BASEH=$( echo $PROTEIN_INFO | sed 's/.*- \(.*\)\].*/\1/' ) ; 
