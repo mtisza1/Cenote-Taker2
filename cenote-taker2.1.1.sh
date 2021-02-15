@@ -678,7 +678,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 			if grep -q "CRESS virus" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
 				echo ${nucl_fa%.fasta} "is a CRESS virus"
 			else
-				ktClassifyBLAST -o ${nucl_fa%.fasta}.tax_guide.blastx.tab ${nucl_fa%.fasta}.tax_guide.blastx.out
+				ktClassifyBLAST -o ${nucl_fa%.fasta}.tax_guide.blastx.tab ${nucl_fa%.fasta}.tax_guide.blastx.out >/dev/null 2>&1
 				taxid=$( tail -n1 ${nucl_fa%.fasta}.tax_guide.blastx.tab | cut -f2 )
 				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fasta}.tax_guide.blastx.out	
 			fi
@@ -717,7 +717,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 				START_BASE=$( echo $LINE | sed 's/.*START=\(.*\)\] \[.*/\1/' ) ; 
 				ORF_NAME=$( echo $LINE | cut -d " " -f1 | sed 's/\(.*\)\.[0-9].*_1/\1/' ) ; 
 				END_BASE=$( echo $LINE | cut -d " " -f1 | sed 's/.*\(\.[0-9].*_1\)/\1/' | sed 's/_1//g; s/\.//g' ) ; 
-				ORIG_CONTIG=$( grep ">" ${PHAN%.phan.fasta}.fasta | cut -d " " -f2 ) ; 
+				ORIG_CONTIG=$( grep ">" ${PHAN%.phan.fasta}.fna | cut -d " " -f2 ) ; 
 				AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ; 
 				let COUNTER=COUNTER+1 ; 
 				echo ">"${ORF_NAME}"_"${COUNTER} "["$START_BASE" - "$END_BASE"]" $ORIG_CONTIG  ; echo $AA_SEQ ; 
@@ -742,8 +742,8 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 			done > ${PROD%.prodigal.fasta}.AA.fasta
 		done
 	fi
-	ROTATE_AAs=$( find * -maxdepth 0 -type f -name "${run_title}*rotate.AA.fasta")
-	if [ -n $ROTATE_AAs ] ; then
+	ROTATE_AAs=$( find * -maxdepth 0 -type f -name "${run_title}*rotate.AA.fasta" )
+	if [ -n "$ROTATE_AAs" ] ; then
 		for ROT in $ROTATE_AAs ; do 
 			bioawk -c fastx '{FS="\t"; OFS=" "} {print ">"$name $3, $4, $5, $6, $7; print $seq}' $ROT > ${ROT%.fasta}.sorted.fasta
 		done
@@ -751,7 +751,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 fi
 
 #-# 4 hhmscan circles/DTRs
-ROTATE_SORT_AAs=$( find * -maxdepth 0 -type f -name "${run_title}*rotate.AA.sorted.fasta" ) rotate.AA.sorted.fasta
+ROTATE_SORT_AAs=$( find * -maxdepth 0 -type f -name "${run_title}*rotate.AA.sorted.fasta" )
 if [ -n "$ROTATE_SORT_AAs" ] ; then
 	cat $( find * -maxdepth 0 -type f -name "${run_title}*rotate.AA.sorted.fasta" ) > all_DTR_sort_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_DTR_sort_genome_proteins.AA.fasta | wc -l | bc )
