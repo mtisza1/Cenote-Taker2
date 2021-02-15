@@ -604,7 +604,7 @@ if [ ! -z "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] && [ "$PROPHAGE" == "True" ] ;then
 	. ${CENOTE_SCRIPT_DIR}/prune_linear_contigs_0.1.sh
 fi
 
-${base_directory}/${run_title}
+cd ${base_directory}/${run_title}
 
 if [ -d DTR_contigs_with_viral_domain ] ; then
 	cd DTR_contigs_with_viral_domain
@@ -618,7 +618,7 @@ echo "annotate DTR part"
 if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 	echo "circular hallmarks found"
 	echo $PWD
-	for nucl_fa in $CIRCLES_AND_ITRS ; do
+	for nucl_fa in $CIRCULAR_HALLMARK_CONTIGS ; do
 		echo "$(tput setaf 5)rotating "$nucl_fa" to put an ORF at beginning of sequence so that no ORFs overlap the breakpoint $(tput sgr 0)"
 		getorf -circular -minsize 240 -table 11 -find 3 -sequence $nucl_fa -outseq ${nucl_fa%.fasta}.nucl_orfs.fa ; 
 
