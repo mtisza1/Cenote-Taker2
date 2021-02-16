@@ -306,7 +306,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 				if [ $LOW_START -lt 1000 ] && [ $HIGH_DIST -lt 1000 ] ; then 
 					echo ${DAT%.2.3.5.80.10.40.500000.10000.dat} "contains ITRs:" ; 
 					echo $LENGTH "5-prime ITR:" $LOW_START "3-prime ITR:" $HIGH_END ; 
-					mv ${DAT%.2.3.5.80.10.40.500000.10000.dat} ../ITR_containing_contigs/${DAT%.2.3.5.80.10.40.500000.10000.dat}
+					mv ../ITR_containing_contigs/${DAT%.fasta.2.3.5.80.10.40.500000.10000.dat}.fasta
 					echo "$(tput setaf 4) Making ITR .tbl file $(tput sgr 0)"
 					L_END_A=$( grep "^$LOW_START" $DAT | cut -d " " -f2 )
 					L_START_B=$( grep "^$LOW_START" $DAT | cut -d " " -f4 )
@@ -314,7 +314,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 					H_START_A=$( grep " $HIGH_END " $DAT | cut -d " " -f1 )
 					H_END_A=$( grep " $HIGH_END " $DAT | cut -d " " -f2 )		
 					H_START_B=$( grep " $HIGH_END " $DAT | cut -d " " -f4 )
-					echo -e "$LOW_START\t""$L_END_A\t""repeat_region\n""\t\t\trpt_type\tITR\n""$L_START_B\t""$L_END_B\t""repeat_region\n""\t\t\trpt_type\tITR\n""$H_START_A\t""$H_END_A\t""repeat_region\n""\t\t\trpt_type\tITR\n""$H_START_B\t""$HIGH_END\t""repeat_region\n""\t\t\trpt_type\tITR\n" >> ../${DAT%.fasta.2.3.5.80.10.40.500000.10000.dat}.ITR.tbl; 
+					echo -e "$LOW_START\t""$L_END_A\t""repeat_region\n""\t\t\trpt_type\tITR\n""$L_START_B\t""$L_END_B\t""repeat_region\n""\t\t\trpt_type\tITR\n""$H_START_A\t""$H_END_A\t""repeat_region\n""\t\t\trpt_type\tITR\n""$H_START_B\t""$HIGH_END\t""repeat_region\n""\t\t\trpt_type\tITR\n" >> ../ITR_containing_contigs/${DAT%.fasta.2.3.5.80.10.40.500000.10000.dat}.ITR.tbl; 
 				fi ; 
 			fi ; 
 		fi ; 
@@ -972,8 +972,7 @@ if [ -n "$NEW_FASTAS" ]; then
 				cat ${nucl_fa%.fasta}.trna.tbl >> ${nucl_fa%.fasta}.int.tbl
 			fi
 		elif [ -s ${nucl_fa%.fasta}.SCAN.tbl ] ; then
-			echo ">Feature ${nucl_fa%.fasta} Table1" >> ${nucl_fa%.fasta}.int.tbl
-			echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
+
 			cat ${nucl_fa%.fasta}.SCAN.tbl >> ${nucl_fa%.fasta}.int.tbl
 			if [ -s ${nucl_fa%.fasta}.trna.tbl ] ; then
 				echo -e "\n" >> ${nucl_fa%.fasta}.int.tbl
@@ -1253,14 +1252,47 @@ fi
 #-#- make gtf files
 cd ${base_directory}/${run_title}
 
-### annotate ITR sequences
 
 ### annotate linear sequences
+cd ${base_directory}/${run_title}
+
+LIST_OF_ITR_DOMAIN_CONTIGS=$( find * -maxdepth 1 -type f -wholename "ITR_containing_contigs/*fna" )
+
+if [ -n "$LIST_OF_ITR_DOMAIN_CONTIGS" ] ; then
+	cd ITR_containing_contigs
+	LIST_OF_ITR_DOMAIN_CONTIGS=$( find * -maxdepth 0 -type f -regextype sed -regex ".*.fna" )
+	echo "$LIST_OF_ITR_DOMAIN_CONTIGS" | sed 's/.fna//g' | while read ITR_SEQ ; do
+		if [ "$PROPHAGE" == "True" ] ;then
+			cp ${ITR_SEQ}.fna no_end_contigs_with_viral_domain/${ITR_SEQ}_vs99.fna
+		else
+			cp ${ITR_SEQ}.fna no_end_contigs_with_viral_domain/${ITR_SEQ}.fna
+		fi
+	done
+	cd ${base_directory}/${run_title}
+else
+	echo "No ITR contigs with minimum hallmark genes found."
+fi
+
+LIST_OF_VIRAL_DOMAIN_CONTIGS=$( find * -maxdepth 1 -type f -wholename "no_end_contigs_with_viral_domain/*fna" )
+
+if [ -n "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ; then
+	. ${CENOTE_SCRIPT_DIR}/annotate_linear_contigs_2.1.1.sh
+else
+	echo "No linear contigs with minimum hallmark genes found."
+fi
+	
+### annotate ITR sequences
+#-#- I can just do this within linear with some options?
+cd ${base_directory}/${run_title}
+
+
 
 ### make maps/sequin files
 
 
 ### REDO make combined virus seq file
+cd ${base_directory}/${run_title}
+
 if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 	for CIRC in $CIRCULAR_HALLMARK_CONTIGS ; do
 		sed 's/ /#/g' $CIRC | bioawk -c fastx '{print ">"$name" DTR" ; print $seq}' | sed 's/#/ /g' >> final_combined_virus_sequences_${run_title}.fna
