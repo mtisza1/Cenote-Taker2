@@ -465,9 +465,9 @@ if [ -n "$dark_orf_list" ] ; then
 	for dark_orf in $dark_orf_list ; do	
 		cat $dark_orf >> ${dark_orf%*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
 		rm -f $dark_orf
-		cat ${dark_orf%.for_hhpred.fasta}.out.hhr >> ${dark_orf%*.for_hhpred.fasta}.out_all.hhr ;
-		rm -f ${dark_orf%.for_hhpred.fasta}.out.hhr 
 	done	
+	cat *out.hhr > ${run_title}.out_all.hhr
+	rm -f *out.hhr
 fi
 
 rm -f *[0-9].AA.fasta

@@ -56,7 +56,7 @@ if [ -n "$vd_fastas" ] ; then
 			grep "${HIT}_" SPLIT_PRUNE_SEQ_COMBINED.AA.hmmscan2.sort.out > ${HIT}.AA.hmmscan2.sort.out
 			# ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.no_hmmscan1.fasta
 			grep "${HIT}_" SPLIT_PRUNE_SEQ_COMBINED.AA.hmmscan2.sort.out | sort -u -k3,3 | cut -f3 > ${HIT}.AA.called_hmmscan2.txt
-			grep -v -f ${HIT}.AA.called_hmmscan2.txt ${HIT}.AA.sorted1.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.AA.no_hmmscan2.fasta
+			grep -v -f ${HIT}.AA.called_hmmscan2.txt ${HIT}.AA.sorted1.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.AA.prune_no_hmmscan2.fasta
 
 		done
 	fi
@@ -104,9 +104,9 @@ if [ -n "$vd_fastas" ] ; then
 		done
 	fi
 	### redo RPS part
-	NO_HMMSCAN_AA=$( find * -maxdepth 0 -type f -name "*.AA.no_hmmscan2.fasta" )
+	NO_HMMSCAN_AA=$( find * -maxdepth 0 -type f -name "*.AA.prune_no_hmmscan2.fasta" )
 	if [ -n "$NO_HMMSCAN_AA" ] ; then
-		cat $( find * -maxdepth 0 -type f -name "*.AA.no_hmmscan2.fasta" ) > all_prunable_rps_proteins.AA.fasta
+		cat $( find * -maxdepth 0 -type f -name "*.AA.prune_no_hmmscan2.fasta" ) > all_prunable_rps_proteins.AA.fasta
 		TOTAL_AA_SEQS=$( grep -F ">" all_prunable_rps_proteins.AA.fasta | wc -l | bc )
 		AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
 		if [ $AA_SEQS_PER_FILE = 0 ] ; then
@@ -117,10 +117,10 @@ if [ -n "$vd_fastas" ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running RPSBLAST on each sequence " $MDYT
 		echo "$SPLIT_AA_RPS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {}.fasta -line_length 200 -out {}.rpsb.out >/dev/null 2>&1
-		cat *rpsb.out > COMBINED_RESULTS.AA.rpsblast.out
+		cat *rpsb.out > COMBINED_RESULTS_PRUNE.AA.rpsblast.out
 		perl ${CENOTE_SCRIPT_DIR}/rpsblastreport_to_table2.pl
-		cut -f1 COMBINED_RESULTS.RPS_TABLE.txt | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read CONTIG ; do
-			grep "^${CONTIG}_" COMBINED_RESULTS.RPS_TABLE.txt > ${CONTIG}.RPS_TABLE.txt
+		cut -f1 COMBINED_RESULTS_PRUNE.RPS_TABLE.txt | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read CONTIG ; do
+			grep "^${CONTIG}_" COMBINED_RESULTS_PRUNE.RPS_TABLE.txt > ${CONTIG}.RPS_TABLE.txt
 		done
 	fi
 
