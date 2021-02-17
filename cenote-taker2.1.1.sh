@@ -1331,7 +1331,7 @@ if [ -n "$COMB3_TBL" ] ; then
 	fi
 	for feat_tbl2 in $COMB3_TBL ; do
 		JUST_TBL2_FILE=$( echo "$feat_tbl2" | sed 's/.*\///g' )
-		file_core=${feat_tbl2%.comb3.tbl}
+		file_core=${JUST_TBL2_FILE%.comb3.tbl}
 		echo $file_core
 		file_numbers=$( echo ${file_core: -3} | sed 's/[a-z]//g' | sed 's/[A-Z]//g' )
 		echo $file_numbers
@@ -1663,16 +1663,42 @@ if [ -n "$COMB3_TBL" ] ; then
 		if echo "$feat_tbl2" | grep -q "DTR_contigs_with_viral_domain" ; then
 			TOPOLOGY="circular"
 			NUCL_FILE="${feat_tbl2%.comb3.tbl}.rotate.fasta"
+			input_contig_name=$( head -n1 ${feat_tbl2%.comb3.tbl}.rotate.fasta | cut -d " " -f 2 | sed 's/|.*//g; s/>//g' ) 
 		else
 			TOPOLOGY="linear"
 			NUCL_FILE="${feat_tbl2%.comb3.tbl}.fna"
-
+			echo "$NUCL_FILE" | if grep -q "_vs[0-9][0-9]" ; then
+				input_contig_name=$( head -n1 ${feat_tbl2%_vs[0-9][0-9].comb3.tbl}.fna | cut -d " " -f 2 | sed 's/|.*//g; s/>//g' )
+			else
+				input_contig_name=$( head -n1 $NUCL_FILE | cut -d " " -f 2 | sed 's/|.*//g; s/>//g' )
+			fi
 		fi
 
 		cp $feat_tbl2 sequin_and_genome_maps/${JUST_TBL2_FILE%.comb3.tbl}.tbl ; 
 				#echo "1"
-		bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var " ; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' $NUCL_FILE > sequin_and_genome_maps/${JUST_TBL2_FILE%.comb3.tbl}.fsa ; 
+		bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -v topoq="$TOPOLOGY" -v gcodeq="$GCODE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var " ] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology="topoq"] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode="gcodeq"]" ; print $seq }' $NUCL_FILE > sequin_and_genome_maps/${JUST_TBL2_FILE%.comb3.tbl}.fsa ; 
+
+	#echo $input_contig_name
+	if [ -s reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt ] ; then
+		COVERAGE=$( grep "$input_contig_name	" reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt | cut -f2 )
+		#echo $COVERAGE
+	else
+		COVERAGE="1"
+	fi
+	echo "StructuredCommentPrefix	##Genome-Assembly-Data-START##" > sequin_directory/${file_core}.cmt ;
+	echo "Assembly Method	" $ASSEMBLER >> sequin_directory/${file_core}.cmt ;
+	echo "Genome Coverage	"$COVERAGE"x" >> sequin_directory/${file_core}.cmt ;
+	echo "Sequencing Technology	Illumina" >> sequin_directory/${file_core}.cmt ;
+	echo "Annotation Pipeline	Cenote-Taker2" >> sequin_directory/${file_core}.cmt ;
+	echo "URL	https://github.com/mtisza1/Cenote-Taker2" >> sequin_directory/${file_core}.cmt ;		
 	done
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "time update: running tbl2asn " $MDYT
+	if [[ $DATA_SOURCE = "tpa_assembly" ]] ;then
+		tbl2asn -V vb -j "[keyword=TPA:assembly]" -t ${base_directory}/${template_file} -X C -p sequin_directory/ ;
+	else
+		tbl2asn -V vb -t ${base_directory}/${template_file} -X C -p sequin_directory/ ;
+	fi
 else
 	echo "no tbl file found for sequin/genome map"
 fi
