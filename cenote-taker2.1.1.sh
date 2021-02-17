@@ -843,7 +843,7 @@ fi
 if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 	if [ -s ${BLASTN_DB}.nsq ] || [ -s ${BLASTN_DB}.1.nsq ] || [ -s ${BLASTN_DB}.01.nsq ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
-		echo "time update: running BLASTN, circular and ITR contigs " $MDYT		
+		echo "time update: running BLASTN, DTR contigs " $MDYT		
 		echo "$ROTATED_DTR_CONTIGS" | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU blastn -task megablast -db ${BLASTN_DB} -query {}.rotate.fasta -evalue 1e-50 -num_threads 1 -outfmt "6 qseqid sseqid stitle pident length qlen" -qcov_hsp_perc 50 -num_alignments 3 -out {}.blastn.out >/dev/null 2>&1
 		for circle in $ROTATED_DTR_CONTIGS ; do
 			if [ -s "${circle%.rotate.fasta}.blastn.out" ]; then
@@ -854,7 +854,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 			fi
 			if [ -s "${circle%.rotate.fasta}.blastn.notnew.out" ] ; then
 
-				echo "$(tput setaf 4)"$circle" is not a novel species (>90% identical to sequence in GenBank nt database).$(tput sgr 0)"
+				#echo "$(tput setaf 4)"$circle" is not a novel species (>90% identical to sequence in GenBank nt database).$(tput sgr 0)"
 				ktClassifyBLAST -o ${circle%.rotate.fasta}.tax_guide.blastn.tab ${circle%.rotate.fasta}.blastn.notnew.out
 				taxid=$( tail -n1 ${circle%.rotate.fasta}.tax_guide.blastn.tab | cut -f2 )
 				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage > ${circle%.rotate.fasta}.tax_guide.blastn.out
@@ -864,8 +864,8 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 				fi
 
 				if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid\|phage" ${circle%.rotate.fasta}.tax_guide.blastn.out ; then
-					echo $circle "$(tput setaf 4) is closely related to a virus that has already been deposited in GenBank nt. $(tput sgr 0)"
-					cat ${circle%.rotate.fasta}.tax_guide.blastn.out
+					#echo $circle "$(tput setaf 4) is closely related to a virus that has already been deposited in GenBank nt. $(tput sgr 0)"
+					#cat ${circle%.rotate.fasta}.tax_guide.blastn.out
 					cp ${circle%.rotate.fasta}.tax_guide.blastn.out ${circle%.rotate.fasta}.tax_guide.KNOWN_VIRUS.out
 
 				else 
@@ -1316,14 +1316,11 @@ if [ -n "$COMB3_TBL" ] ; then
 		JUST_TBL2_FILE=$( echo "$feat_tbl2" | sed 's/.*\///g' )
 		file_core=${JUST_TBL2_FILE%.comb3.tbl}
 		#echo $file_core
-		echo "$file_core" | if grep -q "_vs[0-9][0-9]" ; then
-			file_numbers=$( echo ${file_core%_vs[0-9][0-9]} | sed 's/.*_// ; s/[a-zA-Z]//g' )
-		else
-			file_numbers=$( echo ${file_core} | sed 's/.*_// ; s/[a-zA-Z]//g' )
-		fi
-		echo $file_numbers
+		file_numbers=$( echo ${file_core#${run_title}} | sed 's/[a-zA-Z]//g' )
+
+		#echo $file_numbers
 		tax_info=${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
-		echo $tax_info
+		#echo $tax_info
 		if grep -q "Anellovir" $tax_info ; then
 			vir_name=Anelloviridae ;
 		elif grep -q "Circovirus-like" $tax_info ; then
@@ -1695,7 +1692,7 @@ if [ -d sequin_and_genome_maps ] ; then
 	cd sequin_and_genome_maps
 	COMB4_TBL=$( find * -maxdepth 0 -type f -name "*.tbl" )
 	if [ -n "$COMB4_TBL" ] ; then
-		for feat_tbl2 in $COMB3_TBL ; do
+		for feat_tbl2 in $COMB4_TBL ; do
 			if [ -s ${feat_tbl2%tbl}.gtf ] ; then
 				rm -f ${feat_tbl2%.tbl}.gtf
 			fi
@@ -1743,14 +1740,14 @@ if [ -s final_combined_virus_sequences_${run_title}.fna ] ; then
 	DTR_TOTAL=$( grep -F " DTR" final_combined_virus_sequences_${run_title}.fna | wc -l | bc )
 	ITR_TOTAL=$( grep -F " ITR" final_combined_virus_sequences_${run_title}.fna | wc -l | bc )
 	NO_END_TOTAL=$( grep -F " no_end_feature" final_combined_virus_sequences_${run_title}.fna | wc -l | bc )
-	echo "Virus predition summary:"
-	echo "$NUMBER_VIRUSES virus contigs were detected/predicted. $DTR_TOTAL contigs had DTRs/were circular. $ITR_TOTAL contigs had ITRs. $NO_END_TOTAL were linear/had no end features"
+	echo "$(tput setaf 3)Virus predition summary:$(tput sgr 0)"
+	echo "$NUMBER_VIRUSES virus contigs were detected/predicted. $DTR_TOTAL contigs had DTRs/circularity. $ITR_TOTAL contigs had ITRs. $NO_END_TOTAL were linear/had no end features"
 fi
 if [ -s ${run_title}_PRUNING_INFO_TABLE.tsv ] ; then
 	PRUNE_ATTEMPTS=$( awk '{OFS="\t"}{FS="\t"}{ if ($6=="True") {print}}' ${run_title}_PRUNING_INFO_TABLE.tsv | wc -l | bc )
 	PRUNE_REMOVE=$( awk '{OFS="\t"}{FS="\t"}{ if ($6=="True" && $7=="True") {print}}' ${run_title}_PRUNING_INFO_TABLE.tsv | wc -l | bc )
 	PRUNE_REMAIN=$( awk '{OFS="\t"}{FS="\t"}{ if ($6=="True" && $7=="False") {print}}' ${run_title}_PRUNING_INFO_TABLE.tsv | wc -l | bc )
-	echo "Prophage pruning summary:"
+	echo "$(tput setaf 3)Prophage pruning summary:$(tput sgr 0)"
 	echo "$PRUNE_ATTEMPTS linear contigs > 10 kb were run through pruning module, and $PRUNE_REMOVE virus sub-contigs (putative prophages/proviruses) were extracted from these. $PRUNE_REMAIN virus contigs were kept intact."
 
 fi

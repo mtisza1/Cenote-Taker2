@@ -192,7 +192,7 @@ fi
 if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 	if [ -s ${BLASTN_DB}.nsq ] || [ -s ${BLASTN_DB}.1.nsq ] || [ -s ${BLASTN_DB}.01.nsq ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
-		echo "time update: running BLASTN, circular and ITR contigs " $MDYT		
+		echo "time update: running BLASTN, linear contigs " $MDYT		
 		echo "$LINEAR_HALLMARK_CONTIGS" | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU blastn -task megablast -db ${BLASTN_DB} -query {}.fna -evalue 1e-50 -num_threads 1 -outfmt "6 qseqid sseqid stitle pident length qlen" -qcov_hsp_perc 50 -num_alignments 3 -out {}.blastn.out >/dev/null 2>&1
 		for nucl_fa in $LINEAR_HALLMARK_CONTIGS ; do
 			if [ -s "${nucl_fa%.fna}.blastn.out" ]; then
@@ -202,7 +202,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; t
 			fi
 			if [ -s "${nucl_fa%.fna}.blastn.notnew.out" ] ; then
 
-				echo "$(tput setaf 4)"$nucl_fa" is not a novel species (>90% identical to sequence in GenBank nt database).$(tput sgr 0)"
+				#echo "$(tput setaf 4)"$nucl_fa" is not a novel species (>90% identical to sequence in GenBank nt database).$(tput sgr 0)"
 				ktClassifyBLAST -o ${nucl_fa%.fna}.tax_guide.blastn.tab ${nucl_fa%.fna}.blastn.notnew.out
 				taxid=$( tail -n1 ${nucl_fa%.fna}.tax_guide.blastn.tab | cut -f2 )
 				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage > ${nucl_fa%.fna}.tax_guide.blastn.out
@@ -217,7 +217,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; t
 					cp ${nucl_fa%.fna}.tax_guide.blastn.out ${nucl_fa%.fna}.tax_guide.KNOWN_VIRUS.out
 
 				else 
-					echo $nucl_fa "$(tput setaf 4) is closely related to a chromosomal sequence that has already been deposited in GenBank nt and will be checked for viral and plasmid domains. $(tput sgr 0)"
+					#echo $nucl_fa "$(tput setaf 4) is closely related to a chromosomal sequence that has already been deposited in GenBank nt and will be checked for viral and plasmid domains. $(tput sgr 0)"
 					cat ${nucl_fa%.fna}.tax_guide.blastn.out
 					cp ${nucl_fa%.fna}.tax_guide.blastn.out ${nucl_fa%.fna}.tax_guide.CELLULAR.out
 				fi
@@ -390,8 +390,7 @@ if [ -n "$INT_TBL" ] ; then
 			loc_end=$( echo $liney | cut -d " " -f2 )
 			loc1_start=$( echo " " "$loc_start" " " )
 			if grep -q "$loc1_start" ${feat_tbl3%.int.tbl}.used_positions.txt ; then 
-				echo $feat_tbl3
-				echo "$loc1_start"
+
 				if [[ "$loc_end" -gt "$loc_start" ]]; then
 					gen_len=$(( $loc_end - $loc_start ))
 
@@ -400,10 +399,8 @@ if [ -n "$INT_TBL" ] ; then
 					else
 						f_end=$(( $loc_end + 1 ))
 						f1_end=$( echo " " "$f_end" " ")
-						echo "$f1_end"
 						if grep -q "$f1_end" ${feat_tbl3%.int.tbl}.used_positions.txt ; then
-							echo "removing hypo"
-							echo "$loc1_start" "start, " "$loc_end" "end, " 
+
 							echo "$liney" >> ${feat_tbl3%.int.tbl}.remove_hypo.txt
 						fi
 					fi
@@ -415,11 +412,7 @@ if [ -n "$INT_TBL" ] ; then
 					else
 					r_end=$(( $loc_end - 1 ))
 					r1_end=$( echo " " "$r_end" " ")
-
-					echo "$r1_end"
-						if grep -q "$r1_end" ${feat_tbl3%.int.tbl}.used_positions.txt ; then
-								echo "removing hypo"
-								echo "$loc1_start" "start, " "$loc_end" "end, " 
+						if grep -q "$r1_end" ${feat_tbl3%.int.tbl}.used_positions.txt ; then 
 								echo "$liney" >> ${feat_tbl3%.int.tbl}.remove_hypo.txt
 						fi
 					fi
