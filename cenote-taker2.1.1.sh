@@ -1685,19 +1685,19 @@ if [ -n "$COMB3_TBL" ] ; then
 	else
 		COVERAGE="1"
 	fi
-	echo "StructuredCommentPrefix	##Genome-Assembly-Data-START##" > sequin_directory/${file_core}.cmt ;
-	echo "Assembly Method	" $ASSEMBLER >> sequin_directory/${file_core}.cmt ;
-	echo "Genome Coverage	"$COVERAGE"x" >> sequin_directory/${file_core}.cmt ;
-	echo "Sequencing Technology	Illumina" >> sequin_directory/${file_core}.cmt ;
-	echo "Annotation Pipeline	Cenote-Taker2" >> sequin_directory/${file_core}.cmt ;
-	echo "URL	https://github.com/mtisza1/Cenote-Taker2" >> sequin_directory/${file_core}.cmt ;		
+	echo "StructuredCommentPrefix	##Genome-Assembly-Data-START##" > sequin_and_genome_maps/${file_core}.cmt ;
+	echo "Assembly Method	" $ASSEMBLER >> sequin_and_genome_maps/${file_core}.cmt ;
+	echo "Genome Coverage	"$COVERAGE"x" >> sequin_and_genome_maps/${file_core}.cmt ;
+	echo "Sequencing Technology	Illumina" >> sequin_and_genome_maps/${file_core}.cmt ;
+	echo "Annotation Pipeline	Cenote-Taker2" >> sequin_and_genome_maps/${file_core}.cmt ;
+	echo "URL	https://github.com/mtisza1/Cenote-Taker2" >> sequin_and_genome_maps/${file_core}.cmt ;		
 	done
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: running tbl2asn " $MDYT
 	if [[ $DATA_SOURCE = "tpa_assembly" ]] ;then
-		tbl2asn -V vb -j "[keyword=TPA:assembly]" -t ${base_directory}/${template_file} -X C -p sequin_directory/ ;
+		tbl2asn -V vb -j "[keyword=TPA:assembly]" -t ${base_directory}/${template_file} -X C -p sequin_and_genome_maps/ ;
 	else
-		tbl2asn -V vb -t ${base_directory}/${template_file} -X C -p sequin_directory/ ;
+		tbl2asn -V vb -t ${base_directory}/${template_file} -X C -p sequin_and_genome_maps/ ;
 	fi
 else
 	echo "no tbl file found for sequin/genome map"
