@@ -234,17 +234,17 @@ if [ -n "$POST_PRUNE_CONTIGS" ] ; then
 			else
 				CHROM_REMOVED="True"
 			fi
-			HALLMARK_COUNT=$( cat ${CONTIG%_vs[0-9][0-9].fna}.AA.hmmscan.sort.out | wc -l | bc )
-			HALLMARK_GENES=$( cut -f1 ${CONTIG%_vs[0-9][0-9].fna}.AA.hmmscan.sort.out | sed 's/ /_/g ; s/,//g' | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\|/g' )
-			HALLMARK_AA_NAMES=$( cut -f3 ${CONTIG%_vs[0-9][0-9].fna}.AA.hmmscan.sort.out | sed 's/ /_/g ; s/,//g' | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\|/g' )
+			HALLMARK_COUNT=$( awk -v LEFTQ="$LEFT_COORD" -v RIGHTQ="$RIGHT_COORD" '{FS="\t"}{OFS="\t"}{ if ($2>LEFTQ && $2<RIGHTQ && $3>LEFTQ && $3<RIGHTQ) {print $5}}' ${CONTIG%_vs[0-9][0-9].fna}.VIRUS_BAIT_TABLE.txt | wc -l | bc )
+			HALLMARK_GENES=$( awk -v LEFTQ="$LEFT_COORD" -v RIGHTQ="$RIGHT_COORD" '{FS="\t"}{OFS="\t"}{ if ($2>LEFTQ && $2<RIGHTQ && $3>LEFTQ && $3<RIGHTQ) {print $5}}' ${CONTIG%_vs[0-9][0-9].fna}.VIRUS_BAIT_TABLE.txt | sed 's/ /_/g ; s/,//g' | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\|/g' )
+			HALLMARK_AA_NAMES=$( awk -v LEFTQ="$LEFT_COORD" -v RIGHTQ="$RIGHT_COORD" '{ if ($2>LEFTQ && $2<RIGHTQ && $3>LEFTQ && $3<RIGHTQ) {print $1}}' ${CONTIG%_vs[0-9][0-9].fna}.VIRUS_BAIT_TABLE.txt | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\|/g' )
 		else
 			LEFT_COORD="None"
 			RIGHT_COORD="None"
 			PRUNING_TRIED="False"
 			CHROM_REMOVED="False"
-			HALLMARK_COUNT=$( awk -v LEFTQ="$LEFT_COORD" -v RIGHTQ="$RIGHT_COORD" '{FS="\t"}{OFS="\t"}{ if ($2>LEFTQ && $2<RIGHTQ && $3>LEFTQ && $3<RIGHTQ) {print $5}}' ${CONTIG%_vs[0-9][0-9].fna}.VIRUS_BAIT_TABLE.txt | wc -l | bc )
-			HALLMARK_GENES=$( awk -v LEFTQ="$LEFT_COORD" -v RIGHTQ="$RIGHT_COORD" '{FS="\t"}{OFS="\t"}{ if ($2>LEFTQ && $2<RIGHTQ && $3>LEFTQ && $3<RIGHTQ) {print $5}}' ${CONTIG%_vs[0-9][0-9].fna}.VIRUS_BAIT_TABLE.txt | sed 's/ /_/g ; s/,//g' | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\|/g' )
-			HALLMARK_AA_NAMES=$( awk -v LEFTQ="$LEFT_COORD" -v RIGHTQ="$RIGHT_COORD" '{ if ($2>LEFTQ && $2<RIGHTQ && $3>LEFTQ && $3<RIGHTQ) {print $1}}' ${CONTIG%_vs[0-9][0-9].fna}.VIRUS_BAIT_TABLE.txt | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\|/g' )
+			HALLMARK_COUNT=$( cat ${CONTIG%_vs[0-9][0-9].fna}.AA.hmmscan.sort.out | wc -l | bc )
+			HALLMARK_GENES=$( cut -f1 ${CONTIG%_vs[0-9][0-9].fna}.AA.hmmscan.sort.out | sed 's/ /_/g ; s/,//g' | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\|/g' )
+			HALLMARK_AA_NAMES=$( cut -f3 ${CONTIG%_vs[0-9][0-9].fna}.AA.hmmscan.sort.out | sed 's/ /_/g ; s/,//g' | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\|/g' )
 		fi
 		ORIGINAL_NAME=$( head -n1 ${CONTIG%_vs[0-9][0-9].fna}.fna | cut -d " " -f2 )
 		echo "${CONTIG}	${CENOTE_PARENT}	${ORIGINAL_NAME}	${PRUNED_LENGTH}	${PARENT_LENGTH}	${PRUNING_TRIED}	${CHROM_REMOVED}	${LEFT_COORD}	${RIGHT_COORD}	${HALLMARK_COUNT}	${HALLMARK_GENES}	${HALLMARK_AA_NAMES}" >> ${run_title}_PRUNING_INFO_TABLE.tsv

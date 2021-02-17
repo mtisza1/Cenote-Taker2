@@ -466,13 +466,20 @@ if [ -n "$dark_orf_list" ] ; then
 		cat $dark_orf >> ${dark_orf%*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
 		rm -f $dark_orf
 	done	
-	cat *out.hhr > ${run_title}.out_all.hhr
+	cat *out.hhr > ${run_title}.rotate.out_all.hhr
 	rm -f *out.hhr
 fi
 
 rm -f *[0-9].AA.fasta
 
 perl ${CENOTE_SCRIPT_DIR}/hhpredreport2tbl_mt_annotation_pipe_biowulf1_gjs_edits.pl
+if [ -s ${run_title}.HH.tbl ] ; then
+	grep "protein_id	" ${run_title}.HH.tbl | sed 's/.*protein_id	lcl|//g' | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read CONTIG ; do
+		echo ">Feature ${CONTIG} Table1" > ${CONTIG}.HH.tbl
+		grep -A2 -B1 "${CONTIG}_" ${run_title}.HH.tbl | sed '/--/d' >> ${CONTIG}.HH.tbl
+	done
+	mv ${run_title}.HH.tbl ${run_title}.combined_hhsuite.tbl
+fi
 
 HH_TBL=$( find * -maxdepth 0 -type f -name "*.HH.tbl" )
 if [ -n "$HH_TBL" ] ; then

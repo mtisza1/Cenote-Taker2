@@ -1315,16 +1315,366 @@ else
 	fi
 fi		
 
+cd ${base_directory}/${run_title}
+
+COMB3_TBL=$( find * -maxdepth 0 -type f -name "*.comb3.tbl" )
+if [ -n "$COMB3_TBL" ] ; then
+	if [ ! -d "sequin_directory" ]; then
+		mkdir sequin_directory
+	fi
+	for feat_tbl2 in *.comb3.tbl ; do 
+		file_core=${feat_tbl2%.comb3.tbl}
+		echo $file_core
+		file_numbers=$( echo ${file_core: -3} | sed 's/[a-z]//g' | sed 's/[A-Z]//g' )
+		echo $file_numbers
+		tax_info=${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+		echo $tax_info
+		if grep -q "Anellovir" $tax_info ; then
+			vir_name=Anelloviridae ;
+		elif grep -q "Circovirus-like" $tax_info ; then
+			vir_name="CRESS virus" ;
+		elif grep -q "CRESS virus" $tax_info ; then
+			vir_name="CRESS virus" ;
+		elif grep -q "Adenovir" $tax_info ; then
+			vir_name=Adenoviridae ;
+		elif grep -q "Alphasatellit" $tax_info ; then
+			vir_name=Alphasatellitidae ;
+		elif grep -q "Ampullavir" $tax_info ; then
+			vir_name=Ampullaviridae ;
+		elif grep -q "Ascovir" $tax_info ; then
+			vir_name=Ascoviridae ;
+		elif grep -q "Asfarvir" $tax_info ; then
+			vir_name=Asfarviridae ;
+		elif grep -q "Bacilladnavir" $tax_info ; then
+			vir_name=Bacilladnaviridae ;
+		elif grep -q "Baculovir" $tax_info ; then
+			vir_name=Baculoviridae ;
+		elif grep -q "Bicaudavir" $tax_info ; then
+			vir_name=Bicaudaviridae ;
+		elif grep -q "Bidnavir" $tax_info ; then
+			vir_name=Bidnaviridae ;
+		elif grep -q "Ackermannvir" $tax_info ; then
+			vir_name=Ackermannviridae ;
+		elif grep -q "Herellevir" $tax_info ; then
+			vir_name=Herelleviridae ;
+		elif grep -q "Clavavir" $tax_info ; then
+			vir_name=Clavaviridae ;
+		elif grep -q "Adomavir" $tax_info ; then
+			vir_name=Adomaviridae ;
+		elif grep -q "Corticovir" $tax_info ; then
+			vir_name=Corticoviridae ;
+		elif grep -q "Dinodnavir" $tax_info ; then
+			vir_name=Dinodnavirus ;
+		elif grep -q "Autolykivir" $tax_info ; then
+			vir_name=Autolykiviridae ;
+		elif grep -q "Globulovir" $tax_info ; then
+			vir_name=Globuloviridae ;
+		elif grep -q "Pithovir" $tax_info ; then
+			vir_name=Pithoviridae ;
+		elif grep -q "Pandoravir" $tax_info ; then
+			vir_name=Pandoravirus ;
+		elif grep -q "Fusellovir" $tax_info ; then
+			vir_name=Fuselloviridae ;
+		elif grep -q "Guttavir" $tax_info ; then
+			vir_name=Guttaviridae ;
+		elif grep -q "Hepadnavir" $tax_info ; then
+			vir_name=Hepadnaviridae ;
+		elif grep -q "Herpesvir" $tax_info ; then
+			vir_name=Herpesvirales ;
+		elif grep -q "Hytrosavir" $tax_info ; then
+			vir_name=Hytrosaviridae ;
+		elif grep -q "Iridovir" $tax_info ; then
+			vir_name=Iridoviridae ;
+		elif grep -q "Lavidavir" $tax_info ; then
+			vir_name=Lavidaviridae ;
+		elif grep -q "Adintovir" $tax_info ; then
+			vir_name=Adintovirus ;
+		elif grep -q "Lipothrixvir" $tax_info ; then
+			vir_name=Lipothrixviridae ;
+		elif grep -q "Rudivir" $tax_info ; then
+			vir_name=Rudiviridae ;
+		elif grep -q "Ligamenvir" $tax_info ; then
+			vir_name=Ligamenvirales ;
+		elif grep -q "Marseillevir" $tax_info ; then
+			vir_name=Marseilleviridae ;
+		elif grep -q "Mimivir" $tax_info ; then
+			vir_name=Mimiviridae ;
+		elif grep -q "Nanovir" $tax_info ; then
+			vir_name=Nanoviridae ;
+		elif grep -q "Nimavir" $tax_info ; then
+			vir_name=Nimaviridae ;
+		elif grep -q "Nudivir" $tax_info ; then
+			vir_name=Nudiviridae ;
+		elif grep -q "Caulimovir" $tax_info ; then
+			vir_name=Caulimoviridae ;
+		elif grep -q "Metavir" $tax_info ; then
+			vir_name=Metaviridae ;
+		elif grep -q "Pseudovir" $tax_info ; then
+			vir_name=Pseudoviridae ;
+		elif grep -q "Retrovir" $tax_info ; then
+			vir_name=Retroviridae ;
+		elif grep -q "Ovalivir" $tax_info ; then
+			vir_name=Ovaliviridae ;
+		elif grep -q "Parvovir" $tax_info ; then
+			vir_name=Parvoviridae ;
+		elif grep -q "Phycodnavir" $tax_info ; then
+			vir_name=Phycodnaviridae ;
+		elif grep -q "Plasmavir" $tax_info ; then
+			vir_name=Plasmaviridae ;
+		elif grep -q "Pleolipovir" $tax_info ; then
+			vir_name=Pleolipoviridae ;
+		elif grep -q "Polydnavir" $tax_info ; then
+			vir_name=Polydnaviridae ;
+		elif grep -q "Portoglobovir" $tax_info ; then
+			vir_name=Portogloboviridae ;
+		elif grep -q "Poxvir" $tax_info ; then
+			vir_name=Poxviridae ;
+		elif grep -q "Albetovir" $tax_info ; then
+			vir_name=Albetoviridae ;
+		elif grep -q "Alphatetravir" $tax_info ; then
+			vir_name=Alphatetraviridae ;
+		elif grep -q "Alvernavir" $tax_info ; then
+			vir_name=Alvernaviridae ;
+		elif grep -q "Amalgavir" $tax_info ; then
+			vir_name=Amalgaviridae ;
+		elif grep -q "Astrovir" $tax_info ; then
+			vir_name=Astroviridae ;
+		elif grep -q "Aumaivir" $tax_info ; then
+			vir_name=Aumaivirus ;
+		elif grep -q "Avsunviroid" $tax_info ; then
+			vir_name=Avsunviroidae ;
+		elif grep -q "Barnavir" $tax_info ; then
+			vir_name=Barnaviridae ;
+		elif grep -q "Benyvir" $tax_info ; then
+			vir_name=Benyviridae ;
+		elif grep -q "Birnavir" $tax_info ; then
+			vir_name=Birnaviridae ;
+		elif grep -q "Botourmiavir" $tax_info ; then
+			vir_name=Botourmiaviridae ;
+		elif grep -q "Botybirnavir" $tax_info ; then
+			vir_name=Botybirnavirus ;
+		elif grep -q "Bromovir" $tax_info ; then
+			vir_name=Bromoviridae ;
+		elif grep -q "Calicivir" $tax_info ; then
+			vir_name=Caliciviridae ;
+		elif grep -q "Carmotetravir" $tax_info ; then
+			vir_name=Carmotetraviridae ;
+		elif grep -q "Chrysovir" $tax_info ; then
+			vir_name=Chrysoviridae ;
+		elif grep -q "Closterovir" $tax_info ; then
+			vir_name=Closteroviridae ;
+		elif grep -q "Cystovir" $tax_info ; then
+			vir_name=Cystoviridae ;
+		elif grep -q "Deltavir" $tax_info ; then
+			vir_name=Deltavirus ;
+		elif grep -q "Endornavir" $tax_info ; then
+			vir_name=Endornaviridae ;
+		elif grep -q "Flavivir" $tax_info ; then
+			vir_name=Flaviviridae ;
+		elif grep -q "Hepevir" $tax_info ; then
+			vir_name=Hepeviridae ;
+		elif grep -q "Hypovir" $tax_info ; then
+			vir_name=Hypoviridae ;
+		elif grep -q "Idaeovir" $tax_info ; then
+			vir_name=Idaeovirus ;
+		elif grep -q "Kitavir" $tax_info ; then
+			vir_name=Kitaviridae ;
+		elif grep -q "Levivir" $tax_info ; then
+			vir_name=Leviviridae ;
+		elif grep -q "Luteovir" $tax_info ; then
+			vir_name=Luteoviridae ;
+		elif grep -q "Matonavir" $tax_info ; then
+			vir_name=Matonaviridae ;
+		elif grep -q "Megabirnavir" $tax_info ; then
+			vir_name=Megabirnaviridae ;
+		elif grep -q "Narnavir" $tax_info ; then
+			vir_name=Narnaviridae ;
+		elif grep -q "Nidovir" $tax_info ; then
+			vir_name=Nidovirales ;
+		elif grep -q "Nodavir" $tax_info ; then
+			vir_name=Nodaviridae ;
+		elif grep -q "Papanivir" $tax_info ; then
+			vir_name=Papanivirus ;
+		elif grep -q "Partitivir" $tax_info ; then
+			vir_name=Partitiviridae ;
+		elif grep -q "Permutotetravir" $tax_info ; then
+			vir_name=Permutotetraviridae ;
+		elif grep -q "Picobirnavir" $tax_info ; then
+			vir_name=Picobirnaviridae ;
+		elif grep -q "Dicistrovir" $tax_info ; then
+			vir_name=Dicistroviridae ;
+		elif grep -q "Iflavir" $tax_info ; then
+			vir_name=Iflaviridae ;
+		elif grep -q "Marnavir" $tax_info ; then
+			vir_name=Marnaviridae ;
+		elif grep -q "Picornavir" $tax_info ; then
+			vir_name=Picornaviridae ;
+		elif grep -q "Polycipivir" $tax_info ; then
+			vir_name=Polycipiviridae ;
+		elif grep -q "Secovir" $tax_info ; then
+			vir_name=Secoviridae ;
+		elif grep -q "Picornavir" $tax_info ; then
+			vir_name=Picornavirales ;
+		elif grep -q "Pospiviroid" $tax_info ; then
+			vir_name=Pospiviroidae ;
+		elif grep -q "Polinton-like virus" $tax_info ; then
+			vir_name="Polinton-like virus" ;
+		elif grep -q "Potyvir" $tax_info ; then
+			vir_name=Potyviridae ;
+		elif grep -q "Quadrivir" $tax_info ; then
+			vir_name=Quadriviridae ;
+		elif grep -q "Reovir" $tax_info ; then
+			vir_name=Reoviridae ;
+		elif grep -q "Sarthrovir" $tax_info ; then
+			vir_name=Sarthroviridae ;
+		elif grep -q "Sinaivir" $tax_info ; then
+			vir_name=Sinaivirus ;
+		elif grep -q "Solemovir" $tax_info ; then
+			vir_name=Solemoviridae ;
+		elif grep -q "Solinvivir" $tax_info ; then
+			vir_name=Solinviviridae ;
+		elif grep -q "Togavir" $tax_info ; then
+			vir_name=Togaviridae ;
+		elif grep -q "Tombusvir" $tax_info ; then
+			vir_name=Tombusviridae ;
+		elif grep -q "Totivir" $tax_info ; then
+			vir_name=Totiviridae ;
+		elif grep -q "Tymovir" $tax_info ; then
+			vir_name=Tymovirales ;
+		elif grep -q "Virgavir" $tax_info ; then
+			vir_name=Virgaviridae ;
+		elif grep -q "Virtovir" $tax_info ; then
+			vir_name=Virtovirus ;
+		elif grep -q "Salterprovir" $tax_info ; then
+			vir_name=Salterprovirus ;
+		elif grep -q "Smacovir" $tax_info ; then
+			vir_name=Smacoviridae ;
+		elif grep -q "Sphaerolipovir" $tax_info ; then
+			vir_name=Sphaerolipoviridae ;
+		elif grep -q "Spiravir" $tax_info ; then
+			vir_name=Spiraviridae ;
+		elif grep -q "Crucivir" $tax_info ; then
+			vir_name=Cruciviridae ;
+		elif grep -q "Tectivir" $tax_info ; then
+			vir_name=Tectiviridae ;
+		elif grep -q "Tolecusatellit" $tax_info ; then
+			vir_name=Tolecusatellitidae ;
+		elif grep -q "Tristromavir" $tax_info ; then
+			vir_name=Tristromaviridae ;
+		elif grep -q "Turrivir" $tax_info ; then
+			vir_name=Turriviridae ;
+		elif grep -q "crAss-like virus\|CrAssphage" $tax_info ; then
+			vir_name="CrAss-like virus" ;
+		elif grep -q "Mavir\|virophage" $tax_info ; then
+			vir_name=Virophage ;
+		elif grep -q "Microvir" $tax_info ; then
+			vir_name=Microviridae ;
+		elif grep -q "microphage" $tax_info ; then
+			vir_name=Microviridae ;
+		elif grep -q "uncultured marine virus" $tax_info ; then
+			vir_name="Virus" ;
+		elif grep -q "Inovir" $tax_info ; then
+			vir_name=Inoviridae ;
+		elif grep -q "Siphovir" $tax_info ; then
+			vir_name=Siphoviridae ;
+		elif grep -q "Myovir" $tax_info ; then
+			vir_name=Myoviridae ;		
+		elif grep -q "unclassified dsDNA phage" $tax_info ; then
+			vir_name="Phage" ;
+		elif grep -q "unclassified ssDNA virus" $tax_info ; then
+			vir_name="CRESS virus" ;
+		elif grep -q "Lake Sarah" $tax_info ; then
+			vir_name="CRESS virus" ;
+		elif grep -q "Avon-Heathcote" $tax_info ; then
+			vir_name="CRESS virus" ;
+		elif grep -q "Circovir" $tax_info ; then
+			vir_name=Circoviridae ;
+		elif grep -q "Genomovir" $tax_info ; then
+			vir_name=Genomoviridae ;
+		elif grep -q "Geminivir" $tax_info ; then
+			vir_name=Geminiviridae ;
+		elif grep -q "Polyoma" $tax_info ; then
+			vir_name=Polyomaviridae ;
+		elif grep -q "Papillomavir" $tax_info ; then
+			vir_name=Papillomaviridae ;
+		elif grep -q "Halovir" $tax_info ; then
+			vir_name=Halovirus ;
+		elif grep -q "Conjugative Transposon" $tax_info ; then
+			vir_name="Conjugative Transposon" ;
+		elif grep -q "No homologues found" $tax_info ; then
+			if  [ -s ITR_containing_contigs/${feat_tbl2%.comb3.tbl}.fna ] ; then
+				vir_name="genetic element" ;
+			else
+				vir_name="circular genetic element" ;
+			fi
+		elif grep -q "Circular genetic element" $tax_info ; then
+			vir_name="Circular genetic element" ;
+		elif grep -q "Podovir" $tax_info ; then
+			vir_name=Podoviridae ;
+		elif grep -q "Caudovir" $tax_info ; then
+			vir_name=Caudovirales ;
+		elif grep -q "dsRNA virus" $tax_info ; then
+			vir_name="dsRNA virus" ;
+		elif grep -q "ssRNA virus" $tax_info ; then
+			vir_name="ssRNA virus" ;
+		elif grep -q "unclassified RNA virus" $tax_info ; then
+			vir_name="unclassified RNA viruse" ;
+		elif grep -q "unclassified ssDNA bacterial virus" $tax_info ; then
+			vir_name="unclassified ssDNA bacterial virus" ;
+		elif grep -q "phage" $tax_info ; then
+			vir_name="Phage" ;
+		elif grep -q "plasmid" $tax_info ; then
+			vir_name="metagenomic plasmid" ;
+		elif grep -q "Bacteria" $tax_info ; then
+			vir_name="Phage" ;
+		elif grep -q "unclassified virus" $tax_info ; then
+			vir_name="Unclassified virus" ;		
+		elif grep -q "virus" $tax_info ; then
+			vir_name="Virus" ;
+		else
+			if  [ -s ITR_containing_contigs/${feat_tbl2%.comb3.tbl}.fna ] ; then
+				vir_name="unclassified element" ;
+			else
+				vir_name="Circular genetic element" ;
+			fi
+		fi
+		#echo $vir_name ;
+		fsa_head=$( echo $vir_name " sp." )
+		tax_guess=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ) ; 
+		perc_id=$( head -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | sed 's/ /-/g' | awk '{FS="\t"; OFS="\t"} {print $2" "$3}' | sed 's/-/ /g' ) ;
+		rand_id=$( head /dev/urandom | tr -dc A-Za-z0-9 | head -c 3 ; echo '' )
+
+		# Editing and transferring tbl file and fasta (fsa) files to sequin directory
+		echo "$(tput setaf 5) Editing and transferring tbl file and fasta (fsa) files to sequin directory $(tput sgr 0)"
+
+		if [ -s ${feat_tbl2%.comb3.tbl}.phan.fasta ]; then
+			GCODE="11"
+		else
+			GCODE="1"
+		fi
+		if echo "$feat_tbl2" | grep -q "DTR_contigs_with_viral_domain" ; then
+			TOPOLOGY="circular"
+		else
+			TOPOLOGY="linear"
+		fi
+		cp $feat_tbl2 sequin_directory/${feat_tbl2%.comb3.tbl}.tbl ; 
+				#echo "1"
+		bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var " ; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;		
+
+else
+	echo "no tbl file found for sequin/genome map"
+fi
+
 
 echo "removing ancillary files"
 
 if [ -d DTR_contigs_with_viral_domain ] ; then
 	cd DTR_contigs_with_viral_domain
-	rm -f *.all_start_stop.txt *.bad_starts.txt *.comb.tbl *.comb2.tbl *.good_start_orfs.txt *.hypo_start_stop.txt *.nucl_orfs.fa *.remove_hypo.txt *.log *.promer.contigs_with_ends.fa *.promer.promer *.out.hhr *.starting_orf.txt *.out.hhr *.nucl_orfs.txt *.called_hmmscan.txt *.hmmscan_replicate.out *.hmmscan.out *.rotate.no_hmmscan.fasta *.starting_orf.1.fa *.phan.*fasta *used_positions.txt *.prodigal.for_prodigal.fa *.prodigal.gff *.trnascan-se2.txt *.for_blastp.txt *.for_hhpred.txt circular_contigs_spades_names.txt SPLIT_CIRCULAR_AA*fasta all_circular_contigs_${run_title}.fna
+	rm -f *.all_start_stop.txt *.bad_starts.txt *.comb.tbl *.comb2.tbl *.good_start_orfs.txt *.hypo_start_stop.txt *.nucl_orfs.fa *.remove_hypo.txt *.log *.promer.contigs_with_ends.fa *.promer.promer *.out.hhr *.starting_orf.txt *.out.hhr *.nucl_orfs.txt *.called_hmmscan.txt *.hmmscan_replicate.out *.hmmscan.out *.rotate.no_hmmscan.fasta *.starting_orf.1.fa *.phan.*fasta *used_positions.txt *.prodigal.for_prodigal.fa *.prodigal.gff *.trnascan-se2.txt *.for_blastp.txt *.for_hhpred.txt circular_contigs_spades_names.txt SPLIT_CIRCULAR_AA*fasta all_circular_contigs_${run_title}.fna SPLIT_DTR_* circular_contigs_spades_names.txt
 	cd ..
 fi
 rm -rf bt2_indices/
-rm -f other_contigs/*.AA.fasta other_contigs/*.AA.sorted.fasta other_contigs/*.out other_contigs/*.dat other_contigs/*called_hmmscan.txt other_contigs/SPLIT_LARGE_GENOME_AA_*fasta ITR_containing_contigs/SPLIT_ITR_AA*fasta
+rm -f other_contigs/*.AA.fasta other_contigs/*.AA.sorted.fasta other_contigs/*.out other_contigs/*.dat other_contigs/*called_hmmscan.txt other_contigs/SPLIT_LARGE_GENOME_AA_*fasta ITR_containing_contigs/SPLIT_ITR_AA*fasta SPLIT_CIRCULAR_AA* *called_hmmscan.txt
 rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta no_end_contigs_with_viral_domain/*.comb*.tbl no_end_contigs_with_viral_domain/SPLIT_DTR_HMM2_GENOME_AA*fasta no_end_contigs_with_viral_domain/SPLIT_DTR_sort_GENOME_AA* no_end_contigs_with_viral_domain/SPLIT_DTR_RPS_AA*
 
 echo " "
