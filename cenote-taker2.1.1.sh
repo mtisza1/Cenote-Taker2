@@ -126,6 +126,13 @@ else
 	export PATH="${CENOTE_SCRIPT_DIR}/hh-suite/build/bin:${CENOTE_SCRIPT_DIR}/hh-suite/build/scripts:$PATH" 
 fi
 
+if [ "$PROPHAGE" == "True" ] && [ $LIN_MINIMUM_DOMAINS -le 0 ] ; then
+	echo "Prophage pruning requires --lin_minimum_hallmark_genes >= 1. changing to:"
+	echo "--lin_minimum_hallmark_genes 1"
+	LIN_MINIMUM_DOMAINS=1
+fi
+
+
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: locating inputs: " $MDYT
 
@@ -1322,7 +1329,7 @@ if [ -n "$COMB3_TBL" ] ; then
 	if [ ! -d "sequin_and_genome_maps" ]; then
 		mkdir sequin_and_genome_maps
 	fi
-	for feat_tbl2 in *.comb3.tbl ; do
+	for feat_tbl2 in $COMB3_TBL ; do
 		JUST_TBL2_FILE=$( echo "$feat_tbl2" | sed 's/.*\///g' )
 		file_core=${feat_tbl2%.comb3.tbl}
 		echo $file_core
@@ -1680,7 +1687,7 @@ if [ -d DTR_contigs_with_viral_domain ] ; then
 fi
 rm -rf bt2_indices/
 rm -f other_contigs/*.AA.fasta other_contigs/*.AA.sorted.fasta other_contigs/*.out other_contigs/*.dat other_contigs/*called_hmmscan.txt other_contigs/SPLIT_LARGE_GENOME_AA_*fasta ITR_containing_contigs/SPLIT_ITR_AA*fasta SPLIT_CIRCULAR_AA* *called_hmmscan.txt
-rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta no_end_contigs_with_viral_domain/*.comb*.tbl no_end_contigs_with_viral_domain/SPLIT_DTR_HMM2_GENOME_AA*fasta no_end_contigs_with_viral_domain/SPLIT_DTR_sort_GENOME_AA* no_end_contigs_with_viral_domain/SPLIT_DTR_RPS_AA*
+rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta no_end_contigs_with_viral_domain/*.comb*.tbl no_end_contigs_with_viral_domain/SPLIT_DTR_HMM2_GENOME_AA*fasta no_end_contigs_with_viral_domain/SPLIT_DTR_sort_GENOME_AA* no_end_contigs_with_viral_domain/SPLIT_DTR_RPS_AA* no_end_contigs_with_viral_domain/*used_positions.txt
 
 echo " "
 MDYT=$( date +"%m-%d-%y---%T" )

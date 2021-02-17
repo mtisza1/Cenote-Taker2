@@ -489,9 +489,11 @@ if [ -n "$HH_TBL" ] ; then
 fi
 
 # Combining tbl files from all search results AND fix overlapping ORF module
-echo "$(tput setaf 5) Combining tbl files from all search results AND fix overlapping ORF module $(tput sgr 0)"
+
+INT2_TBL=$( find * -maxdepth 0 -type f -name "*.int2.tbl" )
 
 if [ -n "$INT2_TBL" ] ; then
+	echo "$(tput setaf 5) Combining tbl files from all search results AND fix overlapping ORF module, linear contigs $(tput sgr 0)"
 	for feat_tbl4 in $INT2_TBL ; do 
 		if [ -s "${feat_tbl4%.int2.tbl}.HH2.tbl" ] && [ -s "$feat_tbl4" ] ; then
 			head -n1 $feat_tbl4 > ${feat_tbl4%.int2.tbl}.comb3.tbl
@@ -534,11 +536,14 @@ if [ -n "$INT2_TBL" ] ; then
 		done ; 
 
 	done
+else
+	echo "int2.tbl not found"
 fi
 
 rm -f *tmp.tbl
 COMB3_TBL=$( find * -maxdepth 0 -type f -name "*.comb3.tbl" )
 if [ -n "$COMB3_TBL" ] ; then
+	echo "finalizing taxonomy for linear contigs"
 	for feat_tbl2 in *.comb3.tbl ; do 
 		if grep -i -q "CRESS\|genomovir\|circovir\|bacilladnavir\|redondovir\|nanovir\|geminivir\|smacovir" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
 			echo ${feat_tbl2%.comb3.tbl}" is a CRESS virus of some kind"
