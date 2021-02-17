@@ -1332,8 +1332,12 @@ if [ -n "$COMB3_TBL" ] ; then
 	for feat_tbl2 in $COMB3_TBL ; do
 		JUST_TBL2_FILE=$( echo "$feat_tbl2" | sed 's/.*\///g' )
 		file_core=${JUST_TBL2_FILE%.comb3.tbl}
-		echo $file_core
-		file_numbers=$( echo ${file_core: -3} | sed 's/[a-z]//g' | sed 's/[A-Z]//g' )
+		#echo $file_core
+		echo "$file_core" | if grep -q "_vs[0-9][0-9]" ; then
+			file_numbers=$( echo ${file_core%_vs[0-9][0-9]} | sed 's/.*_// ; s/[a-zA-Z]//g' )
+		else
+			file_numbers=$( echo ${file_core} | sed 's/.*_// ; s/[a-zA-Z]//g' )
+		fi
 		echo $file_numbers
 		tax_info=${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 		echo $tax_info
@@ -1610,7 +1614,7 @@ if [ -n "$COMB3_TBL" ] ; then
 		elif grep -q "Conjugative Transposon" $tax_info ; then
 			vir_name="Conjugative Transposon" ;
 		elif grep -q "No homologues found" $tax_info ; then
-			if  [ -s ITR_containing_contigs/${feat_tbl2%.comb3.tbl}.fna ] ; then
+			if  [ -s ITR_containing_contigs/${JUST_TBL2_FILE%.comb3.tbl}.fna ] ; then
 				vir_name="genetic element" ;
 			else
 				vir_name="circular genetic element" ;
@@ -1640,7 +1644,7 @@ if [ -n "$COMB3_TBL" ] ; then
 		elif grep -q "virus" $tax_info ; then
 			vir_name="Virus" ;
 		else
-			if  [ -s ITR_containing_contigs/${feat_tbl2%.comb3.tbl}.fna ] ; then
+			if  [ -s ITR_containing_contigs/${JUST_TBL2_FILE%.comb3.tbl}.fna ] ; then
 				vir_name="unclassified element" ;
 			else
 				vir_name="Circular genetic element" ;
@@ -1653,7 +1657,6 @@ if [ -n "$COMB3_TBL" ] ; then
 		rand_id=$( head /dev/urandom | tr -dc A-Za-z0-9 | head -c 3 ; echo '' )
 
 		# Editing and transferring tbl file and fasta (fsa) files to sequin directory
-		echo "$(tput setaf 5) Editing and transferring tbl file and fasta (fsa) files to sequin directory $(tput sgr 0)"
 
 		if [ -s ${feat_tbl2%.comb3.tbl}.phan.fasta ]; then
 			GCODE="11"
