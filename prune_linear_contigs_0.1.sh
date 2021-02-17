@@ -12,7 +12,7 @@ if [ -n "$vd_fastas" ] ; then
 	for NO_END in $vd_fastas ; do
 		LENGTH_SEQ=$( bioawk -c fastx '{print length($seq)}' $NO_END )
 		if [[ "$LENGTH_SEQ" -lt 10000 ]] ; then 
-			cp $NO_END ${NO_END%.fna}_vs01.fna
+			bioawk -c fastx '{print ">"$name"_vs01 "$4 ; print $seq}' $NO_END > ${NO_END%.fna}_vs01.fna
 			mv ${NO_END%.fna}.AA.sorted.fasta ${NO_END%.fna}_vs01.AA.sorted.fasta
 			echo "$NO_END is too short to prune chromosomal regions"
 		elif [[ "$LENGTH_SEQ" -gt 10000 ]] || [[ "$LENGTH_SEQ" == 10000 ]] ; then
@@ -207,7 +207,7 @@ else
 					let VIR_COUNTER=VIR_COUNTER+1 ;
 					VIR_VALUE=$( printf "%02d" $VIR_COUNTER)
 					CHUNK_LENGTH=$(( ${CHUNK_END}-${CHUNK_START} ))
-					bioawk -v chunk_startq="$CHUNK_START" -v chunk_endq="$CHUNK_END" -v chunk_lengthq="$CHUNK_LENGTH" -v parent="${CHUNKS%.virus_signal.seq_chunk_coordinates.csv}" -v good_chunk="$VIR_VALUE" -c fastx '{ print ">"parent"_putative_virus"good_chunk" "chunk_startq"-"chunk_endq ; print substr($seq, chunk_startq, chunk_lengthq)}' ${CHUNKS%.virus_signal.seq_chunk_coordinates.csv}.fna > ${CHUNKS%.virus_signal.seq_chunk_coordinates.csv}_vs${VIR_VALUE}.fna
+					bioawk -v chunk_startq="$CHUNK_START" -v chunk_endq="$CHUNK_END" -v chunk_lengthq="$CHUNK_LENGTH" -v parent="${CHUNKS%.virus_signal.seq_chunk_coordinates.csv}" -v good_chunk="$VIR_VALUE" -c fastx '{ print ">"parent"_vs"good_chunk" "chunk_startq"-"chunk_endq ; print substr($seq, chunk_startq, chunk_lengthq)}' ${CHUNKS%.virus_signal.seq_chunk_coordinates.csv}.fna > ${CHUNKS%.virus_signal.seq_chunk_coordinates.csv}_vs${VIR_VALUE}.fna
 				fi
 			done
 		done
@@ -224,7 +224,7 @@ if [ -n "$POST_PRUNE_CONTIGS" ] ; then
 		CENOTE_PARENT=${CONTIG%_vs[0-9][0-9].fna}.fna
 		PARENT_LENGTH=$( bioawk -c fastx '{print length($seq)}' $CENOTE_PARENT )
 		PRUNED_LENGTH=$( bioawk -c fastx '{print length($seq)}' $CONTIG )		
-		if grep -q "putative_virus" $CONTIG ; then
+		if grep -q "_vs[0-9][0-9]" $CONTIG ; then
 			LEFT_COORD=$( head -n1 $CONTIG | cut -d " " -f2 | cut -d "-" -f1 )
 			RIGHT_COORD=$( head -n1 $CONTIG | cut -d " " -f2 | cut -d "-" -f2 )
 			PRUNING_TRIED="True"
