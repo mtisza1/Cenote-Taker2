@@ -29,26 +29,25 @@ srx_number=$9
 biosample=${10}
 bioproject=${11}
 template_file=${12}
-handle_nonviral=${13}
-circ_length_cutoff=${14}
-linear_length_cutoff=${15}
-virus_domain_db=${16}
-LIN_MINIMUM_DOMAINS=${17}
-handle_knowns=${18}
-ASSEMBLER=${19}
-MOLECULE_TYPE=${20}
-HHSUITE_TOOL=${21}
-DATA_SOURCE=${22}
-BLASTP=${23}
-PROPHAGE=${24}
-FOR_PLASMIDS=${25}
-BLASTN_DB=${26}
-CENOTE_SCRIPT_DIR=${27}
-CIRC_MINIMUM_DOMAINS=${28}
-SCRATCH_DIR=${29}
-MEM=${30}
-CPU=${31}
-ENFORCE_START_CODON=${32}
+circ_length_cutoff=${13}
+linear_length_cutoff=${14}
+virus_domain_db=${15}
+LIN_MINIMUM_DOMAINS=${16}
+handle_knowns=${17}
+ASSEMBLER=${18}
+MOLECULE_TYPE=${19}
+HHSUITE_TOOL=${20}
+DATA_SOURCE=${21}
+BLASTP=${22}
+PROPHAGE=${23}
+FOR_PLASMIDS=${24}
+BLASTN_DB=${25}
+CENOTE_SCRIPT_DIR=${26}
+CIRC_MINIMUM_DOMAINS=${27}
+SCRATCH_DIR=${28}
+MEM=${29}
+CPU=${30}
+ENFORCE_START_CODON=${31}
 base_directory=$PWD
 
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@"
@@ -65,7 +64,6 @@ echo "SRA experiment number:             $srx_number"
 echo "SRA sample number:                 $biosample"
 echo "Bioproject number:                 $bioproject"
 echo "template file:                     $template_file"
-echo "handle non-viral:                  $handle_nonviral"
 echo "minimum circular contig length:    $circ_length_cutoff"
 echo "minimum linear contig length:      $linear_length_cutoff"
 echo "virus domain database:             $virus_domain_db"
@@ -186,14 +184,15 @@ if [ ${original_contigs: -6} == ".fasta" ]; then
 	bioawk -v run_var="$run_title" -v contig_cutoff="$LENGTH_MINIMUM" -c fastx '{ if(length($seq) > contig_cutoff) { print ">"run_var NR" "$name; print $seq }}' $original_contigs > ${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta ;
 	cd $run_title
 	echo "cenote_shortcut" > ${run_title}_CONTIG_SUMMARY.tsv
-	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta ;
+	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta >/dev/null 2>&1
 	rm -f apc_aln*
 	APC_CIRCS=$( find * -maxdepth 0 -type f -name "${run_title}*.fa" )
 	if [ -n "$APC_CIRCS" ] ;then
-		for fa1 in $APC_CIRCS ; do 
+		for fa1 in $APC_CIRCS ; do
 			CIRC_SEQ_NAME=$( head -n1 $fa1 | sed 's/|.*//g' ) ; 
 			CIRC_NEW_NAME=$( echo "$CIRC_SEQ_NAME" | sed 's/>//g ; s/ .*//g' )
 			grep -A1 "^$CIRC_SEQ_NAME" ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta | sed '/--/d' > ${CIRC_NEW_NAME}.fasta
+			echo "${CIRC_NEW_NAME}.fasta is circular"
 			rm -f $fa1
 		done 
 	else
@@ -203,7 +202,7 @@ elif [ ${original_contigs: -6} == ".fastg" ]; then
 	bioawk -v contig_cutoff="$LENGTH_MINIMUM" -c fastx '{ if(length($seq) > contig_cutoff) {print }}' $original_contigs | grep "[a-zA-Z0-9]:\|[a-zA-Z0-9];" | grep -v "':" | awk '{ print ">"$1 ; print $2 }' | sed 's/:.*//g; s/;.*//g' | bioawk -v run_var="$run_title" -c fastx '{ print ">"run_var NR" "$name; print $seq }' > ${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta
 	cd $run_title
 	echo "cenote_shortcut" > ${run_title}_CONTIG_SUMMARY.tsv
-	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta ;
+	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta >/dev/null 2>&1
 	rm -f apc_aln*
 	APC_CIRCS=$( find * -maxdepth 0 * -type f -name "${run_title}*.fa" )
 	if [ -n "$APC_CIRCS" ] ;then
@@ -211,6 +210,7 @@ elif [ ${original_contigs: -6} == ".fastg" ]; then
 			CIRC_SEQ_NAME=$( head -n1 $fa1 | sed 's/|.*//g' ) ; 
 			CIRC_NEW_NAME=$( echo "$CIRC_SEQ_NAME" | sed 's/>//g ; s/ .*//g' )
 			grep -A1 "^$CIRC_SEQ_NAME" ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta | sed '/--/d' > ${CIRC_NEW_NAME}.fasta
+			echo "${CIRC_NEW_NAME}.fasta is circular"
 			rm -f $fa1
 		done 
 	else
@@ -290,7 +290,6 @@ cd other_contigs
 CONTIGS_NON_CIRCULAR=$( find * -maxdepth 0 -type f -name "*[0-9].fasta" )
 
 if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
-	### itr search part
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: running IRF for ITRs in non-circular contigs" $MDYT
 	for NONCIR in $CONTIGS_NON_CIRCULAR ; do
@@ -487,8 +486,6 @@ if [ ! -z "$DTR_SEQS" ] ; then
 	done
 fi
 
-### scan ITR contigs
-
 ITR_SEQS=$( find * -maxdepth 1 -type f -wholename "ITR_containing_contigs/*fasta" )
 
 
@@ -601,8 +598,6 @@ if [ -n "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ; then
 	done
 fi
 
-### add ITR contig summary
-
 # script for pruning no_end contigs with viral domains
 
 if [ ! -z "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] && [ "$PROPHAGE" == "True" ] ;then
@@ -617,12 +612,11 @@ if [ -d DTR_contigs_with_viral_domain ] ; then
 	cd DTR_contigs_with_viral_domain
 fi
 
-### annotate circular sequences
 
 #-# rotate DTRs
 rm -f *no_hmmscan1.fasta
 CIRCULAR_HALLMARK_CONTIGS=$( find * -maxdepth 0 -type f -name "*fna" )
-echo "annotate DTR part"
+echo "Annotating DTR contigs"
 if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 	echo "circular hallmarks found"
 	echo $PWD
@@ -847,7 +841,7 @@ fi
 
 #- blastn all dtr seqs
 if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
-	if [ -s ${BLASTN_DB}.nsq ] || [ -s ${BLASTN_DB}.[0-9].nsq ]  ; then
+	if [ -s ${BLASTN_DB}.nsq ] || [ -s ${BLASTN_DB}.1.nsq ] || [ -s ${BLASTN_DB}.01.nsq ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running BLASTN, circular and ITR contigs " $MDYT		
 		echo "$ROTATED_DTR_CONTIGS" | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU blastn -task megablast -db ${BLASTN_DB} -query {}.rotate.fasta -evalue 1e-50 -num_threads 1 -outfmt "6 qseqid sseqid stitle pident length qlen" -qcov_hsp_perc 50 -num_alignments 3 -out {}.blastn.out >/dev/null 2>&1
@@ -1102,7 +1096,7 @@ if [ -n "$INT2_TBL" ] ; then
 	for blastp_tbl1 in $INT2_TBL ; do
 		grep -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Uncharacterized conserved protein' -e 'unknown' -e 'Uncharacterised protein' -e 'product	gp' -e 'putative phage protein' -B2 $blastp_tbl1 | grep "^[0-9]" | awk '{print $1 " - " $2}' > ${blastp_tbl1%.int2.tbl}.for_hhpred.txt ;
 		grep -f ${blastp_tbl1%.int2.tbl}.for_hhpred.txt -A1 ${blastp_tbl1%.int2.tbl}.rotate.AA.sorted.fasta | sed '/--/d' > ${blastp_tbl1%.int2.tbl}.rotate.blast_hypo.fasta ;
-		csplit -z ${blastp_tbl1%.int2.tbl}.rotate.blast_hypo.fasta '/>/' '{*}' --prefix=${blastp_tbl1%.int2.tbl}.rotate --suffix-format=%02d.for_hhpred.fasta; 
+		csplit -z ${blastp_tbl1%.int2.tbl}.rotate.blast_hypo.fasta '/>/' '{*}' --prefix=${blastp_tbl1%.int2.tbl}.rotate --suffix-format=%02d.for_hhpred.fasta >/dev/null 2>&1
 	done
 fi
 
@@ -1254,18 +1248,13 @@ if [ -n "$COMB3_TBL" ] ; then
 	done
 fi
 
-#-#- stopping point
 
-#-#- make gtf files
-cd ${base_directory}/${run_title}
-
-
-### annotate linear sequences
 cd ${base_directory}/${run_title}
 
 LIST_OF_ITR_DOMAIN_CONTIGS=$( find * -maxdepth 1 -type f -wholename "ITR_containing_contigs/*fna" )
 
 if [ -n "$LIST_OF_ITR_DOMAIN_CONTIGS" ] ; then
+	echo "Annotating linear contigs"
 	cd ITR_containing_contigs
 	LIST_OF_ITR_DOMAIN_CONTIGS=$( find * -maxdepth 0 -type f -regextype sed -regex ".*.fna" )
 	echo "$LIST_OF_ITR_DOMAIN_CONTIGS" | sed 's/.fna//g' | while read ITR_SEQ ; do
@@ -1287,17 +1276,7 @@ if [ -n "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ; then
 else
 	echo "No linear contigs with minimum hallmark genes found."
 fi
-	
-### annotate ITR sequences
-#-#- I can just do this within linear with some options?
-cd ${base_directory}/${run_title}
 
-
-
-### make maps/sequin files
-
-
-### REDO make combined virus seq file
 cd ${base_directory}/${run_title}
 
 CIRCULAR_HALLMARK_CONTIGS=$( find * -maxdepth 1 -type f -wholename "DTR_contigs_with_viral_domain/*fna" )
@@ -1311,7 +1290,11 @@ if [ "$PROPHAGE" == "True" ] ;then
 	if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 		for LIN in $LINEAR_HALLMARK_CONTIGS ; do
 			ORIGINAL_NAME=$( head -n1 ${LIN%_vs[0-9][0-9].fna}.fna | cut -d " " -f2 )
-			sed 's/ /#/g' $LIN | bioawk -v ORI="$ORIGINAL_NAME" -c fastx '{print ">"$name" "ORI" no_end_feature" ; print $seq}' | sed 's/#/ /g' >> final_combined_virus_sequences_${run_title}.fna
+			if [ -s ${LIN%_vs[0-9][0-9].fna}.ITR.tbl ] ; then
+				sed 's/ /#/g' $LIN | bioawk -v ORI="$ORIGINAL_NAME" -c fastx '{print ">"$name" "ORI" ITR" ; print $seq}' | sed 's/#/ /g' >> final_combined_virus_sequences_${run_title}.fna
+			else
+				sed 's/ /#/g' $LIN | bioawk -v ORI="$ORIGINAL_NAME" -c fastx '{print ">"$name" "ORI" no_end_feature" ; print $seq}' | sed 's/#/ /g' >> final_combined_virus_sequences_${run_title}.fna
+			fi
 		done
 	fi
 else
@@ -1706,21 +1689,72 @@ else
 	echo "no tbl file found for sequin/genome map"
 fi
 
+# make gtf tables
+echo "Making gtf tables from final feature tables"
+if [ -d sequin_and_genome_maps ] ; then
+	cd sequin_and_genome_maps
+	COMB4_TBL=$( find * -maxdepth 0 -type f -name "*.tbl" )
+	if [ -n "$COMB4_TBL" ] ; then
+		for feat_tbl2 in $COMB3_TBL ; do
+			if [ -s ${feat_tbl2%tbl}.gtf ] ; then
+				rm -f ${feat_tbl2%.tbl}.gtf
+			fi
+			grep "^[0-9]" -A3 $feat_tbl2 | sed '/--/d' | sed 's/ /_/g' | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n		//g' | while read LINE ; do
+				if echo $LINE | grep -q "CDS" ; then
+					GENOME=${feat_tbl2%.tbl}
+					FEAT_TYPE=$( echo $LINE | cut -d " " -f3 )
+					FEAT_START=$( echo $LINE | cut -d " " -f1 )
+					FEAT_END=$( echo $LINE | cut -d " " -f2 )
+					FEAT_NAME=$( echo $LINE | cut -d " " -f7 )
+					FEAT_ATT=$( echo $LINE | cut -d " " -f9 )
+					FEAT_ID=$( echo $LINE | cut -d " " -f5 )
+				elif echo $LINE | grep -q "repeat_region" ; then
+					GENOME=${feat_tbl2%.tbl}
+					FEAT_TYPE=$( echo $LINE | cut -d " " -f3 )
+					FEAT_START=$( echo $LINE | cut -d " " -f1 )
+					FEAT_END=$( echo $LINE | cut -d " " -f2 )
+					FEAT_NAME="ITR"
+					FEAT_ATT="ITR"
+					FEAT_ID="ITR"	
+				fi
+				echo -e "$GENOME\t""Cenote-Taker\t""$FEAT_TYPE\t""$FEAT_START\t""$FEAT_END\t"".\t"".\t"".\t""gene_id \"$FEAT_ID\"; gene_name \"$FEAT_NAME\"; gene_inference \"$FEAT_ATT\"" >> ${feat_tbl2%.tbl}.gtf
+			done
+		done
+	fi
+	cd ..
+fi
 
 echo "removing ancillary files"
 
 if [ -d DTR_contigs_with_viral_domain ] ; then
 	cd DTR_contigs_with_viral_domain
-	rm -f *.all_start_stop.txt *.bad_starts.txt *.comb.tbl *.comb2.tbl *.good_start_orfs.txt *.hypo_start_stop.txt *.nucl_orfs.fa *.remove_hypo.txt *.log *.promer.contigs_with_ends.fa *.promer.promer *.out.hhr *.starting_orf.txt *.out.hhr *.nucl_orfs.txt *.called_hmmscan.txt *.hmmscan_replicate.out *.hmmscan.out *.rotate.no_hmmscan.fasta *.starting_orf.1.fa *.phan.*fasta *used_positions.txt *.prodigal.for_prodigal.fa *.prodigal.gff *.trnascan-se2.txt *.for_blastp.txt *.for_hhpred.txt circular_contigs_spades_names.txt SPLIT_CIRCULAR_AA*fasta all_circular_contigs_${run_title}.fna SPLIT_DTR_* circular_contigs_spades_names.txt
+	rm -f *.all_start_stop.txt *.bad_starts.txt *.comb.tbl *.comb2.tbl *.good_start_orfs.txt *.hypo_start_stop.txt *.nucl_orfs.fa *.remove_hypo.txt *.log *.promer.contigs_with_ends.fa *.promer.promer *.out.hhr *.starting_orf.txt *.out.hhr *.nucl_orfs.txt *.called_hmmscan.txt *.hmmscan_replicate.out *.hmmscan.out *.rotate.no_hmmscan.fasta *.starting_orf.1.fa *.phan.*fasta *used_positions.txt *.prodigal.for_prodigal.fa *.prodigal.gff *.trnascan-se2.txt *.for_blastp.txt *.for_hhpred.txt circular_contigs_spades_names.txt SPLIT_CIRCULAR_AA*fasta all_circular_contigs_${run_title}.fna SPLIT_DTR_* circular_contigs_spades_names.txt *called_hmmscan*txt *HH.tbl
 	cd ..
 fi
 rm -rf bt2_indices/
 rm -f other_contigs/*.AA.fasta other_contigs/*.AA.sorted.fasta other_contigs/*.out other_contigs/*.dat other_contigs/*called_hmmscan.txt other_contigs/SPLIT_LARGE_GENOME_AA_*fasta ITR_containing_contigs/SPLIT_ITR_AA*fasta SPLIT_CIRCULAR_AA* *called_hmmscan.txt
-rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta no_end_contigs_with_viral_domain/*.comb*.tbl no_end_contigs_with_viral_domain/SPLIT_DTR_HMM2_GENOME_AA*fasta no_end_contigs_with_viral_domain/SPLIT_DTR_sort_GENOME_AA* no_end_contigs_with_viral_domain/SPLIT_DTR_RPS_AA* no_end_contigs_with_viral_domain/*used_positions.txt
+rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta no_end_contigs_with_viral_domain/*.comb*.tbl no_end_contigs_with_viral_domain/SPLIT_DTR_HMM2_GENOME_AA*fasta no_end_contigs_with_viral_domain/SPLIT_DTR_sort_GENOME_AA* no_end_contigs_with_viral_domain/SPLIT_DTR_RPS_AA* no_end_contigs_with_viral_domain/*used_positions.txt no_end_contigs_with_viral_domain/*seq_chunk_coordinates.csv
 
 echo " "
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: Finishing " $MDYT
+if [ -s final_combined_virus_sequences_${run_title}.fna ] ; then
+	NUMBER_VIRUSES=$( grep -F ">" final_combined_virus_sequences_${run_title}.fna | wc -l | bc )
+	DTR_TOTAL=$( grep -F " DTR" final_combined_virus_sequences_${run_title}.fna | wc -l | bc )
+	ITR_TOTAL=$( grep -F " ITR" final_combined_virus_sequences_${run_title}.fna | wc -l | bc )
+	NO_END_TOTAL=$( grep -F " no_end_feature" final_combined_virus_sequences_${run_title}.fna | wc -l | bc )
+	echo "Virus predition summary:"
+	echo "$NUMBER_VIRUSES virus contigs were detected/predicted. $DTR_TOTAL contigs had DTRs/were circular. $ITR_TOTAL contigs had ITRs. $NO_END_TOTAL were linear/had no end features"
+fi
+if [ -s ${run_title}_PRUNING_INFO_TABLE.tsv ] ; then
+	PRUNE_ATTEMPTS=$( awk '{OFS="\t"}{FS="\t"}{ if ($6=="True") {print}}' ${run_title}_PRUNING_INFO_TABLE.tsv | wc -l | bc )
+	PRUNE_REMOVE=$( awk '{OFS="\t"}{FS="\t"}{ if ($6=="True" && $7=="True") {print}}' ${run_title}_PRUNING_INFO_TABLE.tsv | wc -l | bc )
+	PRUNE_REMAIN=$( awk '{OFS="\t"}{FS="\t"}{ if ($6=="True" && $7=="False") {print}}' ${run_title}_PRUNING_INFO_TABLE.tsv | wc -l | bc )
+	echo "Prophage pruning summary:"
+	echo "$PRUNE_ATTEMPTS linear contigs > 10 kb were run through pruning module, and $PRUNE_REMOVE virus sub-contigs (putative prophages/proviruses) were extracted from these. $PRUNE_REMAIN virus contigs were kept intact."
+
+fi
+
 echo "$(tput setaf 3)output directory: "$run_title" $(tput sgr 0)"
 echo "$(tput setaf 3) >>>>>>CENOTE-TAKER 2 HAS FINISHED TAKING CENOTES<<<<<< $(tput sgr 0)"
 

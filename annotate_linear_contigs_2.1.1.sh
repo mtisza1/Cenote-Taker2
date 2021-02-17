@@ -5,7 +5,7 @@ cd no_end_contigs_with_viral_domain/
 
 rm -f *no_hmmscan1.fasta
 #CIRCULAR_HALLMARK_CONTIGS=$( find * -maxdepth 0 -type f -name "*fna" )
-echo "annotate linear part"
+echo "Annotating linear contigs"
 
 #-# blastx for translation decision
 if [ "$PROPHAGE" == "True" ] ;then
@@ -190,7 +190,7 @@ fi
 
 #- blastn all dtr seqs
 if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
-	if [ -s ${BLASTN_DB}.nsq ] || [ -s ${BLASTN_DB}.[0-9].nsq ]  ; then
+	if [ -s ${BLASTN_DB}.nsq ] || [ -s ${BLASTN_DB}.1.nsq ] || [ -s ${BLASTN_DB}.01.nsq ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running BLASTN, circular and ITR contigs " $MDYT		
 		echo "$LINEAR_HALLMARK_CONTIGS" | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU blastn -task megablast -db ${BLASTN_DB} -query {}.fna -evalue 1e-50 -num_threads 1 -outfmt "6 qseqid sseqid stitle pident length qlen" -qcov_hsp_perc 50 -num_alignments 3 -out {}.blastn.out >/dev/null 2>&1
@@ -436,14 +436,14 @@ if [ -n "$INT_TBL" ] ; then
 fi
 
 # Grabbing ORFs wihout RPSBLAST hits and separating them into individual files for HHsearch
-echo "$(tput setaf 5) Grabbing ORFs wihout BLASTP hits and separating them into individual files for HHsearch $(tput sgr 0)"
+echo "$(tput setaf 5) Grabbing ORFs wihout RPS-BLAST hits and separating them into individual files for HHsearch $(tput sgr 0)"
 
 INT2_TBL=$( find * -maxdepth 0 -type f -name "*.int2.tbl" )
 if [ -n "$INT2_TBL" ] ; then
 	for blastp_tbl1 in $INT2_TBL ; do
 		grep -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Uncharacterized conserved protein' -e 'unknown' -e 'Uncharacterised protein' -e 'product	gp' -e 'putative phage protein' -B2 $blastp_tbl1 | grep "^[0-9]" | awk '{print $1 " - " $2}' > ${blastp_tbl1%.int2.tbl}.for_hhpred.txt ;
 		grep -f ${blastp_tbl1%.int2.tbl}.for_hhpred.txt -A1 ${blastp_tbl1%.int2.tbl}.AA.sorted.fasta | sed '/--/d' > ${blastp_tbl1%.int2.tbl}.blast_hypo.fasta ;
-		csplit -z ${blastp_tbl1%.int2.tbl}.blast_hypo.fasta '/>/' '{*}' --prefix=${blastp_tbl1%.int2.tbl} --suffix-format=%02d.for_hhpred.fasta; 
+		csplit -z ${blastp_tbl1%.int2.tbl}.blast_hypo.fasta '/>/' '{*}' --prefix=${blastp_tbl1%.int2.tbl} --suffix-format=%02d.for_hhpred.fasta >/dev/null 2>&1 
 	done
 fi
 
