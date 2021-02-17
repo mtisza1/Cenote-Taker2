@@ -1293,6 +1293,7 @@ cd ${base_directory}/${run_title}
 ### REDO make combined virus seq file
 cd ${base_directory}/${run_title}
 
+CIRCULAR_HALLMARK_CONTIGS=$( find * -maxdepth 1 -type f -wholename "DTR_contigs_with_viral_domain/*fna" )
 if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 	for CIRC in $CIRCULAR_HALLMARK_CONTIGS ; do
 		sed 's/ /#/g' $CIRC | bioawk -c fastx '{print ">"$name" DTR" ; print $seq}' | sed 's/#/ /g' >> final_combined_virus_sequences_${run_title}.fna
@@ -1320,7 +1321,7 @@ echo "removing ancillary files"
 rm -f *.all_start_stop.txt *.bad_starts.txt *.comb.tbl *.comb2.tbl *.good_start_orfs.txt *.hypo_start_stop.txt *.nucl_orfs.fa *.remove_hypo.txt *.log *.promer.contigs_with_ends.fa *.promer.promer *.out.hhr *.starting_orf.txt *.out.hhr *.nucl_orfs.txt *.called_hmmscan.txt *.hmmscan_replicate.out *.hmmscan.out *.rotate.no_hmmscan.fasta *.starting_orf.1.fa *.phan.*fasta *used_positions.txt *.prodigal.for_prodigal.fa *.prodigal.gff *.trnascan-se2.txt *.for_blastp.txt *.for_hhpred.txt circular_contigs_spades_names.txt SPLIT_CIRCULAR_AA*fasta all_circular_contigs_${run_title}.fna
 rm -rf bt2_indices/
 rm -f other_contigs/*.AA.fasta other_contigs/*.AA.sorted.fasta other_contigs/*.out other_contigs/*.dat other_contigs/*called_hmmscan.txt other_contigs/SPLIT_LARGE_GENOME_AA_*fasta ITR_containing_contigs/SPLIT_ITR_AA*fasta
-rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta no_end_contigs_with_viral_domain/*.comb*.tbl 
+rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta no_end_contigs_with_viral_domain/*.comb*.tbl no_end_contigs_with_viral_domain/SPLIT_DTR_HMM2_GENOME_AA*fasta no_end_contigs_with_viral_domain/SPLIT_DTR_sort_GENOME_AA* no_end_contigs_with_viral_domain/SPLIT_DTR_RPS_AA*fasta
 
 echo " "
 MDYT=$( date +"%m-%d-%y---%T" )

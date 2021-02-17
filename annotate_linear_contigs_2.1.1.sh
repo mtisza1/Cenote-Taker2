@@ -232,7 +232,7 @@ PROTEIN_NO_HMMSCAN2=$( find * -maxdepth 0 -type f -name "*.AA.no_hmmscan2.fasta"
 
 if [ -n "$PROTEIN_NO_HMMSCAN2" ]; then
 	MDYT=$( date +"%m-%d-%y---%T" )
-	echo "time update: running RPSBLAST on DTR contigs" $MDYT
+	echo "time update: running RPSBLAST on linear contigs" $MDYT
 	cat $( find * -maxdepth 0 -type f -name "*.AA.no_hmmscan2.fasta" ) > all_DTR_rps_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_DTR_rps_proteins.AA.fasta | wc -l | bc )
 	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
@@ -243,7 +243,7 @@ if [ -n "$PROTEIN_NO_HMMSCAN2" ]; then
 	SPLIT_DTR_AA_RPS=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_RPS_AA_*.fasta" )
 
 	echo "$SPLIT_DTR_AA_RPS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {}.fasta -line_length 200 -out {}.rpsb.out >/dev/null 2>&1
-	cat *rpsb.out | awk '{ if ($0 ~ /^>/) {printf $0 ; getline; print $0} else { print $0}}' > COMBINED_RESULTS.AA.rpsblast.out
+	cat *rpsb.out | awk '{ if ($0 ~ /^>/) {printf $0 ; getline; print $0} else { print $0}}' > COMBINED_RESULTS.rotate.AA.rpsblast.out
 	perl ${CENOTE_SCRIPT_DIR}/rpsblastreport2tbl_mt_annotation_pipe_biowulf.pl ;
 	grep "protein_id	" COMBINED_RESULTS.NT.tbl | sed 's/.*protein_id	lcl|//g' | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read CONTIG ; do
 		echo "${CONTIG}"
@@ -361,7 +361,7 @@ if [ -n "$INT_TBL" ] ; then
 		grep -e 'hypothetical protein' -B2 ${feat_tbl3%.int.tbl}.comb2.tbl | grep "^[0-9]" | awk '{FS="\t"; OFS="\t"} {print $1, $2}' > ${feat_tbl3%.int.tbl}.hypo_start_stop.txt ;
 
 		# Remove redudant ORFs that are subORFs of ORFs overlapping the wrap-point
-		GENOME_LENGTH=$( bioawk -c fastx '{print length($seq)}' ${feat_tbl3%.int.tbl}.fasta )
+		GENOME_LENGTH=$( bioawk -c fastx '{print length($seq)}' ${feat_tbl3%.int.tbl}.fna )
 		cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read linet ; do
 			all_start=$( echo $linet | cut -d " " -f1 )
 			all_end=$( echo $linet | cut -d " " -f2 )
@@ -594,3 +594,6 @@ if [ -n "$COMB3_TBL" ] ; then
 		fi
 	done
 fi
+
+MDYT=$( date +"%m-%d-%y---%T" )
+echo "time update: finished annotating linear contigs " $MDYT
