@@ -1317,12 +1317,13 @@ fi
 
 cd ${base_directory}/${run_title}
 
-COMB3_TBL=$( find * -maxdepth 0 -type f -name "*.comb3.tbl" )
+COMB3_TBL=$( find * -maxdepth 1 -type f -name "*.comb3.tbl" )
 if [ -n "$COMB3_TBL" ] ; then
-	if [ ! -d "sequin_directory" ]; then
-		mkdir sequin_directory
+	if [ ! -d "sequin_and_genome_maps" ]; then
+		mkdir sequin_and_genome_maps
 	fi
-	for feat_tbl2 in *.comb3.tbl ; do 
+	for feat_tbl2 in *.comb3.tbl ; do
+		JUST_TBL2_FILE=$( echo "$feat_tbl2" | sed 's/.*\///g' )
 		file_core=${feat_tbl2%.comb3.tbl}
 		echo $file_core
 		file_numbers=$( echo ${file_core: -3} | sed 's/[a-z]//g' | sed 's/[A-Z]//g' )
@@ -1654,13 +1655,17 @@ if [ -n "$COMB3_TBL" ] ; then
 		fi
 		if echo "$feat_tbl2" | grep -q "DTR_contigs_with_viral_domain" ; then
 			TOPOLOGY="circular"
+			NUCL_FILE="${feat_tbl2%.comb3.tbl}.rotate.fasta"
 		else
 			TOPOLOGY="linear"
-		fi
-		cp $feat_tbl2 sequin_directory/${feat_tbl2%.comb3.tbl}.tbl ; 
-				#echo "1"
-		bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var " ; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' ${feat_tbl2%.comb3.tbl}.rotate.fasta > sequin_directory/${feat_tbl2%.comb3.tbl}.fsa ;		
+			NUCL_FILE="${feat_tbl2%.comb3.tbl}.fna"
 
+		fi
+
+		cp $feat_tbl2 sequin_and_genome_maps/${JUST_TBL2_FILE%.comb3.tbl}.tbl ; 
+				#echo "1"
+		bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -c fastx '{ print ">" newname " [note= closest relative: " tax_var " " perc_var " ; WARNING: no viral/plasmid-specific domains were detected. This is probably not a true mobile genetic element.] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology=linear] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode=11]" ; print $seq }' $NUCL_FILE > sequin_and_genome_maps/${JUST_TBL2_FILE%.comb3.tbl}.fsa ; 
+	done
 else
 	echo "no tbl file found for sequin/genome map"
 fi
