@@ -40,7 +40,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 		elif grep -i -q "polinton" ${nucl_fa%.fna}.tax_guide.blastx.out ; then
 			echo "Polinton-like virus" >> ${nucl_fa%.fna}.tax_guide.blastx.out
 		else
-			ktClassifyBLAST -o ${nucl_fa%.fna}.tax_guide.blastx.tab ${nucl_fa%.fna}.tax_guide.blastx.out
+			ktClassifyBLAST -o ${nucl_fa%.fna}.tax_guide.blastx.tab ${nucl_fa%.fna}.tax_guide.blastx.out >/dev/null 2>&1
 			taxid=$( tail -n1 ${nucl_fa%.fna}.tax_guide.blastx.tab | cut -f2 )
 			efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fna}.tax_guide.blastx.out
 		fi
@@ -61,7 +61,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 			else
 				sed 's/ /@/g' ${PHAN} | bioawk -c fastx '{ print }' | awk '{ print ">"$1 ; print $2 }' | sed 's/@/ /g' > ${PHAN%.fasta}.sort.fasta
 			fi
-			transeq -frame 1 -table 11 -sequence ${PHAN%.fasta}.sort.fasta -outseq ${PHAN%.phan.fasta}.trans.fasta ;
+			transeq -frame 1 -table 11 -sequence ${PHAN%.fasta}.sort.fasta -outseq ${PHAN%.phan.fasta}.trans.fasta >/dev/null 2>&1
 			# put emboss transeq in directory 
 			COUNTER=0 ;  
 			bioawk -c fastx '{print}' ${PHAN%.phan.fasta}.trans.fasta | while read LINE ; do 
@@ -112,6 +112,8 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 	fi
 	awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_sort_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_sort_genome_proteins.AA.fasta
 	SPLIT_AA_DTR_sort=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_sort_GENOME_AA_*.fasta" )
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "time update: running hmmscan1, annotating linear contigs " $MDYT
 	if  [[ $virus_domain_db = "standard" ]] ; then
 		echo "$SPLIT_AA_DTR_sort" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1
 		echo "$SPLIT_AA_DTR_sort" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.fasta >/dev/null 2>&1
@@ -144,8 +146,12 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 			grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 > ${HIT}.AA.called_hmmscan1.txt
 			grep -v -f ${HIT}.AA.called_hmmscan1.txt ${HIT}.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.AA.no_hmmscan1.fasta
 		done
-
 	fi
+	for LIN in $LIN_SORT_AAs ; do 
+		if [ ! -s ${LIN%.AA.sorted.fasta}.AA.no_hmmscan1.fasta ] ; then
+			cp $LIN ${LIN%.AA.sorted.fasta}.AA.no_hmmscan1.fasta
+		fi
+	done
 	DTR_AA_FOR_HMM2=$( find * -maxdepth 0 -type f -name "${run_title}*AA.no_hmmscan1.fasta" )
 	if [ -n "$DTR_AA_FOR_HMM2" ] ; then
 		cat $( find * -maxdepth 0 -type f -name "${run_title}*AA.no_hmmscan1.fasta" ) > all_DTR_HMM2_proteins.AA.fasta
@@ -156,6 +162,8 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 		fi
 		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_HMM2_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_HMM2_proteins.AA.fasta
 		SPLIT_DTR_HMM2=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_HMM2_GENOME_AA_*.fasta" )
+		MDYT=$( date +"%m-%d-%y---%T" )
+		echo "time update: running hmmscan2, annotating linear contigs " $MDYT
 		echo "$SPLIT_DTR_HMM2" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan2.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.fasta >/dev/null 2>&1
 		cat SPLIT_DTR_HMM2_GENOME_AA_*AA.hmmscan2.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out
 	fi
@@ -167,23 +175,33 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 		done
 
 	fi
+	for LIN in $LIN_SORT_AAs ; do 
+		if [ ! -s ${LIN%.AA.sorted.fasta}.AA.no_hmmscan2.fasta ] ; then
+			cp ${LIN%.AA.sorted.fasta}.AA.no_hmmscan1.fasta ${LIN%.AA.sorted.fasta}.AA.no_hmmscan2.fasta
+		fi
+	done
 	for ROT_AAs in $LIN_SORT_AAs ; do
 		echo ">Feature "${ROT_AAs%.AA.sorted.fasta}" Table1" > ${ROT_AAs%.AA.sorted.fasta}.SCAN.tbl
-		cat $( find * -maxdepth 0 -type f -regextype sed -regex "${ROT_AAs%.AA.sorted.fasta}.*called_hmmscan.*txt" ) > ${ROT_AAs%.AA.sorted.fasta}.all_called_hmmscans.txt
-		cat ${ROT_AAs%.AA.sorted.fasta}.all_called_hmmscans.txt | while read LINE ; do 
-			PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
-			START_BASEH=$( echo $PROTEIN_INFO | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
-			END_BASEH=$( echo $PROTEIN_INFO | sed 's/.*- \(.*\)\].*/\1/' ) ; 
-			if grep -q "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out ; then
+		CALL_ALL_HMM=$( find * -maxdepth 0 -type f -regextype sed -regex "${ROT_AAs%.AA.sorted.fasta}.*called_hmmscan.*txt" )
+		if [ -n "$CALL_ALL_HMM" ] ; then
+			cat $( find * -maxdepth 0 -type f -regextype sed -regex "${ROT_AAs%.AA.sorted.fasta}.*called_hmmscan.*txt" ) > ${ROT_AAs%.AA.sorted.fasta}.all_called_hmmscans.txt
+			cat ${ROT_AAs%.AA.sorted.fasta}.all_called_hmmscans.txt | while read LINE ; do 
+				PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
+				START_BASEH=$( echo $PROTEIN_INFO | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
+				END_BASEH=$( echo $PROTEIN_INFO | sed 's/.*- \(.*\)\].*/\1/' ) ; 
+				if grep -q "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out ; then
 
-				HMM_INFO=$( grep "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out | head -n1 | cut -f1 | sed 's/-/ /g; s/.*[0-9]\+\///g' ) ; 
-			else
-				HMM_INFO=$( grep "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan2.sort.out | head -n1 | cut -f1 | sed 's/-/ /g; s/.*[0-9]\+\///g' )
-			fi
-			INFERENCEH=$( echo $HMM_INFO | cut -d " " -f1 ) ; 
-			PROTEIN_NAME=$( echo $HMM_INFO | cut -d " " -f2- ) ; 
-			echo -e "$START_BASEH\t""$END_BASEH\t""CDS\n""\t\t\tprotein_id\t""lcl|""$LINE\n""\t\t\tproduct\t""$PROTEIN_NAME\n""\t\t\tinference\t""similar to AA sequence:$INFERENCEH" >> ${ROT_AAs%.AA.sorted.fasta}.SCAN.tbl ;
-		done
+					HMM_INFO=$( grep "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out | head -n1 | cut -f1 | sed 's/-/ /g; s/.*[0-9]\+\///g' ) ; 
+				else
+					HMM_INFO=$( grep "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan2.sort.out | head -n1 | cut -f1 | sed 's/-/ /g; s/.*[0-9]\+\///g' )
+				fi
+				INFERENCEH=$( echo $HMM_INFO | cut -d " " -f1 ) ; 
+				PROTEIN_NAME=$( echo $HMM_INFO | cut -d " " -f2- ) ; 
+				echo -e "$START_BASEH\t""$END_BASEH\t""CDS\n""\t\t\tprotein_id\t""lcl|""$LINE\n""\t\t\tproduct\t""$PROTEIN_NAME\n""\t\t\tinference\t""similar to AA sequence:$INFERENCEH" >> ${ROT_AAs%.AA.sorted.fasta}.SCAN.tbl ;
+			done
+		else
+
+		fi
 	done
 fi
 
@@ -203,7 +221,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; t
 			if [ -s "${nucl_fa%.fna}.blastn.notnew.out" ] ; then
 
 				#echo "$(tput setaf 4)"$nucl_fa" is not a novel species (>90% identical to sequence in GenBank nt database).$(tput sgr 0)"
-				ktClassifyBLAST -o ${nucl_fa%.fna}.tax_guide.blastn.tab ${nucl_fa%.fna}.blastn.notnew.out
+				ktClassifyBLAST -o ${nucl_fa%.fna}.tax_guide.blastn.tab ${nucl_fa%.fna}.blastn.notnew.out >/dev/null 2>&1
 				taxid=$( tail -n1 ${nucl_fa%.fna}.tax_guide.blastn.tab | cut -f2 )
 				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage > ${nucl_fa%.fna}.tax_guide.blastn.out
 				sleep 2s
@@ -241,7 +259,8 @@ if [ -n "$PROTEIN_NO_HMMSCAN2" ]; then
 	fi
 	awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_RPS_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_rps_proteins.AA.fasta
 	SPLIT_DTR_AA_RPS=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_RPS_AA_*.fasta" )
-
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "time update: running RPSBLAST, annotating linear contigs " $MDYT
 	echo "$SPLIT_DTR_AA_RPS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {}.fasta -line_length 200 -out {}.rpsb.out >/dev/null 2>&1
 	cat *rpsb.out | awk '{ if ($0 ~ /^>/) {printf $0 ; getline; print $0} else { print $0}}' > COMBINED_RESULTS.rotate.AA.rpsblast.out
 	perl ${CENOTE_SCRIPT_DIR}/rpsblastreport2tbl_mt_annotation_pipe_biowulf.pl ;
@@ -591,7 +610,7 @@ if [ -n "$COMB3_TBL" ] ; then
 					echo "Polinton-like virus" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out				
 				else
 
-					ktClassifyBLAST -o ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out 
+					ktClassifyBLAST -o ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out >/dev/null 2>&1
 					taxid=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab | cut -f2 )
 					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 				fi

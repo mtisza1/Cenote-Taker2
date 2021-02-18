@@ -18,7 +18,6 @@ if [ -n "$vd_fastas" ] ; then
 		elif [[ "$LENGTH_SEQ" -gt 10000 ]] || [[ "$LENGTH_SEQ" == 10000 ]] ; then
 			mv ${NO_END%.fna}.AA.sorted.fasta ${NO_END%.fna}.AA.sorted1.fasta
 			MDYT=$( date +"%m-%d-%y---%T" )
-			echo "Making table files of viral bait outputs" $MDYT
 
 			#grep -v "^#\|plasmid_cluster" ${NO_END%.fna}.AA.hmmscan.out | sed 's/ \+/	/g' | sort -u -k3,3 > ${NO_END%.fna}.AA.hmmscan.sort.out
 			if [ ! -z "${NO_END%.fna}.AA.hmmscan.sort.out" ] ; then
@@ -85,7 +84,7 @@ if [ -n "$vd_fastas" ] ; then
 		for feat_tbl2 in $SCAN1_TBL ; do
 			SCAN_TBL_LENGTH=$( cat $feat_tbl2 | wc -l )
 			if [[ "$SCAN_TBL_LENGTH" -gt 1 ]] ; then
-				echo "making scan table for $feat_tbl2"
+				#echo "making scan table for $feat_tbl2"
 				grep "^[0-9]" -A3 $feat_tbl2 | sed '/--/d' | sed 's/ /_/g' | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n		//g' | while read LINE ; do
 					if echo $LINE | grep -q "CDS" ; then
 						GENOME=${feat_tbl2%.SCAN.tbl}
