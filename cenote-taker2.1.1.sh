@@ -369,8 +369,8 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 	CONTIGS_NON_CIRCULAR=$( find * -maxdepth 0 -type f -name "*[0-9].fasta" )
 	mkdir ../no_end_contigs_with_viral_domain
 	if [ $LIN_MINIMUM_DOMAINS -le 0 ] ; then
-		for CIRC in $DTR_SEQS ; do
-			mv ${CIRC} ../no_end_contigs_with_viral_domain/${CIRC%.fasta}.fna
+		for LIN in $CONTIGS_NON_CIRCULAR ; do
+			mv ${LIN} ../no_end_contigs_with_viral_domain/${LIN%.fasta}.fna
 		done
 	else
 		MDYT=$( date +"%m-%d-%y---%T" )
@@ -668,9 +668,8 @@ fi
 #-# rotate DTRs
 rm -f *no_hmmscan1.fasta
 CIRCULAR_HALLMARK_CONTIGS=$( find * -maxdepth 0 -type f -name "*fna" )
-echo "Annotating DTR contigs"
 if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
-	echo "circular hallmarks found"
+	echo "Annotating DTR contigs"
 	#echo $PWD
 	for nucl_fa in $CIRCULAR_HALLMARK_CONTIGS ; do
 		#echo "$(tput setaf 5)rotating "$nucl_fa" to put an ORF at beginning of sequence so that no ORFs overlap the breakpoint $(tput sgr 0)"
