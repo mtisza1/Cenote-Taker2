@@ -144,7 +144,13 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 		cut -f3 SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
 			grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out > ${HIT}.AA.hmmscan.sort.out
 			grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 > ${HIT}.AA.called_hmmscan1.txt
-			grep -v -f ${HIT}.AA.called_hmmscan1.txt ${HIT}.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.AA.no_hmmscan1.fasta
+			HMMSCAN_NUM=$( cat ${HIT}.AA.called_hmmscan1.txt | wc -l | bc )
+			TOT_AA_NUM=$( grep -F ">" ${HIT}.AA.sorted.fasta | wc -l | bc )
+			if [ $HMMSCAN_NUM -lt $TOT_AA_NUM ] ; then
+				grep -v -f ${HIT}.AA.called_hmmscan1.txt ${HIT}.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.AA.no_hmmscan1.fasta
+			else
+				echo " " > ${HIT}.AA.no_hmmscan1.fasta
+			fi
 		done
 	fi
 	for LIN in $LIN_SORT_AAs ; do 
@@ -171,7 +177,13 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 		cut -f3 SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
 			grep "${HIT}_" SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out > ${HIT}.AA.hmmscan2.sort.out
 			grep "${HIT}_" SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out | sort -u -k3,3 | cut -f3 > ${HIT}.AA.called_hmmscan2.txt
-			grep -v -f ${HIT}.AA.called_hmmscan2.txt ${HIT}.AA.no_hmmscan1.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.AA.no_hmmscan2.fasta
+			HMMSCAN_NUM=$( cat ${HIT}.AA.called_hmmscan2.txt | wc -l | bc )
+			TOT_AA_NUM=$( grep -F ">" ${HIT}.AA.no_hmmscan1.fasta | wc -l | bc )
+			if [ $HMMSCAN_NUM -lt $TOT_AA_NUM ] ; then
+				grep -v -f ${HIT}.AA.called_hmmscan2.txt ${HIT}.AA.no_hmmscan1.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.AA.no_hmmscan2.fasta
+			else
+				echo " " > ${HIT}.AA.no_hmmscan2.fasta
+			fi
 		done
 
 	fi
@@ -595,9 +607,9 @@ if [ -n "$COMB3_TBL" ] ; then
 
 				grep -A1 "$TAX_ORF " ${feat_tbl2%.comb3.tbl}.AA.sorted.fasta | sed '/--/d' > ${feat_tbl2%.comb3.tbl}.tax_orf.fasta
 				if [[ $STRUCTURAL_COUNT == 1 ]] || [[ $STRUCTURAL_COUNT -gt 1 ]] ; then
-					blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_adinto_polinton_prot_190925 -query ${feat_tbl2%.comb3.tbl}.tax_orf.fasta -out ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
+					blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_adinto_polinton_prot_190925 -query ${feat_tbl2%.comb3.tbl}.tax_orf.fasta -out ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out >/dev/null 2>&1
 				else
-					blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query ${feat_tbl2%.comb3.tbl}.tax_orf.fasta -out ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
+					blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query ${feat_tbl2%.comb3.tbl}.tax_orf.fasta -out ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out >/dev/null 2>&1
 				fi
 				if [ ! -s "${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out" ]; then
 					echo "unclassified virus" > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
