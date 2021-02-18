@@ -258,7 +258,7 @@ else
 	echo "time update: making bowtie2 indices " $MDYT
 	mkdir bt2_indices ; 
 	#### update the script to allow for contigs from other directories
-	bowtie2-build ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta bt2_indices/${run_title}_bt2_index
+	bowtie2-build ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta bt2_indices/${run_title}_bt2_index >/dev/null 2>&1
 	echo "$(tput setaf 4)Aligning reads to BowTie2 index. $(tput sgr 0)" 
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: aligning reads to bowtie2 indices " $MDYT
@@ -1268,9 +1268,7 @@ if [ -n "$COMB3_TBL" ] ; then
 
 
 			fi
-			if [ "$TAX_ORF" == "No_suitable_orf" ] ; then
-				#echo "No suitable taxomic ORF for ${feat_tbl2%.comb3.tbl}"
-			elif [ "$TAX_ORF" == "Conjugative Transposon" ] ; then
+			if [ "$TAX_ORF" == "Conjugative Transposon" ] ; then
 				#echo "${feat_tbl2%.comb3.tbl} looks like a conjugative transposon"
 				echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 			elif [ "$TAX_ORF" == "Inoviridae" ] ; then
