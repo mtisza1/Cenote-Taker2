@@ -208,7 +208,7 @@ if [ ${original_contigs: -6} == ".fasta" ]; then
 			CIRC_SEQ_NAME=$( head -n1 $fa1 | sed 's/|.*//g' ) ; 
 			CIRC_NEW_NAME=$( echo "$CIRC_SEQ_NAME" | sed 's/>//g ; s/ .*//g' )
 			grep -A1 "^$CIRC_SEQ_NAME" ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta | sed '/--/d' > ${CIRC_NEW_NAME}.fasta
-			echo "${CIRC_NEW_NAME}.fasta is circular"
+			echo "${CIRC_NEW_NAME}.fasta has DTRs/circularity"
 			rm -f $fa1
 		done 
 	else
@@ -1689,7 +1689,12 @@ if [ -n "$COMB3_TBL" ] ; then
 
 	#echo $input_contig_name
 	if [ -s reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt ] ; then
-		COVERAGE=$( grep "$input_contig_name	" reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt | cut -f2 )
+		if echo "$JUST_TBL2_FILE" | grep -q "_vs[0-9][0-9]" ; then
+			COVERAGE=$( grep "${JUST_TBL2_FILE%_vs[0-9][0-9].comb3.tbl}	" reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt | cut -f2 )
+		else
+			COVERAGE=$( grep "${JUST_TBL2_FILE%.comb3.tbl}	" reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt | cut -f2 )
+		fi
+
 		#echo $COVERAGE
 	else
 		COVERAGE="1"
@@ -1798,16 +1803,16 @@ if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 	done
 fi
 
-if [ $PROPHAGE == "True" ] ; then
-	LIST_OF_VIRAL_DOMAIN_CONTIGS=$( find * -maxdepth 1 -type f -wholename "no_end_contigs_with_viral_domain/*fna" )
-else
+if [ "$PROPHAGE" == "True" ] ; then
 	LIST_OF_VIRAL_DOMAIN_CONTIGS=$( find * -maxdepth 1 -type f -wholename "no_end_contigs_with_viral_domain/*_vs[0-9][0-9].fna" )
+else
+	LIST_OF_VIRAL_DOMAIN_CONTIGS=$( find * -maxdepth 1 -type f -wholename "no_end_contigs_with_viral_domain/*fna" )
 fi
 
 if [ -n "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ; then
 	for LINEAR in $LIST_OF_VIRAL_DOMAIN_CONTIGS ; do 
 		CENOTE_NAME=$( head -n1 $LINEAR | cut -d " " -f1 | sed 's/>//g' )
-		if [ $PROPHAGE == "True" ] ; then
+		if [ "$PROPHAGE" == "True" ] ; then
 			ORIGINAL_NAME=$( head -n1 ${LINEAR%_vs[0-9][0-9].fna}.fna | cut -d " " -f2 )
 		else
 			ORIGINAL_NAME=$( head -n1 $LINEAR | cut -d " " -f2 )
