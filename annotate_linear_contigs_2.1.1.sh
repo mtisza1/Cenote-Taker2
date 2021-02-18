@@ -17,7 +17,7 @@ fi
 
 if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 	MDYT=$( date +"%m-%d-%y---%T" )
-	echo "time update: running BLASTX, DTR contigs " $MDYT
+	echo "time update: running BLASTX, annotate linear contigs " $MDYT
 	echo "$LINEAR_HALLMARK_CONTIGS" | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU -t blastx -evalue 1e-4 -outfmt "6 qseqid stitle pident evalue length" -num_threads 1 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query {}.fna -out {}.tax_guide.blastx.out >/dev/null 2>&1
 	echo "$LINEAR_HALLMARK_CONTIGS" | while read nucl_fa ; do
 		if [ ! -s "${nucl_fa%.fna}.tax_guide.blastx.out" ]; then
@@ -54,6 +54,8 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 		fi
 	done
 	if [ -s DTR_seqs_for_phanotate.txt ] ; then
+		MDYT=$( date +"%m-%d-%y---%T" )
+		echo "time update: running PHANOTATE, annotate linear contigs " $MDYT
 		cat DTR_seqs_for_phanotate.txt | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU ${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o {}.phan.fasta {}.fna
 		for PHAN in *.phan.fasta ; do 
 			if [ "$ENFORCE_START_CODON" == "True" ] ; then
@@ -76,6 +78,8 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 		done			
 	fi
 	if [ -s DTR_seqs_for_prodigal.txt ] ; then
+		MDYT=$( date +"%m-%d-%y---%T" )
+		echo "time update: running Prodigal, annotate linear contigs " $MDYT
 		cat DTR_seqs_for_prodigal.txt | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU prodigal -a {}.prodigal.fasta -i {}.fna -p meta -c -q >/dev/null 2>&1
 		for PROD in *prodigal.fasta ; do
 			sed 's/ /@/g' ${PROD} | bioawk -c fastx '{print}' | while read LINE ; do 
@@ -260,8 +264,7 @@ fi
 PROTEIN_NO_HMMSCAN2=$( find * -maxdepth 0 -type f -name "*.AA.no_hmmscan2.fasta" )
 
 if [ -n "$PROTEIN_NO_HMMSCAN2" ]; then
-	MDYT=$( date +"%m-%d-%y---%T" )
-	echo "time update: running RPSBLAST on linear contigs" $MDYT
+
 	cat $( find * -maxdepth 0 -type f -name "*.AA.no_hmmscan2.fasta" ) > all_DTR_rps_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_DTR_rps_proteins.AA.fasta | wc -l | bc )
 	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
@@ -285,7 +288,6 @@ fi
 
 # Detecting any tRNAs and making a tbl addenum file
 if [ -n "$LINEAR_HALLMARK_CONTIGS" ]; then
-	echo "$(tput setaf 5) Looking for tRNAs in DTR contigs $(tput sgr 0)"
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: running tRNAscan-SE " $MDYT
 	for GENOME_NAME in $LINEAR_HALLMARK_CONTIGS ; do
@@ -367,95 +369,104 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ]; then
 fi
 
 # remove ORFs within ORFs that are 'hypothetical'
-echo "$(tput setaf 5) Removing ORFS within ORFs that are 'hypothetical' $(tput sgr 0)"
+if [ "$ORF_WITHIN" == "True" ] ; then
+	echo "$(tput setaf 5) Removing ORFS within ORFs that are 'hypothetical' $(tput sgr 0)"
 
-INT_TBL=$( find * -maxdepth 0 -type f -name "*.int.tbl" )
-if [ -n "$INT_TBL" ] ; then
-	for feat_tbl3 in $INT_TBL ; do
-		grep "^[0-9]" $feat_tbl3 | awk '{FS="\t"; OFS="\t"} {print $1, $2}' > ${feat_tbl3%.int.tbl}.all_start_stop.txt ;
-		cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read linev ; do
-			all_start=$( echo $linev | cut -d " " -f1 )
-			all_end=$( echo $linev | cut -d " " -f2 )
-			if [[ "$all_end" -gt "$all_start" ]]; then
-				for ((counter_f=(( $all_start + 1 ));counter_f<=$all_end;counter_f++)); do
-					echo " " "$counter_f" " " >> ${feat_tbl3%.int.tbl}.used_positions.txt
-					
-				done
-			elif [[ "$all_start" -gt "$all_end" ]]; then
-				for ((counter_r=$all_end;counter_r<=(( $all_start - 1 ));counter_r++)) ; do
-					echo " " "$counter_r" " " >> ${feat_tbl3%.int.tbl}.used_positions.txt
-				done
-			fi
-		done
-		sed 's/(Fragment)//g; s/\. .*//g; s/{.*//g; s/\[.*//g; s/Putative hypothetical protein/hypothetical protein/g; s/Uncultured bacteri.*/hypothetical protein/g; s/RNA helicase$/helicase/g; s/Os.*/hypothetical protein/g; s/\.$//g; s/Unplaced genomic scaffold.*/hypothetical protein/g; s/Putative hypothetical protein/hypothetical protein/g; s/Contig.*/hypothetical protein/g; s/Uncharacterized protein/hypothetical protein/g; s/uncharacterized protein/hypothetical protein/g; s/Uncharacterised protein/hypothetical protein/g' $feat_tbl3 | sed '/--/d' > ${feat_tbl3%.int.tbl}.comb2.tbl ; 
-		grep -e 'hypothetical protein' -B2 ${feat_tbl3%.int.tbl}.comb2.tbl | grep "^[0-9]" | awk '{FS="\t"; OFS="\t"} {print $1, $2}' > ${feat_tbl3%.int.tbl}.hypo_start_stop.txt ;
+	INT_TBL=$( find * -maxdepth 0 -type f -name "*.int.tbl" )
+	if [ -n "$INT_TBL" ] ; then
+		for feat_tbl3 in $INT_TBL ; do
+			grep "^[0-9]" $feat_tbl3 | awk '{FS="\t"; OFS="\t"} {print $1, $2}' > ${feat_tbl3%.int.tbl}.all_start_stop.txt ;
+			cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read linev ; do
+				all_start=$( echo $linev | cut -d " " -f1 )
+				all_end=$( echo $linev | cut -d " " -f2 )
+				if [[ "$all_end" -gt "$all_start" ]]; then
+					for ((counter_f=(( $all_start + 1 ));counter_f<=$all_end;counter_f++)); do
+						echo " " "$counter_f" " " >> ${feat_tbl3%.int.tbl}.used_positions.txt
+						
+					done
+				elif [[ "$all_start" -gt "$all_end" ]]; then
+					for ((counter_r=$all_end;counter_r<=(( $all_start - 1 ));counter_r++)) ; do
+						echo " " "$counter_r" " " >> ${feat_tbl3%.int.tbl}.used_positions.txt
+					done
+				fi
+			done
+			sed 's/(Fragment)//g; s/\. .*//g; s/{.*//g; s/\[.*//g; s/Putative hypothetical protein/hypothetical protein/g; s/Uncultured bacteri.*/hypothetical protein/g; s/RNA helicase$/helicase/g; s/Os.*/hypothetical protein/g; s/\.$//g; s/Unplaced genomic scaffold.*/hypothetical protein/g; s/Putative hypothetical protein/hypothetical protein/g; s/Contig.*/hypothetical protein/g; s/Uncharacterized protein/hypothetical protein/g; s/uncharacterized protein/hypothetical protein/g; s/Uncharacterised protein/hypothetical protein/g' $feat_tbl3 | sed '/--/d' > ${feat_tbl3%.int.tbl}.comb2.tbl ; 
+			grep -e 'hypothetical protein' -B2 ${feat_tbl3%.int.tbl}.comb2.tbl | grep "^[0-9]" | awk '{FS="\t"; OFS="\t"} {print $1, $2}' > ${feat_tbl3%.int.tbl}.hypo_start_stop.txt ;
 
-		# Remove redudant ORFs that are subORFs of ORFs overlapping the wrap-point
-		GENOME_LENGTH=$( bioawk -c fastx '{print length($seq)}' ${feat_tbl3%.int.tbl}.fna )
-		cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read linet ; do
-			all_start=$( echo $linet | cut -d " " -f1 )
-			all_end=$( echo $linet | cut -d " " -f2 )
-			if [[ "$all_end" -gt "$GENOME_LENGTH" ]] ; then
-				cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read lineq ; do
-					q_end=$( echo $lineq | cut -d " " -f2 )
-					OVERWRAP_END=$(( $q_end + $GENOME_LENGTH ))
-					if [[ "$all_end" = "$OVERWRAP_END"  ]] ; then
-						echo "$lineq" >> ${feat_tbl3%.int.tbl}.remove_hypo.txt
-					fi
-				done
-			elif [[ "$all_start" -gt "$GENOME_LENGTH" ]] ; then
-				cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read lineq ; do
-					q_start=$( echo $lineq | cut -d " " -f2 )
-					OVERWRAP_START=$(( $q_start + $GENOME_LENGTH ))
-					if [[ "$all_start" = "$OVERWRAP_START"  ]] ; then
-						echo "$lineq" >> ${feat_tbl3%.int.tbl}.remove_hypo.txt
-					fi
-				done
-			fi
-		done
-
-
-		cat "${feat_tbl3%.int.tbl}.hypo_start_stop.txt" | while read liney ; do
-			loc_start=$( echo $liney | cut -d " " -f1 )
-			loc_end=$( echo $liney | cut -d " " -f2 )
-			loc1_start=$( echo " " "$loc_start" " " )
-			if grep -q "$loc1_start" ${feat_tbl3%.int.tbl}.used_positions.txt ; then 
-
-				if [[ "$loc_end" -gt "$loc_start" ]]; then
-					gen_len=$(( $loc_end - $loc_start ))
-
-					if [[ "$gen_len" -gt 1000 ]]; then
-						continue
-					else
-						f_end=$(( $loc_end + 1 ))
-						f1_end=$( echo " " "$f_end" " ")
-						if grep -q "$f1_end" ${feat_tbl3%.int.tbl}.used_positions.txt ; then
-
-							echo "$liney" >> ${feat_tbl3%.int.tbl}.remove_hypo.txt
+			# Remove redudant ORFs that are subORFs of ORFs overlapping the wrap-point
+			GENOME_LENGTH=$( bioawk -c fastx '{print length($seq)}' ${feat_tbl3%.int.tbl}.fna )
+			cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read linet ; do
+				all_start=$( echo $linet | cut -d " " -f1 )
+				all_end=$( echo $linet | cut -d " " -f2 )
+				if [[ "$all_end" -gt "$GENOME_LENGTH" ]] ; then
+					cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read lineq ; do
+						q_end=$( echo $lineq | cut -d " " -f2 )
+						OVERWRAP_END=$(( $q_end + $GENOME_LENGTH ))
+						if [[ "$all_end" = "$OVERWRAP_END"  ]] ; then
+							echo "$lineq" >> ${feat_tbl3%.int.tbl}.remove_hypo.txt
 						fi
-					fi
-				else
-					gen_len=$(( $loc_start - $loc_end ))
+					done
+				elif [[ "$all_start" -gt "$GENOME_LENGTH" ]] ; then
+					cat "${feat_tbl3%.int.tbl}.all_start_stop.txt" | while read lineq ; do
+						q_start=$( echo $lineq | cut -d " " -f2 )
+						OVERWRAP_START=$(( $q_start + $GENOME_LENGTH ))
+						if [[ "$all_start" = "$OVERWRAP_START"  ]] ; then
+							echo "$lineq" >> ${feat_tbl3%.int.tbl}.remove_hypo.txt
+						fi
+					done
+				fi
+			done
 
-					if [[ "$gen_len" -gt 1000 ]]; then
-						continue
-					else
-					r_end=$(( $loc_end - 1 ))
-					r1_end=$( echo " " "$r_end" " ")
-						if grep -q "$r1_end" ${feat_tbl3%.int.tbl}.used_positions.txt ; then 
+
+			cat "${feat_tbl3%.int.tbl}.hypo_start_stop.txt" | while read liney ; do
+				loc_start=$( echo $liney | cut -d " " -f1 )
+				loc_end=$( echo $liney | cut -d " " -f2 )
+				loc1_start=$( echo " " "$loc_start" " " )
+				if grep -q "$loc1_start" ${feat_tbl3%.int.tbl}.used_positions.txt ; then 
+
+					if [[ "$loc_end" -gt "$loc_start" ]]; then
+						gen_len=$(( $loc_end - $loc_start ))
+
+						if [[ "$gen_len" -gt 1000 ]]; then
+							continue
+						else
+							f_end=$(( $loc_end + 1 ))
+							f1_end=$( echo " " "$f_end" " ")
+							if grep -q "$f1_end" ${feat_tbl3%.int.tbl}.used_positions.txt ; then
+
 								echo "$liney" >> ${feat_tbl3%.int.tbl}.remove_hypo.txt
+							fi
+						fi
+					else
+						gen_len=$(( $loc_start - $loc_end ))
+
+						if [[ "$gen_len" -gt 1000 ]]; then
+							continue
+						else
+						r_end=$(( $loc_end - 1 ))
+						r1_end=$( echo " " "$r_end" " ")
+							if grep -q "$r1_end" ${feat_tbl3%.int.tbl}.used_positions.txt ; then 
+									echo "$liney" >> ${feat_tbl3%.int.tbl}.remove_hypo.txt
+							fi
 						fi
 					fi
 				fi
+			done
+			if [ -s "${feat_tbl3%.int.tbl}.remove_hypo.txt" ]; then
+				grep ">Feature" ${feat_tbl3%.int.tbl}.comb2.tbl | sed '/--/d' > ${feat_tbl3%.int.tbl}.int2.tbl
+				grep -v -f ${feat_tbl3%.int.tbl}.remove_hypo.txt ${feat_tbl3%.int.tbl}.comb2.tbl | grep "^[0-9]" -A3 | sed '/--/d' >> ${feat_tbl3%.int.tbl}.int2.tbl ;
+				else
+					cp ${feat_tbl3%.int.tbl}.comb2.tbl ${feat_tbl3%.int.tbl}.int2.tbl
 			fi
 		done
-		if [ -s "${feat_tbl3%.int.tbl}.remove_hypo.txt" ]; then
-			grep ">Feature" ${feat_tbl3%.int.tbl}.comb2.tbl | sed '/--/d' > ${feat_tbl3%.int.tbl}.int2.tbl
-			grep -v -f ${feat_tbl3%.int.tbl}.remove_hypo.txt ${feat_tbl3%.int.tbl}.comb2.tbl | grep "^[0-9]" -A3 | sed '/--/d' >> ${feat_tbl3%.int.tbl}.int2.tbl ;
-			else
-				cp ${feat_tbl3%.int.tbl}.comb2.tbl ${feat_tbl3%.int.tbl}.int2.tbl
-		fi
-	done
+	fi
+else
+	INT_TBL=$( find * -maxdepth 0 -type f -name "*.int.tbl" )
+	if [ -n "$INT_TBL" ] ; then
+		for feat_tbl3 in $INT_TBL ; do
+			sed 's/(Fragment)//g; s/\. .*//g; s/{.*//g; s/\[.*//g; s/Putative hypothetical protein/hypothetical protein/g; s/Uncultured bacteri.*/hypothetical protein/g; s/RNA helicase$/helicase/g; s/Os.*/hypothetical protein/g; s/\.$//g; s/Unplaced genomic scaffold.*/hypothetical protein/g; s/Putative hypothetical protein/hypothetical protein/g; s/Contig.*/hypothetical protein/g; s/Uncharacterized protein/hypothetical protein/g; s/uncharacterized protein/hypothetical protein/g; s/Uncharacterised protein/hypothetical protein/g' $feat_tbl3 | sed '/--/d' > ${feat_tbl3%.int.tbl}.int2.tbl ; 
+		done
+	fi
 fi
 
 # Grabbing ORFs wihout RPSBLAST hits and separating them into individual files for HHsearch
@@ -464,7 +475,7 @@ echo "$(tput setaf 5) Grabbing ORFs wihout RPS-BLAST hits and separating them in
 INT2_TBL=$( find * -maxdepth 0 -type f -name "*.int2.tbl" )
 if [ -n "$INT2_TBL" ] ; then
 	for blastp_tbl1 in $INT2_TBL ; do
-		grep -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Uncharacterized conserved protein' -e 'unknown' -e 'Uncharacterised protein' -e 'product	gp' -e 'putative phage protein' -B2 $blastp_tbl1 | grep "^[0-9]" | awk '{print $1 " - " $2}' > ${blastp_tbl1%.int2.tbl}.for_hhpred.txt ;
+		grep -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'Predicted protein' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Domain of unknown function' -e 'product	gp' -B2 $blastp_tbl1 | grep "^[0-9]" | awk '{print $1 " - " $2}' > ${blastp_tbl1%.int2.tbl}.for_hhpred.txt ;
 		grep -f ${blastp_tbl1%.int2.tbl}.for_hhpred.txt -A1 ${blastp_tbl1%.int2.tbl}.AA.sorted.fasta | sed '/--/d' > ${blastp_tbl1%.int2.tbl}.blast_hypo.fasta ;
 		csplit -z ${blastp_tbl1%.int2.tbl}.blast_hypo.fasta '/>/' '{*}' --prefix=${blastp_tbl1%.int2.tbl} --suffix-format=%02d.for_hhpred.fasta >/dev/null 2>&1 
 	done
