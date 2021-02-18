@@ -1118,7 +1118,7 @@ if [ -n "$INT_TBL" ] ; then
 fi
 
 # Grabbing ORFs wihout RPSBLAST hits and separating them into individual files for HHsearch
-echo "$(tput setaf 5) Grabbing ORFs wihout BLASTP hits and separating them into individual files for HHsearch $(tput sgr 0)"
+echo "$(tput setaf 5) Grabbing ORFs wihout RPS-BLAST hits and separating them into individual files for HHsearch $(tput sgr 0)"
 
 INT2_TBL=$( find * -maxdepth 0 -type f -name "*.int2.tbl" )
 if [ -n "$INT2_TBL" ] ; then
@@ -1685,7 +1685,7 @@ if [ -n "$COMB3_TBL" ] ; then
 
 		cp $feat_tbl2 sequin_and_genome_maps/${JUST_TBL2_FILE%.comb3.tbl}.tbl ; 
 				#echo "1"
-		bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -v topoq="$TOPOLOGY" -v gcodeq="$GCODE" -c fastx '{ print ">" newname " [note=input name:"input_contig_name" -- closest relative: " tax_var " " perc_var " ] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology="topoq"] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode="gcodeq"]" ; print $seq }' $NUCL_FILE > sequin_and_genome_maps/${JUST_TBL2_FILE%.comb3.tbl}.fsa ; 
+		bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -v topoq="$TOPOLOGY" -v gcodeq="$GCODE" -v o_name="$input_contig_name" -c fastx '{ print ">" newname " [note=input name:"o_name" -- closest relative: " tax_var " " perc_var " ] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology="topoq"] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode="gcodeq"]" ; print $seq }' $NUCL_FILE > sequin_and_genome_maps/${JUST_TBL2_FILE%.comb3.tbl}.fsa ; 
 
 	#echo $input_contig_name
 	if [ -s reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt ] ; then
