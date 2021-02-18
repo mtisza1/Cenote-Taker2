@@ -1309,7 +1309,6 @@ cd ${base_directory}/${run_title}
 LIST_OF_ITR_DOMAIN_CONTIGS=$( find * -maxdepth 1 -type f -wholename "ITR_containing_contigs/*fna" )
 
 if [ -n "$LIST_OF_ITR_DOMAIN_CONTIGS" ] ; then
-	echo "Annotating linear contigs"
 	cd ITR_containing_contigs
 	LIST_OF_ITR_DOMAIN_CONTIGS=$( find * -maxdepth 0 -type f -regextype sed -regex ".*.fna" )
 	echo "$LIST_OF_ITR_DOMAIN_CONTIGS" | sed 's/.fna//g' | while read ITR_SEQ ; do
