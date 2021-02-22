@@ -251,7 +251,8 @@ fi
 rm -f *.too_short.fasta
 
 # Aligning reads to contigs
-if [ ! -s "$F_READS" ] ; then
+FIRST_F_READS=$( echo "$F_READS" | sed 's/,.*//g' )
+if [ ! -s "$FIRST_F_READS" ] ; then
 	echo "no reads provided or reads not found"
 else
 	echo "$(tput setaf 4)Aligning provided reads to contigs over cutoff to determine coverage. $(tput sgr 0)" 
@@ -1810,7 +1811,7 @@ if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 		LENGTH=$( bioawk -c fastx '{print length($seq)}' $LINEAR )
 		if [ -s ${LINEAR%.fna}.rotate.AA.hmmscan.sort.out ] ; then
 			NUM_HALLMARKS=$( cat ${LINEAR%.fna}.rotate.AA.hmmscan.sort.out | wc -l | bc )
-			HALLMARK_NAMES=$( cut -f1 ${LINEAR%.fna}.AA.hmmscan.sort.out | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\|/g' | sort -u | sed 's/,//g' )
+			HALLMARK_NAMES=$( cut -f1 ${LINEAR%.fna}.rotate.AA.hmmscan.sort.out | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\|/g' | sort -u | sed 's/,//g' )
 		else
 			NUM_HALLMARKS=0
 			HALLMARK_NAMES="none"
