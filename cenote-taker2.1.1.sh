@@ -431,7 +431,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 					mv ${HIT}.fasta ../no_end_contigs_with_viral_domain/${HIT}.fna
 					grep "${HIT}_" LARGE_GENOME_COMBINED.AA.hmmscan.sort.out > ../no_end_contigs_with_viral_domain/${HIT}.AA.hmmscan.sort.out
 					# ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.no_hmmscan1.fasta
-					grep "${HIT}_" LARGE_GENOME_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 > ${HIT}.AA.called_hmmscan.txt
+					grep "${HIT}_" LARGE_GENOME_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.AA.called_hmmscan.txt
 					grep -v -f ${HIT}.AA.called_hmmscan.txt ${HIT}.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ../no_end_contigs_with_viral_domain/${HIT}.AA.no_hmmscan1.fasta
 					mv ${HIT}.AA.sorted.fasta ../no_end_contigs_with_viral_domain/
 
@@ -518,7 +518,7 @@ if [ ! -z "$DTR_SEQS" ] ; then
 				if [ $HALL_COUNT -ge $CIRC_MINIMUM_DOMAINS ] ; then 
 					mv ${HIT}.fasta DTR_contigs_with_viral_domain/${HIT}.fna
 					grep "${HIT}_" CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out > DTR_contigs_with_viral_domain/${HIT}.AA.hmmscan.sort.out
-					grep "${HIT}_" CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 > ${HIT}.AA.called_hmmscan.txt
+					grep "${HIT}_" CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /'> ${HIT}.AA.called_hmmscan.txt
 					grep -v -f ${HIT}.AA.called_hmmscan.txt ${HIT}.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > DTR_contigs_with_viral_domain/${HIT}.AA.no_hmmscan1.fasta
 					mv ${HIT}.AA.sorted.fasta DTR_contigs_with_viral_domain/
 					rm ${HIT}.AA.fasta
@@ -597,7 +597,7 @@ if [ ! -z "$ITR_SEQS" ] ; then
 			if [ $HALL_COUNT -ge $CIRC_MINIMUM_DOMAINS ] ; then 
 				mv ${HIT}.fasta ${HIT}.fna
 				grep "${HIT}_" ITR_GENOME_COMBINED.AA.hmmscan.sort.out > ${HIT}.AA.hmmscan.sort.out
-				grep "${HIT}_" ITR_GENOME_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 > ${HIT}.AA.called_hmmscan.txt
+				grep "${HIT}_" ITR_GENOME_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.AA.called_hmmscan.txt
 				grep -v -f ${HIT}.AA.called_hmmscan.txt ${HIT}.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.AA.no_hmmscan1.fasta
 				rm ${HIT}.AA.fasta
 
@@ -825,7 +825,7 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 	if [ -s SPLIT_DTR_COMBINED.AA.hmmscan.sort.out ] ; then
 		cut -f3 SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
 			grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out > ${HIT}.rotate.AA.hmmscan.sort.out
-			grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 > ${HIT}.rotate.AA.called_hmmscan1.txt
+			grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.rotate.AA.called_hmmscan1.txt
 			grep -v -f ${HIT}.rotate.AA.called_hmmscan1.txt ${HIT}.rotate.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.rotate.AA.no_hmmscan1.fasta
 		done
 
@@ -853,7 +853,7 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 	if [ -s SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out ] ; then
 		cut -f3 SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
 			grep "${HIT}_" SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out > ${HIT}.rotate.AA.hmmscan2.sort.out
-			grep "${HIT}_" SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out | sort -u -k3,3 | cut -f3 > ${HIT}.rotate.AA.called_hmmscan2.txt
+			grep "${HIT}_" SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.rotate.AA.called_hmmscan2.txt
 			grep -v -f ${HIT}.rotate.AA.called_hmmscan2.txt ${HIT}.rotate.AA.no_hmmscan1.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.rotate.AA.no_hmmscan2.fasta
 		done
 	fi
@@ -865,7 +865,7 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 	for ROT_AAs in $ROTATE_SORT_AAs ; do
 		echo ">Feature "${ROT_AAs%.rotate.AA.sorted.fasta}" Table1" > ${ROT_AAs%.rotate.AA.sorted.fasta}.SCAN.tbl
 		cat $( find * -maxdepth 0 -type f -regextype sed -regex "${ROT_AAs%.rotate.AA.sorted.fasta}.*called_hmmscan.*txt" ) > ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt
-		cat ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt | while read LINE ; do 
+		cat ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt | sed 's/ $//g' | while read LINE ; do 
 			PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
 			START_BASEH=$( echo $PROTEIN_INFO | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
 			END_BASEH=$( echo $PROTEIN_INFO | sed 's/.*- \(.*\)\].*/\1/' ) ; 

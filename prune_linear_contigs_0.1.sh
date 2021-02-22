@@ -54,7 +54,7 @@ if [ -n "$vd_fastas" ] ; then
 			### not sure on this
 			grep "${HIT}_" SPLIT_PRUNE_SEQ_COMBINED.AA.hmmscan2.sort.out > ${HIT}.AA.hmmscan2.sort.out
 			# ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.no_hmmscan1.fasta
-			grep "${HIT}_" SPLIT_PRUNE_SEQ_COMBINED.AA.hmmscan2.sort.out | sort -u -k3,3 | cut -f3 > ${HIT}.AA.called_hmmscan2.txt
+			grep "${HIT}_" SPLIT_PRUNE_SEQ_COMBINED.AA.hmmscan2.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.AA.called_hmmscan2.txt
 			grep -v -f ${HIT}.AA.called_hmmscan2.txt ${HIT}.AA.sorted1.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.AA.prune_no_hmmscan2.fasta
 
 		done
@@ -62,7 +62,7 @@ if [ -n "$vd_fastas" ] ; then
 	CALLED_VIRAL=$( find * -maxdepth 0 -type f -name "*.AA.called_hmmscan2.txt" )
 	if [ -n "$CALLED_VIRAL" ] ; then
 		for NO_END in $CALLED_VIRAL ; do
-			cat $NO_END | while read LINE ; do 
+			cat $NO_END | sed 's/\(.*\)/\1 /' | while read LINE ; do 
 				PROTEIN_INFO=$( grep "$LINE \[" ${NO_END%.AA.called_hmmscan2.txt}.AA.sorted1.fasta ) ;  
 				START_BASEH=$( echo $PROTEIN_INFO | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
 				END_BASEH=$( echo $PROTEIN_INFO | sed 's/.*- \(.*\)\].*/\1/' ) ; 

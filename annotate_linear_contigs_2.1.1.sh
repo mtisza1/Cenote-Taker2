@@ -147,7 +147,7 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 	if [ -s SPLIT_DTR_COMBINED.AA.hmmscan.sort.out ] ; then
 		cut -f3 SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
 			grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out > ${HIT}.AA.hmmscan.sort.out
-			grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 > ${HIT}.AA.called_hmmscan1.txt
+			grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.AA.called_hmmscan1.txt
 			HMMSCAN_NUM=$( cat ${HIT}.AA.called_hmmscan1.txt | wc -l | bc )
 			TOT_AA_NUM=$( grep -F ">" ${HIT}.AA.sorted.fasta | wc -l | bc )
 			if [ $HMMSCAN_NUM -lt $TOT_AA_NUM ] ; then
@@ -180,7 +180,7 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 	if [ -s SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out ] ; then
 		cut -f3 SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
 			grep "${HIT}_" SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out > ${HIT}.AA.hmmscan2.sort.out
-			grep "${HIT}_" SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out | sort -u -k3,3 | cut -f3 > ${HIT}.AA.called_hmmscan2.txt
+			grep "${HIT}_" SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.AA.called_hmmscan2.txt
 			HMMSCAN_NUM=$( cat ${HIT}.AA.called_hmmscan2.txt | wc -l | bc )
 			TOT_AA_NUM=$( grep -F ">" ${HIT}.AA.no_hmmscan1.fasta | wc -l | bc )
 			if [ $HMMSCAN_NUM -lt $TOT_AA_NUM ] ; then
@@ -201,7 +201,7 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 		CALL_ALL_HMM=$( find * -maxdepth 0 -type f -regextype sed -regex "${ROT_AAs%.AA.sorted.fasta}.*called_hmmscan.*txt" )
 		if [ -n "$CALL_ALL_HMM" ] ; then
 			cat $( find * -maxdepth 0 -type f -regextype sed -regex "${ROT_AAs%.AA.sorted.fasta}.*called_hmmscan.*txt" ) > ${ROT_AAs%.AA.sorted.fasta}.all_called_hmmscans.txt
-			cat ${ROT_AAs%.AA.sorted.fasta}.all_called_hmmscans.txt | while read LINE ; do 
+			cat ${ROT_AAs%.AA.sorted.fasta}.all_called_hmmscans.txt | sed 's/ $//g' | while read LINE ; do 
 				PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
 				START_BASEH=$( echo $PROTEIN_INFO | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
 				END_BASEH=$( echo $PROTEIN_INFO | sed 's/.*- \(.*\)\].*/\1/' ) ; 
