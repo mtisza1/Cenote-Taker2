@@ -1705,14 +1705,19 @@ if [ -n "$COMB3_TBL" ] ; then
 		fi
 		INPUT_STEM=$( echo "$input_contig_name" | sed 's/@.*/@/g' )
 		if grep -q "$INPUT_STEM" /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv ; then
-			CRISPR=$( grep -m1 "$INPUT_STEM" /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv | cut -f2,3 | sed 's/	/: /g ; s/\(.*\)/\1 CIRSPR spacer matches/'  )
+			PRE_CRISP=$( grep -m1 "$INPUT_STEM" /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv | awk '{OFS="\t"}{FS="\t"}{if ($3>1) {print "yes"} else {print "no}}' )
+			if [ "$PRE_CRISP" == "yes" ] ;then
+				CRISPR=$( grep -m1 "$INPUT_STEM" /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv | cut -f2,3 | sed 's/	/: /g ; s/\(.*\)/\1 CIRSPR spacer matches/'  )
+			else 
+				CRISPR=" "
+			fi
 		else
 			CRISPR=" "
 		fi
 
 		cp $feat_tbl2 sequin_and_genome_maps/${JUST_TBL2_FILE%.comb3.tbl}.tbl ; 
 				#echo "1"
-		bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -v topoq="$TOPOLOGY" -v gcodeq="$GCODE" -v o_name="$input_contig_name" -v crispr1="$CRISPR" -c fastx '{ print ">" newname " [note=input name:"o_name" -- closest relative: " tax_var " " perc_var ";" crispr1" ] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology="topoq"] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode="gcodeq"]" ; print $seq }' $NUCL_FILE > sequin_and_genome_maps/${JUST_TBL2_FILE%.comb3.tbl}.fsa ; 
+		bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -v topoq="$TOPOLOGY" -v gcodeq="$GCODE" -v o_name="$input_contig_name" -v crispr1="$CRISPR" -c fastx '{ print ">" newname " [note=input name:"o_name" -- closest relative: " tax_var " " perc_var " ; " crispr1" ] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology="topoq"] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode="gcodeq"]" ; print $seq }' $NUCL_FILE > sequin_and_genome_maps/${JUST_TBL2_FILE%.comb3.tbl}.fsa ; 
 
 	#echo $input_contig_name
 	if [ -s reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt ] ; then
