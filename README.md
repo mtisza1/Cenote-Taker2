@@ -1,13 +1,17 @@
-# Cenote-Taker2
-Cenote-Taker2 is a pipeline for divergent virus discovery and annotation. See schematic.
-The code is currently functional.
-An ulterior motive for creating and distributing Cenote-Taker2 is to facilitate annotation and deposition of viral genomes into GenBank where they can be used by the scientific public. Therefore, I hope you consider depositing the submittable outputs (.sqn) after reviewing them. I am not affiliated with GenBank. See the [Cenote-Taker2 wiki](https://github.com/mtisza1/Cenote-Taker2/wiki) for useful information on using the pipeline (e.g. expected outputs) and screeds on myriad topics.
-Using a HPC with at least 16 CPUs and 16g of dedicated memory is strongly recommended for every run. (Annotation of a few selected genomes can be done with less memory/CPU) 
-I usually use 32 CPUs and 32 GB of memory for medium and large metagenomes. More resources would be helpful for extra-large metagenomes.
+# Cenote-Taker 2
+Cenote-Taker 2 is a dual function bioinformatics tool. On the one hand, Cenote-Taker 2 discovers/predicts virus sequences from any kind of genome or metagenomic assembly. Second, virus sequences/genomes are annotated with a variety of sequences features, genes, and taxomy. Either the discovery or the the annotation module can be used independently.
+```diff
++ The code is currently functional. Feel free to use Cenote-Taker 2 at will.
+```
 
+If you just want to discover/predict virus sequences and get a report on those sequences, use [Cenote Unlimited Breadsticks] ###, also provided in the Cenote-Taker 2 repo
+An ulterior motive for creating and distributing Cenote-Taker2 is to facilitate annotation and deposition of viral genomes into GenBank where they can be used by the scientific public. Therefore, I hope you consider depositing the submittable outputs (.sqn) after reviewing them. I am not affiliated with GenBank. See "Use Cases" below, and read the [Cenote-Taker2 wiki](https://github.com/mtisza1/Cenote-Taker2/wiki) for useful information on using the pipeline (e.g. expected outputs) and screeds on myriad topics.
+Using a HPC with at least 16 CPUs and 16g of dedicated memory is recommended for most runs. (Annotation of a few selected genomes or the Cenote Unlimted Breadsticks can be done with less memory/CPU). 
+
+Significant updates to the scripts to increase speed, parallelization, and output readability have been released on ###
 Update to HMM databases (hallmark genes) occurred on September 15th, 2020. See instructions below to update your database.
 
-Read the preprint on [BioRxiv](https://www.biorxiv.org/content/10.1101/2020.09.15.298943v1).
+Read the manuscript in [Virus Evolution](https://academic.oup.com/ve/article/7/1/veaa100/6055568)
 
 
 
@@ -25,6 +29,8 @@ Read the preprint on [BioRxiv](https://www.biorxiv.org/content/10.1101/2020.09.1
 ```
 
 Likely, this will only work in Linux. 
+
+If you just want a lightweight (7GB), non-annotating virus discovery tool, use [Cenote Unlimited Breadsticks](https://github.com/mtisza1/Cenote_Unlimited_Breadsticks). The Unlimited Breadsticks module is included in the Cenote-Taker 2 repo, so no need to install it if you already have Cenote-Taker 2 (you may need to update `cd Cenote-Taker2` then `git pull`) 
 
 ```diff
 - ALERT *** Because Cenote-Taker2 needs large high-quality 
@@ -63,7 +69,7 @@ bash cenote_install1.sh /path/to/better/directory 2>&1 | tee install_ct2.log
 
 # Bioconda installation
 
-A user has packaged Cenote-Taker2 in Bioconda for use by their institute. However, installation can be done by anyone using their package with a few commands. All the above alerts, requirements, and warnings still apply. This will also require a user to have 32GB of storage in their default conda environment directory.
+A user has packaged Cenote-Taker2 in Bioconda for use by their institute. * THIS HAS NOTE BEEN UPDATED RECENTLY * However, installation can be done by anyone using their package with a few commands. All the above alerts, requirements, and warnings still apply. This will also require a user to have 32GB of storage in their default conda environment directory.
 
 Commands:
 ```
@@ -89,7 +95,7 @@ Discussion:
 
 ## Updating databases
 
-As of now, only the HMM database has been updated from the original (update on September 15th, 2020). This update should only take a minute or two. Here's how you update (modify if your conda environment is different than below example):
+As of now, only the HMM database has been updated from the original (update on September 15th, 2020 ###). This update should only take a minute or two. Here's how you update (modify if your conda environment is different than below example):
 ```
 update Cenote-Taker2 (change to main repo directory):
 git pull
@@ -102,7 +108,7 @@ python update_ct2_databases.py --hmm True
 ```
 
 ## Schematic
-![alt text](../master/cenote-taker_figure_200318.png)
+![alt text](../master/CT2_schematic_redo1.png)
 
 # Running Cenote-Taker2
 Cenote-Taker2 currently runs in a python wrapper. 
@@ -119,50 +125,46 @@ conda activate /path/to/better/directory/cenote-taker2_env
 ```
 2. Run the python script (see options below).
 ```
-python /path/to/Cenote-Taker2/run_cenote-taker2.0.1.py
+python /path/to/Cenote-Taker2/run_cenote-taker2.py
 
 (Or, if you want to save a log of the run (note that log files can get quite large))
 
-python /path/to/Cenote-Taker2/run_cenote-taker2.0.1.py 2>&1 | tee output.log
+python /path/to/Cenote-Taker2/run_cenote-taker2.py 2>&1 | tee output.log
 ```
 
 
 ```
-usage: run_cenote-taker2.0.1.py [-h] 
-                          --contigs ORIGINAL_CONTIGS 
-                          --run_title RUN_TITLE 
-                          --template_file TEMPLATE_FILE
-                          --prune_prophage PROPHAGE 
-                          --mem MEM 
-                          --cpu CPU
-                                [--reads1 F_READS] 
-                                [--reads2 R_READS]
-                                [--minimum_length_circular CIRC_LENGTH_CUTOFF]
-                                [--minimum_length_linear LINEAR_LENGTH_CUTOFF]
-                                [--virus_domain_db VIRUS_DOMAIN_DB]
-                                [--lin_minimum_hallmark_genes LIN_MINIMUM_DOMAINS]
-                                [--circ_minimum_hallmark_genes CIRC_MINIMUM_DOMAINS]
-                                [--known_strains HANDLE_KNOWNS]
-                                [--blastn_db BLASTN_DB]
-                                [--enforce_start_codon ENFORCE_START_CODON]
-                                [--handle_contigs_without_hallmark HANDLE_NONVIRAL]
-                                [--hhsuite_tool HHSUITE_TOOL]
-                                [--isolation_source ISOLATION_SOURCE]
-                                [--Environmental_sample ENVIRONMENTAL_SAMPLE]
-                                [--collection_date COLLECTION_DATE]
-                                [--metagenome_type METAGENOME_TYPE]
-                                [--srr_number SRR_NUMBER]
-                                [--srx_number SRX_NUMBER]
-                                [--biosample BIOSAMPLE]
-                                [--bioproject BIOPROJECT]
-                                [--assembler ASSEMBLER]
-                                [--molecule_type MOLECULE_TYPE]
-                                [--data_source DATA_SOURCE]
-                                [--filter_out_plasmids FILTER_PLASMIDS]
-                                [--scratch_directory SCRATCH_DIR]
-                                [--blastp BLASTP]
+usage: run_cenote-taker2.py [-h] 
+                            --contigs ORIGINAL_CONTIGS 
+                            --run_title RUN_TITLE 
+                            --prune_prophage PROPHAGE 
+                            --mem MEM
+                            --cpu CPU 
+                            [--template_file TEMPLATE_FILE]
+                            [--reads1 F_READS] [--reads2 R_READS]
+                            [--minimum_length_circular CIRC_LENGTH_CUTOFF]
+                            [--minimum_length_linear LINEAR_LENGTH_CUTOFF]
+                            [--virus_domain_db VIRUS_DOMAIN_DB]
+                            [--lin_minimum_hallmark_genes LIN_MINIMUM_DOMAINS]
+                            [--circ_minimum_hallmark_genes CIRC_MINIMUM_DOMAINS]
+                            [--known_strains HANDLE_KNOWNS]
+                            [--blastn_db BLASTN_DB]
+                            [--enforce_start_codon ENFORCE_START_CODON]
+                            [--hhsuite_tool HHSUITE_TOOL]
+                            [--isolation_source ISOLATION_SOURCE]
+                            [--Environmental_sample ENVIRONMENTAL_SAMPLE]
+                            [--collection_date COLLECTION_DATE]
+                            [--metagenome_type METAGENOME_TYPE]
+                            [--srr_number SRR_NUMBER]
+                            [--srx_number SRX_NUMBER] [--biosample BIOSAMPLE]
+                            [--bioproject BIOPROJECT] [--assembler ASSEMBLER]
+                            [--molecule_type MOLECULE_TYPE]
+                            [--data_source DATA_SOURCE]
+                            [--filter_out_plasmids FILTER_PLASMIDS]
+                            [--scratch_directory SCRATCH_DIR]
+                            [--blastp BLASTP] [--orf-within-orf ORF_WITHIN]
 
-Cenote-Taker2 is a pipeline for virus discovery and thorough annotation of
+Cenote-Taker 2 is a pipeline for virus discovery and thorough annotation of
 viral contigs and genomes. Visit https://github.com/mtisza1/Cenote-Taker2 and
 https://github.com/mtisza1/Cenote-Taker2/wiki to find answers and submit
 issues
@@ -180,10 +182,6 @@ optional arguments:
                         created. Must be unique from older runs or older run
                         will be renamed. Must be less than 18 characters,
                         using ONLY letters, numbers and underscores (_)
-  --template_file TEMPLATE_FILE
-                        Template file with some metadata. Takes a couple
-                        minutes to generate: https://submit.ncbi.nlm.nih.gov/g
-                        enbank/template/submission/
   --prune_prophage PROPHAGE
                         True or False. Attempt to identify and remove flanking
                         chromosomal regions from non-circular contigs with
@@ -203,33 +201,41 @@ optional arguments:
                         could extend the length of the run
 
  OPTIONAL ARGUMENTS for Cenote-Taker2. Most of which are important to consider!!! GenBank typically only accepts genome submission with ample metadata. See https://www.ncbi.nlm.nih.gov/Sequin/sequin.hlp.html#ModifiersPage for more information on GenBank metadata fields:
-  --reads1 F_READS      Default: no_reads ILLUMINA READS ONLY: First Read file
-                        in paired read set - OR - read file in unpaired read
-                        set - OR - read file of interleaved reads. Used for
-                        coverage depth determination.
-  --reads2 R_READS      Default: no_reads ILLUMINA READS ONLY: Second Read
+  --template_file TEMPLATE_FILE
+                        Template file with some metadata. Real one required
+                        for GenBank submission. Takes a couple minutes to
+                        generate: https://submit.ncbi.nlm.nih.gov/genbank/temp
+                        late/submission/
+  --reads1 F_READS      Default: no_reads -- ILLUMINA READS ONLY: First Read
+                        file in paired read set - OR - read file in unpaired
+                        read set - OR - read file of interleaved reads. Used
+                        for coverage depth determination.
+  --reads2 R_READS      Default: no_reads -- ILLUMINA READS ONLY: Second Read
                         file in paired read set. Disregard if not using paired
                         reads. Used for coverage depth determination.
   --minimum_length_circular CIRC_LENGTH_CUTOFF
-                        Default: 1000 Minimum length of contigs to be checked
-                        for circularity. Bare minimun is 1000 nts
+                        Default: 1000 -- Minimum length of contigs to be
+                        checked for circularity. Bare minimun is 1000 nts
   --minimum_length_linear LINEAR_LENGTH_CUTOFF
-                        Default: 1000 Minimum length of non-circualr contigs
-                        to be checked for viral hallmark genes.
+                        Default: 1000 -- Minimum length of non-circualr
+                        contigs to be checked for viral hallmark genes.
   --virus_domain_db VIRUS_DOMAIN_DB
-                        default: standard 'standard' database: all virus (DNA
-                        and RNA) hallmark genes (i.e. genes with known
+                        default: standard -- 'standard' database: all virus
+                        (DNA and RNA) hallmark genes (i.e. genes with known
                         function as virion structural, packaging, replication,
                         or maturation proteins specifically encoded by virus
-                        genomes) with very low false discovery rate.
-                        'rna_virus' database: For RNA virus hallmarks only.
-                        Includes RdRp and capsid genes of RNA viruses. Low
-                        false discovery rate due to structural similarity
-                        between RdRp genes and e.g. transposon-encoded RT
-                        genes
+                        genomes) with very low false discovery rate. 'virion'
+                        database: subset of 'standard', hallmark genes
+                        encoding virion structural proteins, packaging
+                        proteins, or capsid maturation proteins (DNA and RNA
+                        genomes). 'rna_virus' database: For RNA virus
+                        hallmarks only. Includes RdRp and capsid genes of RNA
+                        viruses. Low false discovery rate due to structural
+                        similarity between RdRp genes and e.g. transposon-
+                        encoded RT genes
   --lin_minimum_hallmark_genes LIN_MINIMUM_DOMAINS
-                        Default: 1 Number of detected viral hallmark genes on
-                        a non-circular contig to be considered viral and
+                        Default: 1 -- Number of detected viral hallmark genes
+                        on a non-circular contig to be considered viral and
                         recieve full annotation. WARNING: Only choose '0' if
                         you have prefiltered the contig file to only contain
                         putative viral contigs (using another method such as
@@ -242,103 +248,106 @@ optional arguments:
                         samples, '2' might be more suitable, yielding a false
                         positive rate near 0.
   --circ_minimum_hallmark_genes CIRC_MINIMUM_DOMAINS
-                        Default:1 Number of detected viral hallmark genes on a
-                        circular contig to be considered viral and recieve
-                        full annotation. For samples physically enriched for
-                        virus particles, '0' can be used, but please treat
-                        circular contigs without known viral domains
-                        cautiously. For unenriched samples, '1' might be more
-                        suitable.
+                        Default:1 -- Number of detected viral hallmark genes
+                        on a circular contig to be considered viral and
+                        recieve full annotation. For samples physically
+                        enriched for virus particles, '0' can be used, but
+                        please treat circular contigs without known viral
+                        domains cautiously. For unenriched samples, '1' might
+                        be more suitable.
   --known_strains HANDLE_KNOWNS
-                        Default: do_not_check_knowns -> do not check if
+                        Default: do_not_check_knowns -- do not check if
                         putatively viral contigs are highly related to known
                         sequences (via MEGABLAST). 'blast_knowns': REQUIRES '
                         --blastn_db' option to function correctly.
   --blastn_db BLASTN_DB
-                        Default: none Set a database if using '--
+                        Default: none -- Set a database if using '--
                         known_strains' option. Specify BLAST-formatted
                         nucleotide datase. Probably, use only GenBank 'nt'
                         database downloaded from ftp://ftp.ncbi.nlm.nih.gov/
                         or another GenBank formatted .fasta file to make
                         databse
   --enforce_start_codon ENFORCE_START_CODON
-                        Default: True For final genome maps, require ORFs to
-                        be initiated by a typical start codon? GenBank
+                        Default: False -- For final genome maps, require ORFs
+                        to be initiated by a typical start codon? GenBank
                         submissions containing ORFs without start codons can
                         be rejected. However, if True, important but
                         incomplete genes could be culled from the final
                         output. This is relevant mainly to contigs of
                         incomplete genomes
-  --handle_contigs_without_hallmark HANDLE_NONVIRAL
-                        Default: no_sketch_domainless What do you want to do
-                        with contigs that do not have detectable viral
-                        hallmark features? 'no_sketch_domainless': do nothing,
-                        report sequences in file. 'sketch_all': annotate ORFs
-                        with RPSBLAST/CDD and tRNA scan only (Could still add
-                        substantial time to run, especially without phyical or
-                        computational viral enrichment).
   --hhsuite_tool HHSUITE_TOOL
-                        default: hhblits hhblits will query PDB, pfam, and CDD
-                        to annotate ORFs escaping identification via upstream
-                        methods. 'hhsearch': hhsearch, a more sensitive tool,
-                        will query PDB, pfam, and CDD to annotate ORFs
-                        escaping identification via upstream methods.
-                        (WARNING: hhsearch takes much, much longer than
-                        hhblits and can extend the duration of the run many
-                        times over. Do not use on large input contig files).
-                        'no_hhsuite_tool': forgoes annotation of ORFs with
-                        hhsuite. Fastest way to complete a run.
+                        default: hhblits -- hhblits will query PDB, pfam, and
+                        CDD to annotate ORFs escaping identification via
+                        upstream methods. 'hhsearch': hhsearch, a more
+                        sensitive tool, will query PDB, pfam, and CDD to
+                        annotate ORFs escaping identification via upstream
+                        methods. (WARNING: hhsearch takes much, much longer
+                        than hhblits and can extend the duration of the run
+                        many times over. Do not use on large input contig
+                        files). 'no_hhsuite_tool': forgoes annotation of ORFs
+                        with hhsuite. Fastest way to complete a run.
   --isolation_source ISOLATION_SOURCE
-                        Default: unknown Describes the local geographical
+                        Default: unknown -- Describes the local geographical
                         source of the organism from which the sequence was
                         derived
   --Environmental_sample ENVIRONMENTAL_SAMPLE
-                        Default: False True or False, Identifies sequence
+                        Default: False -- True or False, Identifies sequence
                         derived by direct molecular isolation from an
                         unidentified organism
   --collection_date COLLECTION_DATE
-                        Default: unknown Date of collection. this format:
+                        Default: unknown -- Date of collection. this format:
                         01-Jan-2019, i.e. DD-Mmm-YYYY
   --metagenome_type METAGENOME_TYPE
-                        Default: unknown a.k.a. metagenome_source
+                        Default: unknown -- a.k.a. metagenome_source
   --srr_number SRR_NUMBER
-                        Default: unknown For read data on SRA, run number,
+                        Default: unknown -- For read data on SRA, run number,
                         usually beginning with 'SRR' or 'ERR'
   --srx_number SRX_NUMBER
-                        Default: unknown For read data on SRA, experiment
+                        Default: unknown -- For read data on SRA, experiment
                         number, usually beginning with 'SRX' or 'ERX'
   --biosample BIOSAMPLE
-                        Default: unknown For read data on SRA, sample number,
-                        usually beginning with 'SAMN' or 'SAMEA' or 'SRS'
+                        Default: unknown -- For read data on SRA, sample
+                        number, usually beginning with 'SAMN' or 'SAMEA' or
+                        'SRS'
   --bioproject BIOPROJECT
-                        Default: unknown For read data on SRA, project number,
-                        usually beginning with 'PRJNA' or 'PRJEB'
+                        Default: unknown -- For read data on SRA, project
+                        number, usually beginning with 'PRJNA' or 'PRJEB'
   --assembler ASSEMBLER
-                        Default: unknown_assembler Assembler used to generate
-                        contigs, if applicable. Specify version of assembler
-                        software, if possible.
+                        Default: unknown_assembler -- Assembler used to
+                        generate contigs, if applicable. Specify version of
+                        assembler software, if possible.
   --molecule_type MOLECULE_TYPE
-                        Default: DNA viable options are DNA - OR - RNA
+                        Default: DNA -- viable options are DNA - OR - RNA
   --data_source DATA_SOURCE
-                        default: original original data is not taken from
+                        default: original -- original data is not taken from
                         other researchers' public or private database.
                         'tpa_assembly': data is taken from other researchers'
                         public or private database. Please be sure to specify
                         SRA metadata.
   --filter_out_plasmids FILTER_PLASMIDS
-                        Default: True True - OR - False. If True, hallmark
+                        Default: True -- True - OR - False. If True, hallmark
                         genes of plasmids will not count toward the minimum
                         hallmark gene parameters. If False, hallmark genes of
                         plasmids will count. Plasmid hallmark gene set is not
                         necessarily comprehensive at this time.
   --scratch_directory SCRATCH_DIR
-                        Default: none When running many instances of Cenote-
-                        Taker2, it seems to run more quickly if you copy the
-                        hhsuite databases to a scratch space temporarily. Use
-                        this argument to set a scratch directory that the
-                        databases will be copied to (at least 100GB of scratch
-                        space are required for copying the databases)
+                        Default: none -- When running many instances of
+                        Cenote-Taker2, it seems to run more quickly if you
+                        copy the hhsuite databases to a scratch space
+                        temporarily. Use this argument to set a scratch
+                        directory that the databases will be copied to (at
+                        least 100GB of scratch space are required for copying
+                        the databases)
   --blastp BLASTP       Do not use this argument as of now.
+  --orf-within-orf ORF_WITHIN
+                        Default: False -- Remove called ORFs without HMMSCAN
+                        or RPS-BLAST hits that begin and end within other
+                        ORFs? True or False
 ```
 ## Directory Tree
 ![Directory Tree Image](../master/cenote-taker2_directory_tree2.png)
+
+
+## Citation
+Michael J Tisza, Anna K Belford, Guillermo Domínguez-Huerta, Benjamin Bolduc, Christopher B Buck, Cenote-Taker 2 democratizes virus discovery and sequence annotation, Virus Evolution, Volume 7, Issue 1, January 2021, veaa100, https://doi.org/10.1093/ve/veaa100
+

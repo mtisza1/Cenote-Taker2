@@ -342,32 +342,35 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 		fi
 	done
 	mkdir ../ITR_containing_contigs
-	for DAT in *.dat ; do 
+	DAT_FILES=$( find  * -maxdepth 0 -type f -name "*.dat" )
+	if [ -n "$DAT_FILES" ] ; then
+		for DAT in $DAT_FILES ; do 
 
-		if grep -q "^[0-9]" $DAT ; then 
-			LENGTH=$( bioawk -c fastx '{ print length($seq) }' ${DAT%.2.3.5.80.10.40.500000.10000.dat} | sed 's/ //g; s/\///g' ) ;
-			ITR_STARTS=$( grep "^[0-9]" $DAT | cut -d " " -f1 ) ; 
-			ITR_ENDS=$( grep "^[0-9]" $DAT | cut -d " " -f5 ) ; 
-			LOW_START=$( echo $ITR_STARTS | tr " " "\n" | sort -g | head -n1| sed 's/ //g' ) ; 
-			HIGH_END=$( echo $ITR_ENDS | tr " " "\n" | sort -g | tail -n1 | sed 's/ //g' ) ; 
-			if [ $LOW_START -gt 0 ] && [ $HIGH_END -gt 0 ] ; then 
-				HIGH_DIST=$(( $LENGTH-$HIGH_END )) ; 
-				if [ $LOW_START -lt 1000 ] && [ $HIGH_DIST -lt 1000 ] ; then 
-					echo ${DAT%.2.3.5.80.10.40.500000.10000.dat} "contains ITRs:" ; 
-					echo $LENGTH "5-prime ITR:" $LOW_START "3-prime ITR:" $HIGH_END ; 
-					mv ../ITR_containing_contigs/${DAT%.fasta.2.3.5.80.10.40.500000.10000.dat}.fasta
-					echo "$(tput setaf 4) Making ITR .tbl file $(tput sgr 0)"
-					L_END_A=$( grep "^$LOW_START" $DAT | cut -d " " -f2 )
-					L_START_B=$( grep "^$LOW_START" $DAT | cut -d " " -f4 )
-					L_END_B=$( grep "^$LOW_START" $DAT | cut -d " " -f5 )
-					H_START_A=$( grep " $HIGH_END " $DAT | cut -d " " -f1 )
-					H_END_A=$( grep " $HIGH_END " $DAT | cut -d " " -f2 )		
-					H_START_B=$( grep " $HIGH_END " $DAT | cut -d " " -f4 )
-					echo -e "$LOW_START\t""$L_END_A\t""repeat_region\n""\t\t\trpt_type\tITR\n""$L_START_B\t""$L_END_B\t""repeat_region\n""\t\t\trpt_type\tITR\n""$H_START_A\t""$H_END_A\t""repeat_region\n""\t\t\trpt_type\tITR\n""$H_START_B\t""$HIGH_END\t""repeat_region\n""\t\t\trpt_type\tITR\n" >> ../ITR_containing_contigs/${DAT%.fasta.2.3.5.80.10.40.500000.10000.dat}.ITR.tbl; 
+			if grep -q "^[0-9]" $DAT ; then 
+				LENGTH=$( bioawk -c fastx '{ print length($seq) }' ${DAT%.2.3.5.80.10.40.500000.10000.dat} | sed 's/ //g; s/\///g' ) ;
+				ITR_STARTS=$( grep "^[0-9]" $DAT | cut -d " " -f1 ) ; 
+				ITR_ENDS=$( grep "^[0-9]" $DAT | cut -d " " -f5 ) ; 
+				LOW_START=$( echo $ITR_STARTS | tr " " "\n" | sort -g | head -n1| sed 's/ //g' ) ; 
+				HIGH_END=$( echo $ITR_ENDS | tr " " "\n" | sort -g | tail -n1 | sed 's/ //g' ) ; 
+				if [ $LOW_START -gt 0 ] && [ $HIGH_END -gt 0 ] ; then 
+					HIGH_DIST=$(( $LENGTH-$HIGH_END )) ; 
+					if [ $LOW_START -lt 1000 ] && [ $HIGH_DIST -lt 1000 ] ; then 
+						echo ${DAT%.2.3.5.80.10.40.500000.10000.dat} "contains ITRs:" ; 
+						echo $LENGTH "5-prime ITR:" $LOW_START "3-prime ITR:" $HIGH_END ; 
+						mv ../ITR_containing_contigs/${DAT%.fasta.2.3.5.80.10.40.500000.10000.dat}.fasta
+						echo "$(tput setaf 4) Making ITR .tbl file $(tput sgr 0)"
+						L_END_A=$( grep "^$LOW_START" $DAT | cut -d " " -f2 )
+						L_START_B=$( grep "^$LOW_START" $DAT | cut -d " " -f4 )
+						L_END_B=$( grep "^$LOW_START" $DAT | cut -d " " -f5 )
+						H_START_A=$( grep " $HIGH_END " $DAT | cut -d " " -f1 )
+						H_END_A=$( grep " $HIGH_END " $DAT | cut -d " " -f2 )		
+						H_START_B=$( grep " $HIGH_END " $DAT | cut -d " " -f4 )
+						echo -e "$LOW_START\t""$L_END_A\t""repeat_region\n""\t\t\trpt_type\tITR\n""$L_START_B\t""$L_END_B\t""repeat_region\n""\t\t\trpt_type\tITR\n""$H_START_A\t""$H_END_A\t""repeat_region\n""\t\t\trpt_type\tITR\n""$H_START_B\t""$HIGH_END\t""repeat_region\n""\t\t\trpt_type\tITR\n" >> ../ITR_containing_contigs/${DAT%.fasta.2.3.5.80.10.40.500000.10000.dat}.ITR.tbl; 
+					fi ; 
 				fi ; 
 			fi ; 
-		fi ; 
-	done
+		done
+	fi
 	CONTIGS_NON_CIRCULAR=$( find * -maxdepth 0 -type f -name "*[0-9].fasta" )
 	mkdir ../no_end_contigs_with_viral_domain
 	if [ $LIN_MINIMUM_DOMAINS -le 0 ] ; then
@@ -1054,7 +1057,7 @@ if [ "$ORF_WITHIN" == "True" ] ; then
 					done
 				fi
 			done
-			sed 's/(Fragment)//g; s/\. .*//g; s/{.*//g; s/\[.*//g; s/Putative hypothetical protein/hypothetical protein/g; s/Uncultured bacteri.*/hypothetical protein/g; s/RNA helicase$/helicase/g; s/Os.*/hypothetical protein/g; s/\.$//g; s/Unplaced genomic scaffold.*/hypothetical protein/g; s/Putative hypothetical protein/hypothetical protein/g; s/Contig.*/hypothetical protein/g; s/Uncharacterized protein/hypothetical protein/g; s/uncharacterized protein/hypothetical protein/g; s/Uncharacterised protein/hypothetical protein/g' $feat_tbl3 | sed '/--/d' > ${feat_tbl3%.int.tbl}.comb2.tbl ; 
+			sed 's/(Fragment)//g; s/\. .*//g; s/{.*//g; s/\[.*//g; s/Putative hypothetical protein/hypothetical protein/g; s/Uncultured bacteri.*/hypothetical protein/g; s/RNA helicase$/helicase/g; s/Os.*/hypothetical protein/g; s/\.$//g; s/Unplaced genomic scaffold.*/hypothetical protein/g; s/Putative hypothetical protein/hypothetical protein/g; s/Contig.*/hypothetical protein/g; s/Uncharacterized protein/hypothetical protein/g; s/uncharacterized protein/hypothetical protein/g; s/Uncharacterised protein/hypothetical protein/g ; s/length=.*//g' $feat_tbl3 | sed '/--/d' > ${feat_tbl3%.int.tbl}.comb2.tbl ; 
 			grep -e 'hypothetical protein' -B2 ${feat_tbl3%.int.tbl}.comb2.tbl | grep "^[0-9]" | awk '{FS="\t"; OFS="\t"} {print $1, $2}' > ${feat_tbl3%.int.tbl}.hypo_start_stop.txt ;
 
 			# Remove redudant ORFs that are subORFs of ORFs overlapping the wrap-point
@@ -1130,7 +1133,7 @@ else
 	INT_TBL=$( find * -maxdepth 0 -type f -name "*.int.tbl" )
 	if [ -n "$INT_TBL" ] ; then
 		for feat_tbl3 in $INT_TBL ; do
-			sed 's/(Fragment)//g; s/\. .*//g; s/{.*//g; s/\[.*//g; s/Putative hypothetical protein/hypothetical protein/g; s/Uncultured bacteri.*/hypothetical protein/g; s/RNA helicase$/helicase/g; s/Os.*/hypothetical protein/g; s/\.$//g; s/Unplaced genomic scaffold.*/hypothetical protein/g; s/Putative hypothetical protein/hypothetical protein/g; s/Contig.*/hypothetical protein/g; s/Uncharacterized protein/hypothetical protein/g; s/uncharacterized protein/hypothetical protein/g; s/Uncharacterised protein/hypothetical protein/g' $feat_tbl3 | sed '/--/d' > ${feat_tbl3%.int.tbl}.int2.tbl ; 
+			sed 's/(Fragment)//g; s/\. .*//g; s/{.*//g; s/\[.*//g; s/Putative hypothetical protein/hypothetical protein/g; s/Uncultured bacteri.*/hypothetical protein/g; s/RNA helicase$/helicase/g; s/Os.*/hypothetical protein/g; s/\.$//g; s/Unplaced genomic scaffold.*/hypothetical protein/g; s/Putative hypothetical protein/hypothetical protein/g; s/Contig.*/hypothetical protein/g; s/Uncharacterized protein/hypothetical protein/g; s/uncharacterized protein/hypothetical protein/g; s/Uncharacterised protein/hypothetical protein/g ; s/length=.*//g' $feat_tbl3 | sed '/--/d' > ${feat_tbl3%.int.tbl}.int2.tbl ; 
 		done
 	fi
 fi
@@ -1188,8 +1191,8 @@ if [ -n "$INT2_TBL" ] ; then
 	for feat_tbl4 in $INT2_TBL ; do 
 		if [ -s "${feat_tbl4%.int2.tbl}.HH2.tbl" ] && [ -s "$feat_tbl4" ] ; then
 			head -n1 $feat_tbl4 > ${feat_tbl4%.int2.tbl}.comb3.tbl
-			grep -v -e 'hypothetical protein' -e 'unnamed protein product' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Domain of unknown function' -e 'product	gp' -e 'putative phage protein' $feat_tbl4 | grep -A1 -B2 'product' | grep -v ">Feature" | sed '/--/d; s/TPA_asm: //g; s/TPA://g' >> ${feat_tbl4%.int2.tbl}.comb3.tbl
-			sed 's/(Fragment)//g; s/\. .*//g; s/{.*//g; s/\[.*//g; s/Putative hypothetical protein/hypothetical protein/g; s/Uncultured bacteri.*/hypothetical protein/g; s/RNA helicase$/helicase/g; s/Os.*/hypothetical protein/g; s/\.$//g; s/Unplaced genomic scaffold.*/hypothetical protein/g; s/Putative hypothetical protein/hypothetical protein/g; s/Contig.*/hypothetical protein/g; s/Uncharacterized protein/hypothetical protein/g; s/uncharacterized protein/hypothetical protein/g; s/Uncharacterised protein/hypothetical protein/g; s/[bB]rain cDNA.*/hypothetical protein/g; s/(E\.C.*//g' ${feat_tbl4%.int2.tbl}.HH2.tbl | grep -v ">Feature" | sed '/--/d' >> ${feat_tbl4%.int2.tbl}.comb3.tbl ;
+			grep -v -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Domain of unknown function' -e 'product	gp' -e 'putative phage protein' $feat_tbl4 | grep -A1 -B2 'product' | grep -v ">Feature" | sed '/--/d; s/TPA_asm: //g; s/TPA://g' >> ${feat_tbl4%.int2.tbl}.comb3.tbl
+			sed 's/(Fragment)//g; s/\. .*//g; s/{.*//g; s/\[.*//g; s/Putative hypothetical protein/hypothetical protein/g; s/Uncultured bacteri.*/hypothetical protein/g; s/RNA helicase$/helicase/g; s/Os.*/hypothetical protein/g; s/\.$//g; s/Unplaced genomic scaffold.*/hypothetical protein/g; s/Putative hypothetical protein/hypothetical protein/g; s/Contig.*/hypothetical protein/g; s/Uncharacterized protein/hypothetical protein/g; s/uncharacterized protein/hypothetical protein/g; s/Uncharacterised protein/hypothetical protein/g; s/[bB]rain cDNA.*/hypothetical protein/g; s/(E\.C.*//g ; s/length=.*//g' ${feat_tbl4%.int2.tbl}.HH2.tbl | grep -v ">Feature" | sed '/--/d' >> ${feat_tbl4%.int2.tbl}.comb3.tbl ;
 			if [ -s "${feat_tbl4%.int2.tbl}.ITR.tbl" ] ; then
 				cat ${feat_tbl4%.int2.tbl}.ITR.tbl >> ${feat_tbl4%.int2.tbl}.comb3.tbl
 			fi
@@ -1694,16 +1697,22 @@ if [ -n "$COMB3_TBL" ] ; then
 		else
 			TOPOLOGY="linear"
 			NUCL_FILE="${feat_tbl2%.comb3.tbl}.fna"
-			echo "$NUCL_FILE" | if grep -q "_vs[0-9][0-9]" ; then
+			if [ "$PROPHAGE" == "True" ] ; then
 				input_contig_name=$( head -n1 ${feat_tbl2%_vs[0-9][0-9].comb3.tbl}.fna | cut -d " " -f 2 | sed 's/|.*//g; s/>//g' )
 			else
-				input_contig_name=$( head -n1 $NUCL_FILE | cut -d " " -f 2 | sed 's/|.*//g; s/>//g' )
+				input_contig_name=$( head -n1 ${feat_tbl2%.comb3.tbl}.fna | cut -d " " -f 2 | sed 's/|.*//g; s/>//g' )
 			fi
+		fi
+		INPUT_STEM=$( echo "$input_contig_name" | sed 's/@.*/@/g' )
+		if grep -q "$INPUT_STEM" /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv ; then
+			CRISPR=$( grep -m1 "$INPUT_STEM" /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv | cut -f2,3 | sed 's/	/: /g ; s/\(.*\)/\1 CIRSPR spacer matches/'  )
+		else
+			CRISPR=" "
 		fi
 
 		cp $feat_tbl2 sequin_and_genome_maps/${JUST_TBL2_FILE%.comb3.tbl}.tbl ; 
 				#echo "1"
-		bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -v topoq="$TOPOLOGY" -v gcodeq="$GCODE" -v o_name="$input_contig_name" -c fastx '{ print ">" newname " [note=input name:"o_name" -- closest relative: " tax_var " " perc_var " ] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology="topoq"] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode="gcodeq"]" ; print $seq }' $NUCL_FILE > sequin_and_genome_maps/${JUST_TBL2_FILE%.comb3.tbl}.fsa ; 
+		bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" -v molecule_var="$MOLECULE_TYPE" -v topoq="$TOPOLOGY" -v gcodeq="$GCODE" -v o_name="$input_contig_name" -v crispr1="$CRISPR" -c fastx '{ print ">" newname " [note=input name:"o_name" -- closest relative: " tax_var " " perc_var ";" crispr1" ] [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"][isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [country=USA] [collection_date=" date_var "] [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] [topology="topoq"] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode="gcodeq"]" ; print $seq }' $NUCL_FILE > sequin_and_genome_maps/${JUST_TBL2_FILE%.comb3.tbl}.fsa ; 
 
 	#echo $input_contig_name
 	if [ -s reads_to_all_contigs_over${LENGTH_MINIMUM}nt.coverage.txt ] ; then
