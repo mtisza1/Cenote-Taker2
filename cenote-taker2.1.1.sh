@@ -1705,7 +1705,7 @@ if [ -n "$COMB3_TBL" ] ; then
 		fi
 		INPUT_STEM=$( echo "$input_contig_name" | sed 's/@.*/@/g' )
 		if grep -q "$INPUT_STEM" /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv ; then
-			PRE_CRISP=$( grep -m1 "$INPUT_STEM" /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv | awk '{OFS="\t"}{FS="\t"}{if ($3>1) {print "yes"} else {print "no}}' )
+			PRE_CRISP=$( grep -m1 "$INPUT_STEM" /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv | awk '{OFS="\t"}{FS="\t"}{if ($3>1) {print "yes"} else {print "no"}}' )
 			if [ "$PRE_CRISP" == "yes" ] ;then
 				CRISPR=$( grep -m1 "$INPUT_STEM" /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv | cut -f2,3 | sed 's/	/: /g ; s/\(.*\)/\1 CIRSPR spacer matches/'  )
 			else 
