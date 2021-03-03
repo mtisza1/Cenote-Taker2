@@ -62,7 +62,7 @@ if [ -n "$vd_fastas" ] ; then
 	CALLED_VIRAL=$( find * -maxdepth 0 -type f -name "*.AA.called_hmmscan2.txt" )
 	if [ -n "$CALLED_VIRAL" ] ; then
 		for NO_END in $CALLED_VIRAL ; do
-			cat $NO_END | sed 's/\(.*\)/\1 /' | while read LINE ; do 
+			cat $NO_END | sed 's/ $//g' | while read LINE ; do 
 				PROTEIN_INFO=$( grep "$LINE \[" ${NO_END%.AA.called_hmmscan2.txt}.AA.sorted1.fasta ) ;  
 				START_BASEH=$( echo $PROTEIN_INFO | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
 				END_BASEH=$( echo $PROTEIN_INFO | sed 's/.*- \(.*\)\].*/\1/' ) ; 
@@ -128,7 +128,7 @@ if [ -n "$vd_fastas" ] ; then
 	HMM_TBL=$( find * -maxdepth 0 -type f -name "*.HMMSCAN_TABLE.txt" )
 	if [ -n "$HMM_TBL" ] ; then
 		for TABLE1 in $HMM_TBL ; do
-			echo $TABLE1
+			#echo $TABLE1
 			CONTIG_LENGTH=$( bioawk -c fastx '{ print length($seq) }' ${TABLE1%.HMMSCAN_TABLE.txt}.fna )
 			awk -v lengthq="$CONTIG_LENGTH" 'BEGIN {for (i=1;i<=lengthq;i++) print i, "Z"}' | sed 's/ /	/g' > ${TABLE1%.HMMSCAN_TABLE.txt}.virus_signal.tab
 

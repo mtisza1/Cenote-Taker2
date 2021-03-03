@@ -204,8 +204,8 @@ optional arguments:
   --template_file TEMPLATE_FILE
                         Template file with some metadata. Real one required
                         for GenBank submission. Takes a couple minutes to
-                        generate: https://submit.ncbi.nlm.nih.gov/genbank/temp
-                        late/submission/
+                        generate: 
+                        https://submit.ncbi.nlm.nih.gov/genbank/template/submission/
   --reads1 F_READS      Default: no_reads -- ILLUMINA READS ONLY: First Read
                         file in paired read set - OR - read file in unpaired
                         read set - OR - read file of interleaved reads. Used
