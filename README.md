@@ -1,5 +1,5 @@
 # Cenote-Taker 2
-Cenote-Taker 2 is a dual function bioinformatics tool. On the one hand, Cenote-Taker 2 discovers/predicts virus sequences from any kind of genome or metagenomic assembly. Second, virus sequences/genomes are annotated with a variety of sequences features, genes, and taxomy. Either the discovery or the the annotation module can be used independently.
+Cenote-Taker 2 is a dual function bioinformatics tool. On the one hand, Cenote-Taker 2 discovers/predicts virus sequences from any kind of genome or metagenomic assembly. Second, virus sequences/genomes are annotated with a variety of sequences features, genes, and taxonomy. Either the discovery or the the annotation module can be used independently.
 ```diff
 + The code is currently functional. Feel free to use Cenote-Taker 2 at will.
 + Major update on March 4th 2021. 
