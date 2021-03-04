@@ -48,15 +48,15 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 			echo "No homologues found" > ${nucl_fa%.fna}.tax_guide.blastx.out
 		fi
 		if grep -i -q "Caudovir\|Ackermannvir\|Herellevir\|Corticovir\|Levivir\|Tectivir\|crAss-like virus\|CrAssphage\|Cyanophage\|Microvir\microphage\|Siphoviridae\|Myoviridae\|phage\|Podovir\|Halovir\|sphaerolipovir\|pleolipovir\|plasmid\|Inovir\|Ampullavir\|Bicaudavir\|Fusellovir\|Guttavir\|Ligamenvir\|Plasmavir\|Salterprovir\|Cystovir" ${nucl_fa%.fna}.tax_guide.blastx.out ; then
-			echo ${nucl_fa} >> DTR_seqs_for_phanotate.txt
+			echo ${nucl_fa} >> LIN_seqs_for_phanotate.txt
 		else
-			echo ${nucl_fa} >> DTR_seqs_for_prodigal.txt
+			echo ${nucl_fa} >> LIN_seqs_for_prodigal.txt
 		fi
 	done
-	if [ -s DTR_seqs_for_phanotate.txt ] ; then
+	if [ -s LIN_seqs_for_phanotate.txt ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running PHANOTATE, annotate linear contigs " $MDYT
-		cat DTR_seqs_for_phanotate.txt | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU ${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o {}.phan.fasta {}.fna
+		cat LIN_seqs_for_phanotate.txt | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU ${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o {}.phan.fasta {}.fna
 		for PHAN in *.phan.fasta ; do 
 			if [ "$ENFORCE_START_CODON" == "True" ] ; then
 				sed 's/ /@/g' ${PHAN} | bioawk -c fastx '{ print }' | awk '{ if ($2 ~ /^[ATCG]TG/) { print ">"$1 ; print $2 }}' | sed 's/@/ /g' > ${PHAN%.fasta}.sort.fasta
@@ -77,10 +77,10 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 			done > ${PHAN%.phan.fasta}.AA.fasta
 		done			
 	fi
-	if [ -s DTR_seqs_for_prodigal.txt ] ; then
+	if [ -s LIN_seqs_for_prodigal.txt ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running Prodigal, annotate linear contigs " $MDYT
-		cat DTR_seqs_for_prodigal.txt | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU prodigal -a {}.prodigal.fasta -i {}.fna -p meta -c -q >/dev/null 2>&1
+		cat LIN_seqs_for_prodigal.txt | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU prodigal -a {}.prodigal.fasta -i {}.fna -p meta -c -q >/dev/null 2>&1
 		for PROD in *prodigal.fasta ; do
 			sed 's/ /@/g' ${PROD} | bioawk -c fastx '{print}' | while read LINE ; do 
 				ORIENTATION=$( echo "$LINE" | cut -d "#" -f 4 | sed 's/@//g' ) ;
@@ -200,7 +200,7 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 		echo ">Feature "${ROT_AAs%.AA.sorted.fasta}" Table1" > ${ROT_AAs%.AA.sorted.fasta}.SCAN.tbl
 		CALL_ALL_HMM=$( find * -maxdepth 0 -type f -regextype sed -regex "${ROT_AAs%.AA.sorted.fasta}.*called_hmmscan.*txt" )
 		if [ -n "$CALL_ALL_HMM" ] ; then
-			cat $( find * -maxdepth 0 -type f -regextype sed -regex "${ROT_AAs%.AA.sorted.fasta}.*called_hmmscan.*txt" ) > ${ROT_AAs%.AA.sorted.fasta}.all_called_hmmscans.txt
+			cat $( find * -maxdepth 0 -type f -regextype sed -regex "${ROT_AAs%.AA.sorted.fasta}\..*called_hmmscan.*txt" ) > ${ROT_AAs%.AA.sorted.fasta}.all_called_hmmscans.txt
 			cat ${ROT_AAs%.AA.sorted.fasta}.all_called_hmmscans.txt | sed 's/ $//g' | while read LINE ; do 
 				PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
 				START_BASEH=$( echo $PROTEIN_INFO | sed 's/.*\[\(.*\) -.*/\1/' ) ; 

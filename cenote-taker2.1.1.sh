@@ -867,7 +867,7 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 	done
 	for ROT_AAs in $ROTATE_SORT_AAs ; do
 		echo ">Feature "${ROT_AAs%.rotate.AA.sorted.fasta}" Table1" > ${ROT_AAs%.rotate.AA.sorted.fasta}.SCAN.tbl
-		cat $( find * -maxdepth 0 -type f -regextype sed -regex "${ROT_AAs%.rotate.AA.sorted.fasta}.*called_hmmscan.*txt" ) > ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt
+		cat $( find * -maxdepth 0 -type f -regextype sed -regex "${ROT_AAs%.rotate.AA.sorted.fasta}\..*called_hmmscan.*txt" ) > ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt
 		cat ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt | sed 's/ $//g' | while read LINE ; do 
 			PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
 			START_BASEH=$( echo $PROTEIN_INFO | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
@@ -945,7 +945,7 @@ if [ -n "$PROTEIN_NO_HMMSCAN2" ]; then
 	cat *rpsb.out | awk '{ if ($0 ~ /^>/) {printf $0 ; getline; print $0} else { print $0}}' > COMBINED_RESULTS.rotate.AA.rpsblast.out
 	perl ${CENOTE_SCRIPT_DIR}/rpsblastreport2tbl_mt_annotation_pipe_biowulf.pl ;
 	grep "protein_id	" COMBINED_RESULTS.NT.tbl | sed 's/.*protein_id	lcl|//g' | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read CONTIG ; do
-		echo "${CONTIG}"
+		#echo "${CONTIG}"
 		echo ">Feature ${CONTIG} Table1" > ${CONTIG}.NT.tbl
 
 		grep -A2 -B1 "${CONTIG}_" COMBINED_RESULTS.NT.tbl | sed '/--/d' >> ${CONTIG}.NT.tbl
@@ -1815,7 +1815,7 @@ if [ -s ${run_title}_PRUNING_INFO_TABLE.tsv ] ; then
 
 fi
 
-echo "ORIGINAL_NAME	CENOTE_NAME	END_FEATURE	LENGTH	NUM_HALLMARKS	HALLMARK_NAMES" > ${run_title}_CONTIG_SUMMARY.tsv
+echo "ORIGINAL_NAME	CENOTE_NAME	END_FEATURE	LENGTH	ORF_CALLER	NUM_HALLMARKS	HALLMARK_NAMES" > ${run_title}_CONTIG_SUMMARY.tsv
 CIRCULAR_HALLMARK_CONTIGS=$( find * -maxdepth 1 -type f -wholename "DTR_contigs_with_viral_domain/*fna" )
 
 if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
@@ -1830,8 +1830,13 @@ if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 			NUM_HALLMARKS=0
 			HALLMARK_NAMES="none"
 		fi
+		if grep -q "${LINEAR}" DTR_contigs_with_viral_domain/DTR_seqs_for_phanotate.txt ; then
+			ORF_CALLER="PHANTOTATE"
+		else
+			ORF_CALLER="Prodigal"
+		fi
 		END_FEATURE="DTR"
-		echo "${ORIGINAL_NAME}	${CENOTE_NAME}	${END_FEATURE}	${LENGTH}	${NUM_HALLMARKS}	${HALLMARK_NAMES}" >> ${run_title}_CONTIG_SUMMARY.tsv
+		echo "${ORIGINAL_NAME}	${CENOTE_NAME}	${END_FEATURE}	${LENGTH}	${ORF_CALLER}	${NUM_HALLMARKS}	${HALLMARK_NAMES}" >> ${run_title}_CONTIG_SUMMARY.tsv
 	done
 fi
 
@@ -1858,7 +1863,12 @@ if [ -n "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ; then
 			HALLMARK_NAMES="none"
 		fi
 		END_FEATURE="None"
-		echo "${ORIGINAL_NAME}	${CENOTE_NAME}	${END_FEATURE}	${LENGTH}	${NUM_HALLMARKS}	${HALLMARK_NAMES}" >> ${run_title}_CONTIG_SUMMARY.tsv
+		if grep -q "${LINEAR}" no_end_contigs_with_viral_domain/LIN_seqs_for_phanotate.txt ; then
+			ORF_CALLER="PHANTOTATE"
+		else
+			ORF_CALLER="Prodigal"
+		fi
+		echo "${ORIGINAL_NAME}	${CENOTE_NAME}	${END_FEATURE}	${LENGTH}	${ORF_CALLER}	${NUM_HALLMARKS}	${HALLMARK_NAMES}" >> ${run_title}_CONTIG_SUMMARY.tsv
 	done
 fi
 
