@@ -16,6 +16,7 @@ echo "00000000000000000000000000$(tput sgr 0)"
 echo " "
 sleep 2s
 
+
 # Setting input parameters
 original_contigs=$1
 F_READS=$2
@@ -49,7 +50,15 @@ MEM=${29}
 CPU=${30}
 ENFORCE_START_CODON=${31}
 ORF_WITHIN=${32}
+ANNOTATION_MODE=${33}
 base_directory=$PWD
+
+if [ "$ANNOTATION_MODE" == "True" ] ; then
+	LIN_MINIMUM_DOMAINS=0
+	CIRC_MINIMUM_DOMAINS=0
+	circ_length_cutoff=1000
+	linear_length_cutoff=1
+fi
 
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@"
 echo "Your specified arguments:"
