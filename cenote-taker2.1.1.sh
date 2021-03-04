@@ -92,6 +92,7 @@ echo "Location of Cenote scripts:        $CENOTE_SCRIPT_DIR"
 echo "Location of scratch directory:     $SCRATCH_DIR"
 echo "GB of memory:                      $MEM"
 echo "number of CPUs available for run:  $CPU"
+echo "Annotation mode?                   $ANNOTATION_MODE"
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@"
 
 if [ "${SCRATCH_DIR}" == "none" ] ; then
@@ -1738,6 +1739,9 @@ if [ -n "$COMB3_TBL" ] ; then
 		if [ -s ${NUCL_FILE%.fna}.blastn.notnew.out ] ; then
 			PRE_BLASTN=$( head -n1 ${NUCL_FILE%.fna}.blastn.notnew.out | cut -f3 )
 			BLASTN_INFO=$( echo "; BLASTN hit: $PRE_BLASTN" )
+		elif [ -s ${NUCL_FILE%.rotate.fasta}.blastn.notnew.out ] ; then
+			PRE_BLASTN=$( head -n1 ${NUCL_FILE%.rotate.fasta}.blastn.notnew.out | cut -f3 )
+			BLASTN_INFO=$( echo "; BLASTN hit: $PRE_BLASTN" )			
 		else
 			BLASTN_INFO=""
 		fi

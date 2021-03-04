@@ -246,7 +246,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; t
 
 				if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid\|phage" ${nucl_fa%.fna}.tax_guide.blastn.out ; then
 					echo $nucl_fa " is closely related to a virus that has already been deposited in GenBank nt."
-					cat ${nucl_fa%.fna}.tax_guide.blastn.out
+					#cat ${nucl_fa%.fna}.tax_guide.blastn.out
 					cp ${nucl_fa%.fna}.tax_guide.blastn.out ${nucl_fa%.fna}.tax_guide.KNOWN_VIRUS.out
 
 				else 
