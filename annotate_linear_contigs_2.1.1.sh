@@ -279,7 +279,7 @@ if [ -n "$PROTEIN_NO_HMMSCAN2" ]; then
 	cat *rpsb.out | awk '{ if ($0 ~ /^>/) {printf $0 ; getline; print $0} else { print $0}}' > COMBINED_RESULTS.rotate.AA.rpsblast.out
 	perl ${CENOTE_SCRIPT_DIR}/rpsblastreport2tbl_mt_annotation_pipe_biowulf.pl ;
 	grep "protein_id	" COMBINED_RESULTS.NT.tbl | sed 's/.*protein_id	lcl|//g' | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read CONTIG ; do
-		echo "${CONTIG}"
+		#echo "${CONTIG}"
 		echo ">Feature ${CONTIG} Table1" > ${CONTIG}.NT.tbl
 
 		grep -A2 -B1 "${CONTIG}_" COMBINED_RESULTS.NT.tbl | sed '/--/d' >> ${CONTIG}.NT.tbl
@@ -491,17 +491,24 @@ dark_orf_list=$( find * -maxdepth 0 -type f -name "*.for_hhpred.fasta" )
 if [ -n "$dark_orf_list" ] ; then
 	if  [[ $HHSUITE_TOOL = "hhsearch" ]] ; then
 		echo "$dark_orf_list" | sed 's/.for_hhpred.fasta//g' | xargs -n 1 -I {} -P $CPU ${CENOTE_SCRIPT_DIR}/hh-suite/build/src/hhsearch -i {}.for_hhpred.fasta -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o {}.out.hhr -cpu 1 -maxmem 1 -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1 >/dev/null 2>&1
+		for dark_orf in $dark_orf_list ; do	
+			cat $dark_orf >> ${dark_orf%*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
+			rm -f $dark_orf
+		done		
 	elif [[ $HHSUITE_TOOL = "hhblits" ]] ; then
 		echo "$dark_orf_list" | sed 's/.for_hhpred.fasta//g' | xargs -n 1 -I {} -P $CPU ${CENOTE_SCRIPT_DIR}/hh-suite/build/src/hhblits -i {}.for_hhpred.fasta -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o {}.out.hhr -cpu 1 -maxmem 1 -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1 >/dev/null 2>&1
+		for dark_orf in $dark_orf_list ; do	
+			cat $dark_orf >> ${dark_orf%*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
+			rm -f $dark_orf
+		done
 	else
 		echo "$(tput setaf 5) Valid option for HHsuite tool (i.e. -hhsearch or -hhblits) was not provided. Skipping step for "$dark_orf" $(tput sgr 0)"
 	fi
-	for dark_orf in $dark_orf_list ; do	
-		cat $dark_orf >> ${dark_orf%*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
-		rm -f $dark_orf
-	done	
-	cat *out.hhr > ${run_title}.rotate.out_all.hhr
-	rm -f *out.hhr
+	cat_list=$( find * -maxdepth 0 -type f -name "*.out.hhr" )
+	if [ -s $cat_list ] ; then
+		cat *out.hhr > ${run_title}.rotate.out_all.hhr
+		rm -f *out.hhr
+	fi
 fi
 
 rm -f *[0-9].AA.fasta

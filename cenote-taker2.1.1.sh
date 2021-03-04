@@ -1160,17 +1160,28 @@ dark_orf_list=$( find * -maxdepth 0 -type f -name "*.for_hhpred.fasta" )
 if [ -n "$dark_orf_list" ] ; then
 	if  [[ $HHSUITE_TOOL = "hhsearch" ]] ; then
 		echo "$dark_orf_list" | sed 's/.for_hhpred.fasta//g' | xargs -n 1 -I {} -P $CPU ${CENOTE_SCRIPT_DIR}/hh-suite/build/src/hhsearch -i {}.for_hhpred.fasta -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o {}.out.hhr -cpu 1 -maxmem 1 -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1 >/dev/null 2>&1
+		for dark_orf in $dark_orf_list ; do	
+			cat $dark_orf >> ${dark_orf%.rotate*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
+			rm -f $dark_orf
+			cat ${dark_orf%.for_hhpred.fasta}.out.hhr >> ${dark_orf%.rotate*.for_hhpred.fasta}.rotate.out_all.hhr ;
+			rm -f ${dark_orf%.for_hhpred.fasta}.out.hhr 
+		done
 	elif [[ $HHSUITE_TOOL = "hhblits" ]] ; then
 		echo "$dark_orf_list" | sed 's/.for_hhpred.fasta//g' | xargs -n 1 -I {} -P $CPU ${CENOTE_SCRIPT_DIR}/hh-suite/build/src/hhblits -i {}.for_hhpred.fasta -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o {}.out.hhr -cpu 1 -maxmem 1 -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1 >/dev/null 2>&1
+		for dark_orf in $dark_orf_list ; do	
+			cat $dark_orf >> ${dark_orf%.rotate*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
+			rm -f $dark_orf
+			cat ${dark_orf%.for_hhpred.fasta}.out.hhr >> ${dark_orf%.rotate*.for_hhpred.fasta}.rotate.out_all.hhr ;
+			rm -f ${dark_orf%.for_hhpred.fasta}.out.hhr 
+		done
 	else
 		echo "$(tput setaf 5) Valid option for HHsuite tool (i.e. -hhsearch or -hhblits) was not provided. Skipping step for "$dark_orf" $(tput sgr 0)"
+		for dark_orf in $dark_orf_list ; do	
+			cat $dark_orf >> ${dark_orf%.rotate*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
+			rm -f $dark_orf
+		done
 	fi
-	for dark_orf in $dark_orf_list ; do	
-		cat $dark_orf >> ${dark_orf%.rotate*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
-		rm -f $dark_orf
-		cat ${dark_orf%.for_hhpred.fasta}.out.hhr >> ${dark_orf%.rotate*.for_hhpred.fasta}.rotate.out_all.hhr ;
-		rm -f ${dark_orf%.for_hhpred.fasta}.out.hhr 
-	done	
+	
 fi
 
 rm -f *.rotate.AA.fasta
