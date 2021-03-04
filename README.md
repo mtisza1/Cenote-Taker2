@@ -2,14 +2,20 @@
 Cenote-Taker 2 is a dual function bioinformatics tool. On the one hand, Cenote-Taker 2 discovers/predicts virus sequences from any kind of genome or metagenomic assembly. Second, virus sequences/genomes are annotated with a variety of sequences features, genes, and taxomy. Either the discovery or the the annotation module can be used independently.
 ```diff
 + The code is currently functional. Feel free to use Cenote-Taker 2 at will.
++ Major update on March 4th 2021. 
++ Cenote-Taker 2.1.1 is has improved paralellization (faster), better output file structure, more customization, improved hallmark models, and unlimited breadsticks.
 ```
 
-If you just want to discover/predict virus sequences and get a report on those sequences, use [Cenote Unlimited Breadsticks] ###, also provided in the Cenote-Taker 2 repo
-An ulterior motive for creating and distributing Cenote-Taker2 is to facilitate annotation and deposition of viral genomes into GenBank where they can be used by the scientific public. Therefore, I hope you consider depositing the submittable outputs (.sqn) after reviewing them. I am not affiliated with GenBank. See "Use Cases" below, and read the [Cenote-Taker2 wiki](https://github.com/mtisza1/Cenote-Taker2/wiki) for useful information on using the pipeline (e.g. expected outputs) and screeds on myriad topics.
+If you just want to discover/predict virus sequences and get a report on those sequences, use [Cenote Unlimited Breadsticks](https://github.com/mtisza1/Cenote_Unlimited_Breadsticks), also provided in the Cenote-Taker 2 repo.
+
+If you just want to annotate your virus sequences and make genome maps, run Cenote-Taker 2 using `-am True`.
+
+An ulterior motive for creating and distributing Cenote-Taker 2 is to facilitate annotation and deposition of viral genomes into GenBank where they can be used by the scientific public.  Therefore, I hope you consider depositing the submittable outputs (.sqn) after reviewing them. I am not affiliated with GenBank. See "Use Cases" below, and read the [Cenote-Taker 2 wiki](https://github.com/mtisza1/Cenote-Taker2/wiki) for useful information on using the pipeline (e.g. expected outputs) and screeds on myriad topics.
 Using a HPC with at least 16 CPUs and 16g of dedicated memory is recommended for most runs. (Annotation of a few selected genomes or the Cenote Unlimted Breadsticks can be done with less memory/CPU). 
 
-Significant updates to the scripts to increase speed, parallelization, and output readability have been released on ###
-Update to HMM databases (hallmark genes) occurred on September 15th, 2020. See instructions below to update your database.
+To update from older versions: `cd Cenote-Taker2` then `git pull`. Then update the HMM database.
+
+Update to HMM databases (hallmark genes) occurred on March 4th, 2021. See instructions below to update your database.
 
 Read the manuscript in [Virus Evolution](https://academic.oup.com/ve/article/7/1/veaa100/6055568)
 
@@ -33,7 +39,7 @@ Likely, this will only work in Linux.
 If you just want a lightweight (7GB), non-annotating virus discovery tool, use [Cenote Unlimited Breadsticks](https://github.com/mtisza1/Cenote_Unlimited_Breadsticks). The Unlimited Breadsticks module is included in the Cenote-Taker 2 repo, so no need to install it if you already have Cenote-Taker 2 (you may need to update `cd Cenote-Taker2` then `git pull`) 
 
 ```diff
-- ALERT *** Because Cenote-Taker2 needs large high-quality 
+- ALERT *** Because Cenote-Taker 2 needs large high-quality 
 - sequence databases to work correctly, installation will take ~2 hours 
 - AND require about 130GB of storage space. 
 - Also part of the install requires 4 CPUs to work. 
@@ -51,7 +57,7 @@ wget  https://raw.githubusercontent.com/mtisza1/Cenote-Taker2/master/install_scr
 4. Run the install script. Give exactly one argument in the script: 'default' - OR - a path to the desired conda environment setup directory. 
 The conda environment itself requires 32GB of space mostly due to the krona taxonomy database. Some HPC users have installed their Conda in their /home directory (or equivalent) which typically has little space. The other 100GB consists of sequence databases and will be put within the current directory
 ```diff
-- ALERT *** Because Cenote-Taker2 needs large high-quality 
+- ALERT *** Because Cenote-Taker 2 needs large high-quality 
 - sequence databases to work correctly, running this script will take ~2 hours 
 - AND require about 130GB of storage space. 
 - Also part of the install requires 4 CPUs to work. 
@@ -69,7 +75,9 @@ bash cenote_install1.sh /path/to/better/directory 2>&1 | tee install_ct2.log
 
 # Bioconda installation
 
-A user has packaged Cenote-Taker2 in Bioconda for use by their institute. * THIS HAS NOTE BEEN UPDATED RECENTLY * However, installation can be done by anyone using their package with a few commands. All the above alerts, requirements, and warnings still apply. This will also require a user to have 32GB of storage in their default conda environment directory.
+* THIS HAS NOT BEEN UPDATED RECENTLY. BIOCONDA VERSION NOT RECOMMENDED AT THE MOMENT *
+
+A user has packaged Cenote-Taker 2 in Bioconda for use by their institute.  However, installation can be done by anyone using their package with a few commands. All the above alerts, requirements, and warnings still apply. This will also require a user to have 32GB of storage in their default conda environment directory.
 
 Commands:
 ```
@@ -95,9 +103,9 @@ Discussion:
 
 ## Updating databases
 
-As of now, only the HMM database has been updated from the original (update on September 15th, 2020 ###). This update should only take a minute or two. Here's how you update (modify if your conda environment is different than below example):
+As of now, only the HMM database has been updated from the original (update on March 4th, 2021). This update should only take a minute or two. Here's how you update (modify if your conda environment is different than below example):
 ```
-update Cenote-Taker2 (change to main repo directory):
+update Cenote-Taker 2 (change to main repo directory):
 git pull
 
 load your conda environment:
@@ -110,8 +118,8 @@ python update_ct2_databases.py --hmm True
 ## Schematic
 ![alt text](../master/CT2_schematic_redo1.png)
 
-# Running Cenote-Taker2
-Cenote-Taker2 currently runs in a python wrapper. 
+# Running Cenote-Taker 2
+Cenote-Taker 2 currently runs in a python wrapper. 
 1. Activate the Conda environment.
 ```
 Check environments:
@@ -127,30 +135,64 @@ conda activate /path/to/better/directory/cenote-taker2_env
 ```
 python /path/to/Cenote-Taker2/run_cenote-taker2.py
 
-(Or, if you want to save a log of the run (note that log files can get quite large))
+(Or, if you want to save a log of the run)
 
 python /path/to/Cenote-Taker2/run_cenote-taker2.py 2>&1 | tee output.log
 ```
 
+### Use Case Suggestions/Settings
+#### *Annotation*
 
+If you just want to annotate your pre-selected virus sequences and make genome maps, run Cenote-Taker 2 using `-am True`.
+
+For very divergent genomes, setting `-hh hhsearch` will marginally improve number of genes that are annotated. This setting drastically increasese the run time.
+
+#### *Discovery*
+
+**Virus-like particle (VLP) prep assembly:**
+```
+-p False -db standard
+```
+You might apply a size cutoff for linear contigs as well, e.g. ` --minimum_length_linear 3000` OR `--minimum_length_linear 5000`. Changing length minima does not affect false positive rates, but short linear contigs may not be useful, depending on your goals.
+
+**Whole genome shotgun (WGS) metagenomic assembly:**
+```
+-p True -db virion --minimum_length_linear 3000 --lin_minimum_hallmark_genes 2
+```
+While you should definitely ***definitely*** prune virus sequences from WGS datasets, [CheckV](https://bitbucket.org/berkeleylab/checkv/src/master/) also does a very good job (I'm still formally comparing these approaches) and you could use `--prune_prophage False` and feed the unpruned contigs from Unlimited Breadsticks into `checkv end_to_end` if you prefer. (Or, prune with Cenote-Taker 2, then CheckV)
+
+**Bacterial reference genome**
+```
+-p True -db virion --minimum_length_linear 3000 --lin_minimum_hallmark_genes 2
+```
+Using `--lin_minimum_hallmark_genes 1 --virus_domain_db virion` with WGS or bacterial genome data will (in my experience) yield very few sequences that appear to be false positives, however, there are lots of "degraded" prophage sequences in these sequencing sets, i.e. some/most genes of the phage have been lost. That said, sequence with just 1 hallmark gene is neither a guarantee of a degraded phage (especially in the case of ssDNA viruses) nor is 2+ hallmark a guarantee of of a complete phage.
+
+**RNAseq assembly of any kind (if you only want RNA viruses)**
+```
+-p False -db rna_virus
+```
+If you also want DNA virus transcripts, or if your data is mixed RNA/DNA sequencing `--virus_domain_db standard` is the appropriate option.
+
+All arguments:
 ```
 usage: run_cenote-taker2.py [-h] 
-                            --contigs ORIGINAL_CONTIGS 
-                            --run_title RUN_TITLE 
-                            --prune_prophage PROPHAGE 
-                            --mem MEM
-                            --cpu CPU 
-                            [--template_file TEMPLATE_FILE]
-                            [--reads1 F_READS] [--reads2 R_READS]
+                           -c ORIGINAL_CONTIGS 
+                           -r RUN_TITLE 
+                           -p PROPHAGE
+                           -m MEM 
+                           -t CPU 
+                            [-am ANNOTATION_MODE]
+                            [--template_file TEMPLATE_FILE] [--reads1 F_READS]
+                            [--reads2 R_READS]
                             [--minimum_length_circular CIRC_LENGTH_CUTOFF]
                             [--minimum_length_linear LINEAR_LENGTH_CUTOFF]
-                            [--virus_domain_db VIRUS_DOMAIN_DB]
+                            [-db VIRUS_DOMAIN_DB]
                             [--lin_minimum_hallmark_genes LIN_MINIMUM_DOMAINS]
                             [--circ_minimum_hallmark_genes CIRC_MINIMUM_DOMAINS]
                             [--known_strains HANDLE_KNOWNS]
                             [--blastn_db BLASTN_DB]
                             [--enforce_start_codon ENFORCE_START_CODON]
-                            [--hhsuite_tool HHSUITE_TOOL]
+                            [-hh HHSUITE_TOOL]
                             [--isolation_source ISOLATION_SOURCE]
                             [--Environmental_sample ENVIRONMENTAL_SAMPLE]
                             [--collection_date COLLECTION_DATE]
@@ -173,16 +215,16 @@ optional arguments:
   -h, --help            show this help message and exit
 
  REQUIRED ARGUMENTS for Cenote-Taker2 :
-  --contigs ORIGINAL_CONTIGS
+  -c ORIGINAL_CONTIGS, --contigs ORIGINAL_CONTIGS
                         Contig file with .fasta extension in fasta format - OR
                         - assembly graph with .fastg extension. Each header
                         must be unique before the first space character
-  --run_title RUN_TITLE
+  -r RUN_TITLE, --run_title RUN_TITLE
                         Name of this run. A directory of this name will be
                         created. Must be unique from older runs or older run
                         will be renamed. Must be less than 18 characters,
                         using ONLY letters, numbers and underscores (_)
-  --prune_prophage PROPHAGE
+  -p PROPHAGE, --prune_prophage PROPHAGE
                         True or False. Attempt to identify and remove flanking
                         chromosomal regions from non-circular contigs with
                         viral hallmarks (True is highly recommended for
@@ -190,22 +232,26 @@ optional arguments:
                         enriched samples probably should be False (you might
                         check with ViromeQC). Also, please use False if
                         --lin_minimum_hallmark_genes is set to 0)
-  --mem MEM             example: 56 Gigabytes of memory available for Cenote-
+  -m MEM, --mem MEM     example: 56 Gigabytes of memory available for Cenote-
                         Taker2. Typically, 16 to 32 should be used. Lower
                         memory will work in theory, but could extend the
                         length of the run
-  --cpu CPU             Example: 32 Number of CPUs available for Cenote-
+  -t CPU, --cpu CPU     Example: 32 Number of CPUs available for Cenote-
                         Taker2. Typically, 32 CPUs should be used. For large
                         datasets, increased performance can be seen up to 120
                         CPUs. Fewer than 16 CPUs will work in theory, but
                         could extend the length of the run
 
  OPTIONAL ARGUMENTS for Cenote-Taker2. Most of which are important to consider!!! GenBank typically only accepts genome submission with ample metadata. See https://www.ncbi.nlm.nih.gov/Sequin/sequin.hlp.html#ModifiersPage for more information on GenBank metadata fields:
+  -am ANNOTATION_MODE, --annotation_mode ANNOTATION_MODE
+                        Default: False -- Annotate sequences only (skip
+                        discovery). Only use if you believe each provided
+                        sequence is viral
   --template_file TEMPLATE_FILE
                         Template file with some metadata. Real one required
                         for GenBank submission. Takes a couple minutes to
-                        generate: 
-                        https://submit.ncbi.nlm.nih.gov/genbank/template/submission/
+                        generate: https://submit.ncbi.nlm.nih.gov/genbank/temp
+                        late/submission/
   --reads1 F_READS      Default: no_reads -- ILLUMINA READS ONLY: First Read
                         file in paired read set - OR - read file in unpaired
                         read set - OR - read file of interleaved reads. Used
@@ -219,7 +265,7 @@ optional arguments:
   --minimum_length_linear LINEAR_LENGTH_CUTOFF
                         Default: 1000 -- Minimum length of non-circualr
                         contigs to be checked for viral hallmark genes.
-  --virus_domain_db VIRUS_DOMAIN_DB
+  -db VIRUS_DOMAIN_DB, --virus_domain_db VIRUS_DOMAIN_DB
                         default: standard -- 'standard' database: all virus
                         (DNA and RNA) hallmark genes (i.e. genes with known
                         function as virion structural, packaging, replication,
@@ -275,7 +321,7 @@ optional arguments:
                         incomplete genes could be culled from the final
                         output. This is relevant mainly to contigs of
                         incomplete genomes
-  --hhsuite_tool HHSUITE_TOOL
+  -hh HHSUITE_TOOL, --hhsuite_tool HHSUITE_TOOL
                         default: hhblits -- hhblits will query PDB, pfam, and
                         CDD to annotate ORFs escaping identification via
                         upstream methods. 'hhsearch': hhsearch, a more
