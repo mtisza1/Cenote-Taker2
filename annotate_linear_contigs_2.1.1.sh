@@ -503,16 +503,16 @@ if [ -n "$dark_orf_list" ] ; then
 		done
 	else
 		echo "$(tput setaf 5) Valid option for HHsuite tool (i.e. -hhsearch or -hhblits) was not provided. Skipping step for "$dark_orf" $(tput sgr 0)"
+		for dark_orf in $dark_orf_list ; do	
+			cat $dark_orf >> ${dark_orf%*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
+			rm -f $dark_orf
+		done
 	fi
 	cat_list=$( find * -maxdepth 0 -type f -name "*.out.hhr" )
-	if [ -s $cat_list ] ; then
+	if [ -n "$cat_list" ] ; then
 		cat *out.hhr > ${run_title}.rotate.out_all.hhr
 		rm -f *out.hhr
 	fi
-	for dark_orf in $dark_orf_list ; do	
-		cat $dark_orf >> ${dark_orf%*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
-		rm -f $dark_orf
-	done
 fi
 
 rm -f *[0-9].AA.fasta
@@ -614,15 +614,16 @@ if [ -n "$COMB3_TBL" ] ; then
 			elif grep -i -q "tail" $feat_tbl2 ; then
 				TAX_ORF=$( grep -i -B1 "tail" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
 			else TAX_ORF="No_suitable_orf"
-
-
 			fi
+
 			if [ "$TAX_ORF" == "Conjugative Transposon" ] ; then
 				#echo "${feat_tbl2%.comb3.tbl} looks like a conjugative transposon"
 				echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 			elif [ "$TAX_ORF" == "Inoviridae" ] ; then
 				#echo "${feat_tbl2%.comb3.tbl} looks like an Inovirus"
 				echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+			elif [ "$TAX_ORF" == "No_suitable_orf" ] ; then
+				echo "No suitable ORF for taxonomy found for ${feat_tbl2%.comb3.tbl}, using BLASTX result."
 			else
 
 				grep -A1 "$TAX_ORF " ${feat_tbl2%.comb3.tbl}.AA.sorted.fasta | sed '/--/d' > ${feat_tbl2%.comb3.tbl}.tax_orf.fasta

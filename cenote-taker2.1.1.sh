@@ -1290,6 +1290,8 @@ if [ -n "$COMB3_TBL" ] ; then
 			elif [ "$TAX_ORF" == "Inoviridae" ] ; then
 				#echo "${feat_tbl2%.comb3.tbl} looks like an Inovirus"
 				echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+			elif [ "$TAX_ORF" == "No_suitable_orf" ] ; then
+				echo "No suitable ORF for taxonomy found for ${feat_tbl2%.comb3.tbl}, using BLASTX result."
 			else
 
 				grep -A1 "$TAX_ORF " ${feat_tbl2%.comb3.tbl}.rotate.AA.sorted.fasta | sed '/--/d' > ${feat_tbl2%.comb3.tbl}.tax_orf.fasta
@@ -1726,15 +1728,19 @@ if [ -n "$COMB3_TBL" ] ; then
 		fi
 		INPUT_STEM=$( echo "$input_contig_name" | sed 's/@.*/@/g' )
 		### crispr info
-		if grep -q "$INPUT_STEM" /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv ; then
-			PRE_CRISP=$( grep -m1 "$INPUT_STEM" /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv | awk '{OFS="\t"}{FS="\t"}{if ($3>1) {print "yes"} else {print "no"}}' )
-			if [ "$PRE_CRISP" == "yes" ] ;then
-				CRISPR=$( grep -m1 "$INPUT_STEM" /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv | cut -f2,3 | sed 's/	/: /g ; s/\(.*\)/\1 CRISPR spacer matches/'  )
-			else 
-				CRISPR=" "
+		if [ -s /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv ] ; then
+			if grep -q "$INPUT_STEM" /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv ; then
+				PRE_CRISP=$( grep -m1 "$INPUT_STEM" /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv | awk '{OFS="\t"}{FS="\t"}{if ($3>1) {print "yes"} else {print "no"}}' )
+				if [ "$PRE_CRISP" == "yes" ] ;then
+					CRISPR=$( grep -m1 "$INPUT_STEM" /data/tiszamj/mike_tisza/auto_annotation_pipeline/hmp_wgs_contigs/chvd_db4.2_contigs_binned_by_biosample_210129/200814_final_crispropendb_summary_all_db4_seqs.fmt1.tsv | cut -f2,3 | sed 's/	/: /g ; s/\(.*\)/\1 CRISPR spacer matches/'  )
+				else 
+					CRISPR=""
+				fi
+			else
+				CRISPR=""
 			fi
 		else
-			CRISPR=" "
+			CRISPR=""
 		fi
 		if [ -s ${NUCL_FILE%.fna}.blastn.notnew.out ] ; then
 			PRE_BLASTN=$( head -n1 ${NUCL_FILE%.fna}.blastn.notnew.out | cut -f3 )
