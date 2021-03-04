@@ -245,7 +245,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; t
 				fi
 
 				if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid\|phage" ${nucl_fa%.fna}.tax_guide.blastn.out ; then
-					echo $nucl_fa "$(tput setaf 4) is closely related to a virus that has already been deposited in GenBank nt. $(tput sgr 0)"
+					echo $nucl_fa " is closely related to a virus that has already been deposited in GenBank nt."
 					cat ${nucl_fa%.fna}.tax_guide.blastn.out
 					cp ${nucl_fa%.fna}.tax_guide.blastn.out ${nucl_fa%.fna}.tax_guide.KNOWN_VIRUS.out
 
@@ -509,6 +509,10 @@ if [ -n "$dark_orf_list" ] ; then
 		cat *out.hhr > ${run_title}.rotate.out_all.hhr
 		rm -f *out.hhr
 	fi
+	for dark_orf in $dark_orf_list ; do	
+		cat $dark_orf >> ${dark_orf%*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
+		rm -f $dark_orf
+	done
 fi
 
 rm -f *[0-9].AA.fasta
