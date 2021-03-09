@@ -14,6 +14,9 @@ echo "00000000000000000000000000"
 echo "00000000000000000000000000$(tput sgr 0)"
 
 echo " "
+echo "Version 2.1.1"
+echo " "
+
 sleep 2s
 
 

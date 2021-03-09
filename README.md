@@ -2,7 +2,7 @@
 Cenote-Taker 2 is a dual function bioinformatics tool. On the one hand, Cenote-Taker 2 discovers/predicts virus sequences from any kind of genome or metagenomic assembly. Second, virus sequences/genomes are annotated with a variety of sequences features, genes, and taxonomy. Either the discovery or the the annotation module can be used independently.
 ```diff
 + The code is currently functional. Feel free to use Cenote-Taker 2 at will.
-+ Major update on March 4th 2021. 
++ Major update on March 4th 2021: Version 2.1.1
 + Cenote-Taker 2.1.1 is has improved paralellization (faster), better output file structure, more customization, improved hallmark models, and unlimited breadsticks.
 ```
 
@@ -145,7 +145,7 @@ python /path/to/Cenote-Taker2/run_cenote-taker2.py 2>&1 | tee output.log
 
 If you just want to annotate your pre-selected virus sequences and make genome maps, run Cenote-Taker 2 using `-am True`.
 
-For very divergent genomes, setting `-hh hhsearch` will marginally improve number of genes that are annotated. This setting drastically increasese the run time.
+For very divergent genomes, setting `-hh hhsearch` will marginally improve number of genes that are annotated. This setting drastically increasese the run time. On the other hand, setting `-hh none` will skip the time consuming hhblits step. With this, you'll still get pretty good genome maps, and might be most appropriate for very large metagenomes, or for runs where you just want to do a quick check.
 
 #### *Discovery*
 
