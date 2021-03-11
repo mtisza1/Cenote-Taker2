@@ -544,7 +544,7 @@ if [ ! -z "$DTR_SEQS" ] ; then
 						mv ${HIT}.AA.sorted.fasta DTR_contigs_with_viral_domain/
 						rm ${HIT}.AA.fasta
 
-					else
+					elif [ -s ${HIT}.fasta ] ; then
 						sed 's/ /#/g' ${HIT}.fasta | bioawk -c fastx '{print ">"$name"#DTRs" ; print $seq}' | 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
 						rm -f ${HIT}.fasta
 					fi
@@ -626,7 +626,7 @@ if [ ! -z "$ITR_SEQS" ] ; then
 					grep -v -f ${HIT}.AA.called_hmmscan.txt ${HIT}.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.AA.no_hmmscan1.fasta
 					rm ${HIT}.AA.fasta
 
-				else
+				elif [ -s ${HIT}.fasta ] ; then
 					sed 's/ /#/g' ${HIT}.fasta | bioawk -c fastx '{print ">"$name"#ITRs" ; print $seq}' | 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
 					rm -f ${HIT}.fasta
 				fi
@@ -931,7 +931,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 				#echo ${circle%.rotate.fasta}.blastn.out" found"
 				sed 's/ /-/g' ${circle%.rotate.fasta}.blastn.out | awk '{if ($4 > 90) print}' | awk '{if (($5 / $6) > 0.5) print}' > ${circle%.rotate.fasta}.blastn.notnew.out ;
 			else
-				echo ${circle%.rotate.fasta}.blastn.out" not found"
+				echo ${circle%.rotate.fasta}.blastn.out" not found, no close BLASTN hits for this sequence."
 			fi
 			if [ -s "${circle%.rotate.fasta}.blastn.notnew.out" ] ; then
 
@@ -1895,7 +1895,7 @@ if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 			NUM_HALLMARKS=0
 			HALLMARK_NAMES="none"
 		fi
-		if grep -q "${LINEAR}" DTR_contigs_with_viral_domain/DTR_seqs_for_phanotate.txt ; then
+		if [ -s DTR_contigs_with_viral_domain/DTR_seqs_for_phanotate.txt ] && grep -q "${LINEAR}" DTR_contigs_with_viral_domain/DTR_seqs_for_phanotate.txt ; then
 			ORF_CALLER="PHANTOTATE"
 		else
 			ORF_CALLER="Prodigal"
@@ -1928,7 +1928,7 @@ if [ -n "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ; then
 			HALLMARK_NAMES="none"
 		fi
 		END_FEATURE="None"
-		if grep -q "${LINEAR}" no_end_contigs_with_viral_domain/LIN_seqs_for_phanotate.txt ; then
+		if [ -s no_end_contigs_with_viral_domain/LIN_seqs_for_phanotate.txt ] && grep -q "${LINEAR}" no_end_contigs_with_viral_domain/LIN_seqs_for_phanotate.txt ; then
 			ORF_CALLER="PHANTOTATE"
 		else
 			ORF_CALLER="Prodigal"

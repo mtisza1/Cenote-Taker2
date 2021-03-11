@@ -235,7 +235,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; t
 			if [ -s "${nucl_fa%.fna}.blastn.out" ]; then
 				sed 's/ /-/g' ${nucl_fa%.fna}.blastn.out | awk '{if ($4 > 90) print}' | awk '{if (($5 / $6) > 0.5) print}' > ${nucl_fa%.fna}.blastn.notnew.out ;
 			else
-				echo ${nucl_fa%.fna}.blastn.out" not found"
+				echo ${nucl_fa%.fna}.blastn.out" not found, no close BLASTN hits for this sequence."
 			fi
 			if [ -s "${nucl_fa%.fna}.blastn.notnew.out" ] ; then
 
