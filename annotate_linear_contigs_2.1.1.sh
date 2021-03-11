@@ -166,16 +166,20 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 	if [ -n "$DTR_AA_FOR_HMM2" ] ; then
 		cat $( find * -maxdepth 0 -type f -name "${run_title}*AA.no_hmmscan1.fasta" ) > all_DTR_HMM2_proteins.AA.fasta
 		TOTAL_AA_SEQS=$( grep -F ">" all_DTR_HMM2_proteins.AA.fasta | wc -l | bc )
-		AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
-		if [ $AA_SEQS_PER_FILE = 0 ] ; then
-			AA_SEQS_PER_FILE=1
+		if [ $TOTAL_AA_SEQS -ge 1 ] ; then 
+			AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
+			if [ $AA_SEQS_PER_FILE = 0 ] ; then
+				AA_SEQS_PER_FILE=1
+			fi
+			awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_HMM2_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_HMM2_proteins.AA.fasta
+			SPLIT_DTR_HMM2=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_HMM2_GENOME_AA_*.fasta" )
+			MDYT=$( date +"%m-%d-%y---%T" )
+			echo "time update: running hmmscan2, annotating linear contigs " $MDYT
+			echo "$SPLIT_DTR_HMM2" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan2.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.fasta >/dev/null 2>&1
+			cat SPLIT_DTR_HMM2_GENOME_AA_*AA.hmmscan2.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out
+		else
+			echo "no AA seqs for hmmscan2, annotating linear contigs"
 		fi
-		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_HMM2_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_HMM2_proteins.AA.fasta
-		SPLIT_DTR_HMM2=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_HMM2_GENOME_AA_*.fasta" )
-		MDYT=$( date +"%m-%d-%y---%T" )
-		echo "time update: running hmmscan2, annotating linear contigs " $MDYT
-		echo "$SPLIT_DTR_HMM2" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan2.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.fasta >/dev/null 2>&1
-		cat SPLIT_DTR_HMM2_GENOME_AA_*AA.hmmscan2.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out
 	fi
 	if [ -s SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out ] ; then
 		cut -f3 SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
@@ -267,23 +271,27 @@ if [ -n "$PROTEIN_NO_HMMSCAN2" ]; then
 
 	cat $( find * -maxdepth 0 -type f -name "*.AA.no_hmmscan2.fasta" ) > all_DTR_rps_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_DTR_rps_proteins.AA.fasta | wc -l | bc )
-	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
-	if [ $AA_SEQS_PER_FILE = 0 ] ; then
-		AA_SEQS_PER_FILE=1
-	fi
-	awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_RPS_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_rps_proteins.AA.fasta
-	SPLIT_DTR_AA_RPS=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_RPS_AA_*.fasta" )
-	MDYT=$( date +"%m-%d-%y---%T" )
-	echo "time update: running RPSBLAST, annotating linear contigs " $MDYT
-	echo "$SPLIT_DTR_AA_RPS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {}.fasta -line_length 200 -out {}.rpsb.out >/dev/null 2>&1
-	cat *rpsb.out | awk '{ if ($0 ~ /^>/) {printf $0 ; getline; print $0} else { print $0}}' > COMBINED_RESULTS.rotate.AA.rpsblast.out
-	perl ${CENOTE_SCRIPT_DIR}/rpsblastreport2tbl_mt_annotation_pipe_biowulf.pl ;
-	grep "protein_id	" COMBINED_RESULTS.NT.tbl | sed 's/.*protein_id	lcl|//g' | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read CONTIG ; do
-		#echo "${CONTIG}"
-		echo ">Feature ${CONTIG} Table1" > ${CONTIG}.NT.tbl
+	if [ $TOTAL_AA_SEQS -ge 1 ] ; then 
+		AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
+		if [ $AA_SEQS_PER_FILE = 0 ] ; then
+			AA_SEQS_PER_FILE=1
+		fi
+		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_RPS_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_rps_proteins.AA.fasta
+		SPLIT_DTR_AA_RPS=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_RPS_AA_*.fasta" )
+		MDYT=$( date +"%m-%d-%y---%T" )
+		echo "time update: running RPSBLAST, annotating linear contigs " $MDYT
+		echo "$SPLIT_DTR_AA_RPS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {}.fasta -line_length 200 -out {}.rpsb.out >/dev/null 2>&1
+		cat *rpsb.out | awk '{ if ($0 ~ /^>/) {printf $0 ; getline; print $0} else { print $0}}' > COMBINED_RESULTS.rotate.AA.rpsblast.out
+		perl ${CENOTE_SCRIPT_DIR}/rpsblastreport2tbl_mt_annotation_pipe_biowulf.pl ;
+		grep "protein_id	" COMBINED_RESULTS.NT.tbl | sed 's/.*protein_id	lcl|//g' | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read CONTIG ; do
+			#echo "${CONTIG}"
+			echo ">Feature ${CONTIG} Table1" > ${CONTIG}.NT.tbl
 
-		grep -A2 -B1 "${CONTIG}_" COMBINED_RESULTS.NT.tbl | sed '/--/d' >> ${CONTIG}.NT.tbl
-	done
+			grep -A2 -B1 "${CONTIG}_" COMBINED_RESULTS.NT.tbl | sed '/--/d' >> ${CONTIG}.NT.tbl
+		done
+	else
+		echo "no AA seqs for RPSBLAST, annotating linear contigs"
+	fi
 fi
 
 # Detecting any tRNAs and making a tbl addenum file

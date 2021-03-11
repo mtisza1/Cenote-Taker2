@@ -408,54 +408,58 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 		echo "time update: running linear contigs with hmmscan against virus hallmark gene database: $virus_domain_db " $MDYT	
 		cat $( find * -maxdepth 0 -type f -name "*.AA.sorted.fasta" ) > all_large_genome_proteins.AA.fasta
 		TOTAL_AA_SEQS=$( grep -F ">" all_large_genome_proteins.AA.fasta | wc -l | bc )
-		AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
-		if [ $AA_SEQS_PER_FILE = 0 ] ; then
-			AA_SEQS_PER_FILE=1
-		fi
-		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_LARGE_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_large_genome_proteins.AA.fasta
-		SPLIT_AA_LARGE=$( find * -maxdepth 0 -type f -name "SPLIT_LARGE_GENOME_AA_*.fasta" )
-		if  [[ $virus_domain_db = "standard" ]] ; then
-			echo "$SPLIT_AA_LARGE" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1
-			echo "$SPLIT_AA_LARGE" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.fasta >/dev/null 2>&1
-		elif [[ $virus_domain_db = "virion" ]]; then
-			echo "$SPLIT_AA_LARGE" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1		
-		elif [[ $virus_domain_db = "rna_virus" ]]; then
-			echo "$SPLIT_AA_LARGE" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/rna_virus_rdrp_capsid_hmms1 {}.fasta >/dev/null 2>&1
-		else
-			echo "$(tput setaf 5) Incorrect argument given for virus_domain_db variable. Try standard, virion, or rna_virus as arguments. For this run, no contigs with viral domains but without circularity or ITRs will be detected $(tput sgr 0)"
-			rm -f ./*{0..9}.fasta
-			break
-		fi		
-		HMM_REP_NUMEBR=$( find * -maxdepth 0 -type f -name "SPLIT_LARGE_GENOME_AA_*AA.hmmscan_replicate.out" | wc -l )
-		if [[ $FOR_PLASMIDS = "True" ]]; then
-			if [ $HMM_REP_NUMEBR -gt 0 ] ; then
-				cat SPLIT_LARGE_GENOME_AA_*AA.hmmscan.out SPLIT_LARGE_GENOME_AA_*AA.hmmscan_replicate.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > LARGE_GENOME_COMBINED.AA.hmmscan.sort.out
-			else
-				cat SPLIT_LARGE_GENOME_AA_*AA.hmmscan.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > LARGE_GENOME_COMBINED.AA.hmmscan.sort.out
+		if [ $TOTAL_AA_SEQS -ge 1 ] ; then 
+			AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
+			if [ $AA_SEQS_PER_FILE = 0 ] ; then
+				AA_SEQS_PER_FILE=1
 			fi
-		else
-			if [ $HMM_REP_NUMEBR -gt 0 ] ; then
-				cat SPLIT_LARGE_GENOME_AA_*AA.hmmscan.out SPLIT_LARGE_GENOME_AA_*AA.hmmscan_replicate.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > LARGE_GENOME_COMBINED.AA.hmmscan.sort.out
+			awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_LARGE_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_large_genome_proteins.AA.fasta
+			SPLIT_AA_LARGE=$( find * -maxdepth 0 -type f -name "SPLIT_LARGE_GENOME_AA_*.fasta" )
+			if  [[ $virus_domain_db = "standard" ]] ; then
+				echo "$SPLIT_AA_LARGE" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1
+				echo "$SPLIT_AA_LARGE" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.fasta >/dev/null 2>&1
+			elif [[ $virus_domain_db = "virion" ]]; then
+				echo "$SPLIT_AA_LARGE" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1		
+			elif [[ $virus_domain_db = "rna_virus" ]]; then
+				echo "$SPLIT_AA_LARGE" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/rna_virus_rdrp_capsid_hmms1 {}.fasta >/dev/null 2>&1
 			else
-				cat SPLIT_LARGE_GENOME_AA_*AA.hmmscan.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > LARGE_GENOME_COMBINED.AA.hmmscan.sort.out
-			fi
-		fi		
-		if [ -s LARGE_GENOME_COMBINED.AA.hmmscan.sort.out ] ; then
-			cut -f3 LARGE_GENOME_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
-				HALL_COUNT=$( grep "${HIT}_" LARGE_GENOME_COMBINED.AA.hmmscan.sort.out | wc -l | bc )
-				if [ $HALL_COUNT -ge $LIN_MINIMUM_DOMAINS ] ; then 
-					mv ${HIT}.fasta ../no_end_contigs_with_viral_domain/${HIT}.fna
-					grep "${HIT}_" LARGE_GENOME_COMBINED.AA.hmmscan.sort.out > ../no_end_contigs_with_viral_domain/${HIT}.AA.hmmscan.sort.out
-					# ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.no_hmmscan1.fasta
-					grep "${HIT}_" LARGE_GENOME_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.AA.called_hmmscan.txt
-					grep -v -f ${HIT}.AA.called_hmmscan.txt ${HIT}.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ../no_end_contigs_with_viral_domain/${HIT}.AA.no_hmmscan1.fasta
-					mv ${HIT}.AA.sorted.fasta ../no_end_contigs_with_viral_domain/
-
+				echo "$(tput setaf 5) Incorrect argument given for virus_domain_db variable. Try standard, virion, or rna_virus as arguments. For this run, no contigs with viral domains but without circularity or ITRs will be detected $(tput sgr 0)"
+				rm -f ./*{0..9}.fasta
+				break
+			fi		
+			HMM_REP_NUMEBR=$( find * -maxdepth 0 -type f -name "SPLIT_LARGE_GENOME_AA_*AA.hmmscan_replicate.out" | wc -l )
+			if [[ $FOR_PLASMIDS = "True" ]]; then
+				if [ $HMM_REP_NUMEBR -gt 0 ] ; then
+					cat SPLIT_LARGE_GENOME_AA_*AA.hmmscan.out SPLIT_LARGE_GENOME_AA_*AA.hmmscan_replicate.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > LARGE_GENOME_COMBINED.AA.hmmscan.sort.out
 				else
-					cat ${HIT}.fasta >> non_viral_domains_contigs.fna
-					rm -f ${HIT}.fasta
+					cat SPLIT_LARGE_GENOME_AA_*AA.hmmscan.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > LARGE_GENOME_COMBINED.AA.hmmscan.sort.out
 				fi
-			done
+			else
+				if [ $HMM_REP_NUMEBR -gt 0 ] ; then
+					cat SPLIT_LARGE_GENOME_AA_*AA.hmmscan.out SPLIT_LARGE_GENOME_AA_*AA.hmmscan_replicate.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > LARGE_GENOME_COMBINED.AA.hmmscan.sort.out
+				else
+					cat SPLIT_LARGE_GENOME_AA_*AA.hmmscan.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > LARGE_GENOME_COMBINED.AA.hmmscan.sort.out
+				fi
+			fi		
+			if [ -s LARGE_GENOME_COMBINED.AA.hmmscan.sort.out ] ; then
+				cut -f3 LARGE_GENOME_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
+					HALL_COUNT=$( grep "${HIT}_" LARGE_GENOME_COMBINED.AA.hmmscan.sort.out | wc -l | bc )
+					if [ $HALL_COUNT -ge $LIN_MINIMUM_DOMAINS ] ; then 
+						mv ${HIT}.fasta ../no_end_contigs_with_viral_domain/${HIT}.fna
+						grep "${HIT}_" LARGE_GENOME_COMBINED.AA.hmmscan.sort.out > ../no_end_contigs_with_viral_domain/${HIT}.AA.hmmscan.sort.out
+						# ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.no_hmmscan1.fasta
+						grep "${HIT}_" LARGE_GENOME_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.AA.called_hmmscan.txt
+						grep -v -f ${HIT}.AA.called_hmmscan.txt ${HIT}.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ../no_end_contigs_with_viral_domain/${HIT}.AA.no_hmmscan1.fasta
+						mv ${HIT}.AA.sorted.fasta ../no_end_contigs_with_viral_domain/
+
+					else
+						cat ${HIT}.fasta >> non_viral_domains_contigs.fna
+						rm -f ${HIT}.fasta
+					fi
+				done
+			fi
+		else
+			echo "no AA seqs found in linear contigs, discover virus module"
 		fi
 		for REMAINDER in $CONTIGS_NON_CIRCULAR ; do
 			if [ -s $REMAINDER ] ; then
@@ -494,56 +498,60 @@ if [ ! -z "$DTR_SEQS" ] ; then
 		done	
 		cat $( find * -maxdepth 0 -type f -name "*.AA.sorted.fasta" ) > all_circular_genome_proteins.AA.fasta
 		TOTAL_AA_SEQS=$( grep -F ">" all_circular_genome_proteins.AA.fasta | wc -l | bc )
-		AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
-		if [ $AA_SEQS_PER_FILE = 0 ] ; then
-			AA_SEQS_PER_FILE=1
-		fi
-		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_CIRCULAR_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_circular_genome_proteins.AA.fasta
-		MDYT=$( date +"%m-%d-%y---%T" )
-		echo "time update: running hmmscan on circular/DTR contigs " $MDYT
-		SPLIT_AA_CIRC=$( find * -maxdepth 0 -type f -name "SPLIT_CIRCULAR_AA_*.fasta" )
-		if  [[ $virus_domain_db = "standard" ]] ; then
-			echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1
-			echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.fasta	>/dev/null 2>&1
-		elif [[ $virus_domain_db = "virion" ]]; then
-			echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta	>/dev/null 2>&1	
-		elif [[ $virus_domain_db = "rna_virus" ]]; then
-			echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/rna_virus_rdrp_capsid_hmms1 {}.fasta >/dev/null 2>&1
-		else
-			echo "$(tput setaf 5) Incorrect argument given for virus_domain_db variable. Try standard, virion, or rna_virus as arguments. For this run, no contigs with viral domains but without circularity or ITRs will be detected $(tput sgr 0)"
-			rm -f ./*{0..9}.fasta
-			break
-		fi
-		HMM_REP_NUMEBR=$( find * -maxdepth 0 -type f -name "SPLIT_CIRCULAR_AA_*AA.hmmscan_replicate.out" | wc -l )
-		if [[ $FOR_PLASMIDS = "True" ]]; then
-			if [ $HMM_REP_NUMEBR -gt 0 ] ; then
-				cat SPLIT_CIRCULAR_AA_*AA.hmmscan.out SPLIT_CIRCULAR_AA_*AA.hmmscan_replicate.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out
-			else
-				cat SPLIT_CIRCULAR_AA_*AA.hmmscan.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out
+		if [ $TOTAL_AA_SEQS -ge 1 ] ; then 
+			AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
+			if [ $AA_SEQS_PER_FILE = 0 ] ; then
+				AA_SEQS_PER_FILE=1
 			fi
-		else
-			if [ $HMM_REP_NUMEBR -gt 0 ] ; then
-				cat SPLIT_CIRCULAR_AA_*AA.hmmscan.out SPLIT_CIRCULAR_AA_*AA.hmmscan_replicate.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out
+			awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_CIRCULAR_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_circular_genome_proteins.AA.fasta
+			MDYT=$( date +"%m-%d-%y---%T" )
+			echo "time update: running hmmscan on circular/DTR contigs " $MDYT
+			SPLIT_AA_CIRC=$( find * -maxdepth 0 -type f -name "SPLIT_CIRCULAR_AA_*.fasta" )
+			if  [[ $virus_domain_db = "standard" ]] ; then
+				echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1
+				echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.fasta	>/dev/null 2>&1
+			elif [[ $virus_domain_db = "virion" ]]; then
+				echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta	>/dev/null 2>&1	
+			elif [[ $virus_domain_db = "rna_virus" ]]; then
+				echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/rna_virus_rdrp_capsid_hmms1 {}.fasta >/dev/null 2>&1
 			else
-				cat SPLIT_CIRCULAR_AA_*AA.hmmscan.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out
+				echo "$(tput setaf 5) Incorrect argument given for virus_domain_db variable. Try standard, virion, or rna_virus as arguments. For this run, no contigs with viral domains but without circularity or ITRs will be detected $(tput sgr 0)"
+				rm -f ./*{0..9}.fasta
+				break
 			fi
-		fi		
-		if [ -s CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out ] ; then
-			cut -f3 CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
-				HALL_COUNT=$( grep "${HIT}_" CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out | wc -l | bc )
-				if [ $HALL_COUNT -ge $CIRC_MINIMUM_DOMAINS ] ; then 
-					mv ${HIT}.fasta DTR_contigs_with_viral_domain/${HIT}.fna
-					grep "${HIT}_" CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out > DTR_contigs_with_viral_domain/${HIT}.AA.hmmscan.sort.out
-					grep "${HIT}_" CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /'> ${HIT}.AA.called_hmmscan.txt
-					grep -v -f ${HIT}.AA.called_hmmscan.txt ${HIT}.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > DTR_contigs_with_viral_domain/${HIT}.AA.no_hmmscan1.fasta
-					mv ${HIT}.AA.sorted.fasta DTR_contigs_with_viral_domain/
-					rm ${HIT}.AA.fasta
-
+			HMM_REP_NUMEBR=$( find * -maxdepth 0 -type f -name "SPLIT_CIRCULAR_AA_*AA.hmmscan_replicate.out" | wc -l )
+			if [[ $FOR_PLASMIDS = "True" ]]; then
+				if [ $HMM_REP_NUMEBR -gt 0 ] ; then
+					cat SPLIT_CIRCULAR_AA_*AA.hmmscan.out SPLIT_CIRCULAR_AA_*AA.hmmscan_replicate.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out
 				else
-					sed 's/ /#/g' ${HIT}.fasta | bioawk -c fastx '{print ">"$name"#DTRs" ; print $seq}' | 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
-					rm -f ${HIT}.fasta
+					cat SPLIT_CIRCULAR_AA_*AA.hmmscan.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out
 				fi
-			done
+			else
+				if [ $HMM_REP_NUMEBR -gt 0 ] ; then
+					cat SPLIT_CIRCULAR_AA_*AA.hmmscan.out SPLIT_CIRCULAR_AA_*AA.hmmscan_replicate.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out
+				else
+					cat SPLIT_CIRCULAR_AA_*AA.hmmscan.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out
+				fi
+			fi		
+			if [ -s CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out ] ; then
+				cut -f3 CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
+					HALL_COUNT=$( grep "${HIT}_" CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out | wc -l | bc )
+					if [ $HALL_COUNT -ge $CIRC_MINIMUM_DOMAINS ] ; then 
+						mv ${HIT}.fasta DTR_contigs_with_viral_domain/${HIT}.fna
+						grep "${HIT}_" CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out > DTR_contigs_with_viral_domain/${HIT}.AA.hmmscan.sort.out
+						grep "${HIT}_" CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /'> ${HIT}.AA.called_hmmscan.txt
+						grep -v -f ${HIT}.AA.called_hmmscan.txt ${HIT}.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > DTR_contigs_with_viral_domain/${HIT}.AA.no_hmmscan1.fasta
+						mv ${HIT}.AA.sorted.fasta DTR_contigs_with_viral_domain/
+						rm ${HIT}.AA.fasta
+
+					else
+						sed 's/ /#/g' ${HIT}.fasta | bioawk -c fastx '{print ">"$name"#DTRs" ; print $seq}' | 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
+						rm -f ${HIT}.fasta
+					fi
+				done
+			fi
+		else
+			echo "No AA seqs found in circular contigs, discover viruses module"
 		fi
 		for REMAINDER in $DTR_SEQS ; do
 			if [ -s $REMAINDER ] ; then
@@ -573,56 +581,61 @@ if [ ! -z "$ITR_SEQS" ] ; then
 	done	
 	cat $( find * -maxdepth 0 -type f -name "*.AA.sorted.fasta" ) > all_ITR_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_ITR_genome_proteins.AA.fasta | wc -l | bc )
-	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
-	if [ $AA_SEQS_PER_FILE = 0 ] ; then
-		AA_SEQS_PER_FILE=1
-	fi
-	awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_ITR_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_ITR_genome_proteins.AA.fasta
-	MDYT=$( date +"%m-%d-%y---%T" )
-	echo "time update: running hmmscan on ITR contigs " $MDYT
-	SPLIT_AA_CIRC=$( find * -maxdepth 0 -type f -name "SPLIT_ITR_AA_*.fasta" )
-	if  [[ $virus_domain_db = "standard" ]] ; then
-		echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1
-		echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.fasta >/dev/null 2>&1
-	elif [[ $virus_domain_db = "virion" ]]; then
-		echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1		
-	elif [[ $virus_domain_db = "rna_virus" ]]; then
-		echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/rna_virus_rdrp_capsid_hmms1 {}.fasta >/dev/null 2>&1
-	else
-		echo "$(tput setaf 5) Incorrect argument given for virus_domain_db variable. Try standard, virion, or rna_virus as arguments. For this run, no contigs with viral domains but without circularity or ITRs will be detected $(tput sgr 0)"
-		rm -f ./*{0..9}.fasta
-		break
-	fi
-	HMM_REP_NUMEBR=$( find * -maxdepth 0 -type f -name "SPLIT_ITR_AA_*AA.hmmscan_replicate.out" | wc -l )
-	if [[ $FOR_PLASMIDS = "True" ]]; then
-		if [ $HMM_REP_NUMEBR -gt 0 ] ; then
-			cat SPLIT_ITR_AA_*AA.hmmscan.out SPLIT_ITR_AA_*AA.hmmscan_replicate.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > ITR_GENOME_COMBINED.AA.hmmscan.sort.out
-		else
-			cat SPLIT_ITR_AA_*AA.hmmscan.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > ITR_GENOME_COMBINED.AA.hmmscan.sort.out
+	if [ $TOTAL_AA_SEQS -ge 1 ] ; then
+		AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
+		if [ $AA_SEQS_PER_FILE = 0 ] ; then
+			AA_SEQS_PER_FILE=1
 		fi
-	else
-		if [ $HMM_REP_NUMEBR -gt 0 ] ; then
-			cat SPLIT_ITR_AA_*AA.hmmscan.out SPLIT_ITR_AA_*AA.hmmscan_replicate.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > ITR_GENOME_COMBINED.AA.hmmscan.sort.out
+		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_ITR_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_ITR_genome_proteins.AA.fasta
+		MDYT=$( date +"%m-%d-%y---%T" )
+		echo "time update: running hmmscan on ITR contigs " $MDYT
+		SPLIT_AA_CIRC=$( find * -maxdepth 0 -type f -name "SPLIT_ITR_AA_*.fasta" )
+		if  [[ $virus_domain_db = "standard" ]] ; then
+			echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1
+			echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.fasta >/dev/null 2>&1
+		elif [[ $virus_domain_db = "virion" ]]; then
+			echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1		
+		elif [[ $virus_domain_db = "rna_virus" ]]; then
+			echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/rna_virus_rdrp_capsid_hmms1 {}.fasta >/dev/null 2>&1
 		else
-			cat SPLIT_ITR_AA_*AA.hmmscan.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > ITR_GENOME_COMBINED.AA.hmmscan.sort.out
+			echo "$(tput setaf 5) Incorrect argument given for virus_domain_db variable. Try standard, virion, or rna_virus as arguments. For this run, no contigs with viral domains but without circularity or ITRs will be detected $(tput sgr 0)"
+			rm -f ./*{0..9}.fasta
+			break
 		fi
-	fi		
-	if [ -s ITR_GENOME_COMBINED.AA.hmmscan.sort.out ] ; then
-		cut -f3 ITR_GENOME_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
-			HALL_COUNT=$( grep "${HIT}_" ITR_GENOME_COMBINED.AA.hmmscan.sort.out | wc -l | bc )
-			if [ $HALL_COUNT -ge $CIRC_MINIMUM_DOMAINS ] ; then 
-				mv ${HIT}.fasta ${HIT}.fna
-				grep "${HIT}_" ITR_GENOME_COMBINED.AA.hmmscan.sort.out > ${HIT}.AA.hmmscan.sort.out
-				grep "${HIT}_" ITR_GENOME_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.AA.called_hmmscan.txt
-				grep -v -f ${HIT}.AA.called_hmmscan.txt ${HIT}.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.AA.no_hmmscan1.fasta
-				rm ${HIT}.AA.fasta
-
+		HMM_REP_NUMEBR=$( find * -maxdepth 0 -type f -name "SPLIT_ITR_AA_*AA.hmmscan_replicate.out" | wc -l )
+		if [[ $FOR_PLASMIDS = "True" ]]; then
+			if [ $HMM_REP_NUMEBR -gt 0 ] ; then
+				cat SPLIT_ITR_AA_*AA.hmmscan.out SPLIT_ITR_AA_*AA.hmmscan_replicate.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > ITR_GENOME_COMBINED.AA.hmmscan.sort.out
 			else
-				sed 's/ /#/g' ${HIT}.fasta | bioawk -c fastx '{print ">"$name"#ITRs" ; print $seq}' | 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
-				rm -f ${HIT}.fasta
+				cat SPLIT_ITR_AA_*AA.hmmscan.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > ITR_GENOME_COMBINED.AA.hmmscan.sort.out
 			fi
-		done
+		else
+			if [ $HMM_REP_NUMEBR -gt 0 ] ; then
+				cat SPLIT_ITR_AA_*AA.hmmscan.out SPLIT_ITR_AA_*AA.hmmscan_replicate.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > ITR_GENOME_COMBINED.AA.hmmscan.sort.out
+			else
+				cat SPLIT_ITR_AA_*AA.hmmscan.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > ITR_GENOME_COMBINED.AA.hmmscan.sort.out
+			fi
+		fi		
+		if [ -s ITR_GENOME_COMBINED.AA.hmmscan.sort.out ] ; then
+			cut -f3 ITR_GENOME_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
+				HALL_COUNT=$( grep "${HIT}_" ITR_GENOME_COMBINED.AA.hmmscan.sort.out | wc -l | bc )
+				if [ $HALL_COUNT -ge $CIRC_MINIMUM_DOMAINS ] ; then 
+					mv ${HIT}.fasta ${HIT}.fna
+					grep "${HIT}_" ITR_GENOME_COMBINED.AA.hmmscan.sort.out > ${HIT}.AA.hmmscan.sort.out
+					grep "${HIT}_" ITR_GENOME_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.AA.called_hmmscan.txt
+					grep -v -f ${HIT}.AA.called_hmmscan.txt ${HIT}.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.AA.no_hmmscan1.fasta
+					rm ${HIT}.AA.fasta
+
+				else
+					sed 's/ /#/g' ${HIT}.fasta | bioawk -c fastx '{print ">"$name"#ITRs" ; print $seq}' | 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
+					rm -f ${HIT}.fasta
+				fi
+			done
+		fi
+	else
+		echo "no AA seqs found in ITR contigs, discover viruses module"
 	fi
+
 	for REMAINDER in $ITR_SEQS ; do
 		if [ -s $REMAINDER ] ; then
 			sed 's/ /#/g' $REMAINDER | bioawk -c fastx '{print ">"$name"#ITRs" ; print $seq}' | 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
@@ -804,47 +817,51 @@ ROTATE_SORT_AAs=$( find * -maxdepth 0 -type f -name "${run_title}*rotate.AA.sort
 if [ -n "$ROTATE_SORT_AAs" ] ; then
 	cat $( find * -maxdepth 0 -type f -name "${run_title}*rotate.AA.sorted.fasta" ) > all_DTR_sort_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_DTR_sort_genome_proteins.AA.fasta | wc -l | bc )
-	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
-	if [ $AA_SEQS_PER_FILE = 0 ] ; then
-		AA_SEQS_PER_FILE=1
-	fi
-	awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_sort_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_sort_genome_proteins.AA.fasta
-	SPLIT_AA_DTR_sort=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_sort_GENOME_AA_*.fasta" )
-	MDYT=$( date +"%m-%d-%y---%T" )
-	echo "time update: running hmmscan1, annotate DTR contigs " $MDYT
-	if  [[ $virus_domain_db = "standard" ]] ; then
-		echo "$SPLIT_AA_DTR_sort" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1
-		echo "$SPLIT_AA_DTR_sort" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.fasta >/dev/null 2>&1
-	elif [[ $virus_domain_db = "virion" ]]; then
-		echo "$SPLIT_AA_DTR_sort" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1		
-	elif [[ $virus_domain_db = "rna_virus" ]]; then
-		echo "$SPLIT_AA_DTR_sort" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/rna_virus_rdrp_capsid_hmms1 {}.fasta >/dev/null 2>&1
-	else
-		echo "$(tput setaf 5) Incorrect argument given for virus_domain_db variable. Try standard, virion, or rna_virus as arguments. For this run, no contigs with viral domains but without circularity or ITRs will be detected $(tput sgr 0)"
-		rm -f ./*{0..9}.fasta
-		break
-	fi
-	HMM_REP_NUMEBR=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan_replicate.out" | wc -l )
-	if [[ $FOR_PLASMIDS = "True" ]]; then
-		if [ $HMM_REP_NUMEBR -gt 0 ] ; then
-			cat SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan.out SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan_replicate.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_COMBINED.AA.hmmscan.sort.out
-		else
-			cat SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_COMBINED.AA.hmmscan.sort.out
+	if [ $TOTAL_AA_SEQS -ge 1 ] ; then
+		AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
+		if [ $AA_SEQS_PER_FILE = 0 ] ; then
+			AA_SEQS_PER_FILE=1
 		fi
-	else
-		if [ $HMM_REP_NUMEBR -gt 0 ] ; then
-			cat SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan.out SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan_replicate.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_COMBINED.AA.hmmscan.sort.out
+		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_sort_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_sort_genome_proteins.AA.fasta
+		SPLIT_AA_DTR_sort=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_sort_GENOME_AA_*.fasta" )
+		MDYT=$( date +"%m-%d-%y---%T" )
+		echo "time update: running hmmscan1, annotate DTR contigs " $MDYT
+		if  [[ $virus_domain_db = "standard" ]] ; then
+			echo "$SPLIT_AA_DTR_sort" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1
+			echo "$SPLIT_AA_DTR_sort" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.fasta >/dev/null 2>&1
+		elif [[ $virus_domain_db = "virion" ]]; then
+			echo "$SPLIT_AA_DTR_sort" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1		
+		elif [[ $virus_domain_db = "rna_virus" ]]; then
+			echo "$SPLIT_AA_DTR_sort" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/rna_virus_rdrp_capsid_hmms1 {}.fasta >/dev/null 2>&1
 		else
-			cat SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_COMBINED.AA.hmmscan.sort.out
+			echo "$(tput setaf 5) Incorrect argument given for virus_domain_db variable. Try standard, virion, or rna_virus as arguments. For this run, no contigs with viral domains but without circularity or ITRs will be detected $(tput sgr 0)"
+			rm -f ./*{0..9}.fasta
+			break
 		fi
-	fi		
-	if [ -s SPLIT_DTR_COMBINED.AA.hmmscan.sort.out ] ; then
-		cut -f3 SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
-			grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out > ${HIT}.rotate.AA.hmmscan.sort.out
-			grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.rotate.AA.called_hmmscan1.txt
-			grep -v -f ${HIT}.rotate.AA.called_hmmscan1.txt ${HIT}.rotate.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.rotate.AA.no_hmmscan1.fasta
-		done
+		HMM_REP_NUMEBR=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan_replicate.out" | wc -l )
+		if [[ $FOR_PLASMIDS = "True" ]]; then
+			if [ $HMM_REP_NUMEBR -gt 0 ] ; then
+				cat SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan.out SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan_replicate.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_COMBINED.AA.hmmscan.sort.out
+			else
+				cat SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_COMBINED.AA.hmmscan.sort.out
+			fi
+		else
+			if [ $HMM_REP_NUMEBR -gt 0 ] ; then
+				cat SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan.out SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan_replicate.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_COMBINED.AA.hmmscan.sort.out
+			else
+				cat SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_COMBINED.AA.hmmscan.sort.out
+			fi
+		fi		
+		if [ -s SPLIT_DTR_COMBINED.AA.hmmscan.sort.out ] ; then
+			cut -f3 SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
+				grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out > ${HIT}.rotate.AA.hmmscan.sort.out
+				grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.rotate.AA.called_hmmscan1.txt
+				grep -v -f ${HIT}.rotate.AA.called_hmmscan1.txt ${HIT}.rotate.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ${HIT}.rotate.AA.no_hmmscan1.fasta
+			done
 
+		fi
+	else
+		echo "no AA seqs found for hmmscan1, annotate DTR contigs "
 	fi
 	for ROT in $ROTATE_SORT_AAs ; do 
 		if [ ! -s ${ROT%.rotate.AA.sorted.fasta}.rotate.AA.no_hmmscan1.fasta ] ; then
@@ -855,16 +872,20 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 	if [ -n "$DTR_AA_FOR_HMM2" ] ; then
 		cat $( find * -maxdepth 0 -type f -name "${run_title}*AA.no_hmmscan1.fasta" ) > all_DTR_HMM2_proteins.AA.fasta
 		TOTAL_AA_SEQS=$( grep -F ">" all_DTR_HMM2_proteins.AA.fasta | wc -l | bc )
-		AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
-		if [ $AA_SEQS_PER_FILE = 0 ] ; then
-			AA_SEQS_PER_FILE=1
+		if [ $TOTAL_AA_SEQS -ge 1 ] ; then
+			AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
+			if [ $AA_SEQS_PER_FILE = 0 ] ; then
+				AA_SEQS_PER_FILE=1
+			fi
+			awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_HMM2_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_HMM2_proteins.AA.fasta
+			SPLIT_DTR_HMM2=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_HMM2_GENOME_AA_*.fasta" )
+			MDYT=$( date +"%m-%d-%y---%T" )
+			echo "time update: running hmmscan2, annotate DTR contigs " $MDYT
+			echo "$SPLIT_DTR_HMM2" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan2.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.fasta >/dev/null 2>&1
+			cat SPLIT_DTR_HMM2_GENOME_AA_*AA.hmmscan2.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out
+		else
+			echo "no AA seqs found for hmmscan2, annotate DTR contigs"
 		fi
-		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_HMM2_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_HMM2_proteins.AA.fasta
-		SPLIT_DTR_HMM2=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_HMM2_GENOME_AA_*.fasta" )
-		MDYT=$( date +"%m-%d-%y---%T" )
-		echo "time update: running hmmscan2, annotate DTR contigs " $MDYT
-		echo "$SPLIT_DTR_HMM2" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan2.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.fasta >/dev/null 2>&1
-		cat SPLIT_DTR_HMM2_GENOME_AA_*AA.hmmscan2.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out
 	fi
 	if [ -s SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out ] ; then
 		cut -f3 SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
@@ -944,25 +965,29 @@ PROTEIN_NO_HMMSCAN2=$( find * -maxdepth 0 -type f -name "*.rotate.AA.no_hmmscan2
 
 if [ -n "$PROTEIN_NO_HMMSCAN2" ]; then
 	MDYT=$( date +"%m-%d-%y---%T" )
-	echo "time update: running RPSBLAST on DTR contigs" $MDYT
+	echo "time update: running RPSBLAST, annotate DTR contigs" $MDYT
 	cat $( find * -maxdepth 0 -type f -name "*.rotate.AA.no_hmmscan2.fasta" ) > all_DTR_rps_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_DTR_rps_proteins.AA.fasta | wc -l | bc )
+	if [ $TOTAL_AA_SEQS -ge 1 ] ; then
 	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
-	if [ $AA_SEQS_PER_FILE = 0 ] ; then
-		AA_SEQS_PER_FILE=1
+		if [ $AA_SEQS_PER_FILE = 0 ] ; then
+			AA_SEQS_PER_FILE=1
+		fi
+		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_RPS_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_rps_proteins.AA.fasta
+		SPLIT_DTR_AA_RPS=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_RPS_AA_*.fasta" )
+
+		echo "$SPLIT_DTR_AA_RPS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {}.fasta -line_length 200 -out {}.rpsb.out >/dev/null 2>&1
+		cat *rpsb.out | awk '{ if ($0 ~ /^>/) {printf $0 ; getline; print $0} else { print $0}}' > COMBINED_RESULTS.rotate.AA.rpsblast.out
+		perl ${CENOTE_SCRIPT_DIR}/rpsblastreport2tbl_mt_annotation_pipe_biowulf.pl ;
+		grep "protein_id	" COMBINED_RESULTS.NT.tbl | sed 's/.*protein_id	lcl|//g' | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read CONTIG ; do
+			#echo "${CONTIG}"
+			echo ">Feature ${CONTIG} Table1" > ${CONTIG}.NT.tbl
+
+			grep -A2 -B1 "${CONTIG}_" COMBINED_RESULTS.NT.tbl | sed '/--/d' >> ${CONTIG}.NT.tbl
+		done
+	else
+		echo "no AA seqs for RPSBLAST, annotate DTR contigs"
 	fi
-	awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_RPS_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_rps_proteins.AA.fasta
-	SPLIT_DTR_AA_RPS=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_RPS_AA_*.fasta" )
-
-	echo "$SPLIT_DTR_AA_RPS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {}.fasta -line_length 200 -out {}.rpsb.out >/dev/null 2>&1
-	cat *rpsb.out | awk '{ if ($0 ~ /^>/) {printf $0 ; getline; print $0} else { print $0}}' > COMBINED_RESULTS.rotate.AA.rpsblast.out
-	perl ${CENOTE_SCRIPT_DIR}/rpsblastreport2tbl_mt_annotation_pipe_biowulf.pl ;
-	grep "protein_id	" COMBINED_RESULTS.NT.tbl | sed 's/.*protein_id	lcl|//g' | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read CONTIG ; do
-		#echo "${CONTIG}"
-		echo ">Feature ${CONTIG} Table1" > ${CONTIG}.NT.tbl
-
-		grep -A2 -B1 "${CONTIG}_" COMBINED_RESULTS.NT.tbl | sed '/--/d' >> ${CONTIG}.NT.tbl
-	done
 fi
 
 # Detecting any tRNAs and making a tbl addenum file
