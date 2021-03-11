@@ -774,7 +774,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 	if [ -s DTR_seqs_for_prodigal.txt ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running prodigal, annotate DTR contigs " $MDYT
-		cat DTR_seqs_for_prodigal.txt | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU prodigal -a {}.rotate.prodigal.fasta -i {}.rotate.fasta -p meta -c -q >/dev/null 2>&1
+		cat DTR_seqs_for_prodigal.txt | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU prodigal -a {}.rotate.prodigal.fasta -i {}.rotate.fasta -p meta -q >/dev/null 2>&1
 		for PROD in *rotate.prodigal.fasta ; do
 			sed 's/ /@/g' ${PROD} | bioawk -c fastx '{print}' | while read LINE ; do 
 				ORIENTATION=$( echo "$LINE" | cut -d "#" -f 4 | sed 's/@//g' ) ;

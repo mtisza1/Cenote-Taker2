@@ -80,7 +80,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 	if [ -s LIN_seqs_for_prodigal.txt ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running Prodigal, annotate linear contigs " $MDYT
-		cat LIN_seqs_for_prodigal.txt | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU prodigal -a {}.prodigal.fasta -i {}.fna -p meta -c -q >/dev/null 2>&1
+		cat LIN_seqs_for_prodigal.txt | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU prodigal -a {}.prodigal.fasta -i {}.fna -p meta -q >/dev/null 2>&1
 		for PROD in *prodigal.fasta ; do
 			sed 's/ /@/g' ${PROD} | bioawk -c fastx '{print}' | while read LINE ; do 
 				ORIENTATION=$( echo "$LINE" | cut -d "#" -f 4 | sed 's/@//g' ) ;
