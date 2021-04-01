@@ -957,6 +957,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 					fi
 				fi
 			fi
+		done
 		###
 		### old blastn
 		echo "$ROTATED_DTR_CONTIGS" | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU blastn -task megablast -db ${BLASTN_DB} -query {}.rotate.fasta -evalue 1e-50 -num_threads 1 -outfmt "6 qseqid sseqid stitle pident length qlen" -qcov_hsp_perc 50 -num_alignments 3 -out {}.blastn.out >/dev/null 2>&1
