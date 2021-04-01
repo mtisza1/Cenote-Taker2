@@ -14,7 +14,7 @@ echo "00000000000000000000000000"
 echo "00000000000000000000000000$(tput sgr 0)"
 
 echo " "
-echo "Version 2.1.1"
+echo "Version 2.1.2"
 echo " "
 
 sleep 2s
@@ -914,7 +914,7 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 			fi
 			INFERENCEH=$( echo $HMM_INFO | cut -d " " -f1 ) ; 
 			PROTEIN_NAME=$( echo $HMM_INFO | cut -d " " -f2- ) ; 
-			echo -e "$START_BASEH\t""$END_BASEH\t""CDS\n""\t\t\tprotein_id\t""lcl|""$LINE\n""\t\t\tproduct\t""$PROTEIN_NAME\n""\t\t\tinference\t""similar to AA sequence:$INFERENCEH" >> ${ROT_AAs%.rotate.AA.sorted.fasta}.SCAN.tbl ;
+			echo -e "$START_BASEH\t""$END_BASEH\t""CDS\n""\t\t\tprotein_id\t""lcl|""$LINE\n""\t\t\tproduct\t""$PROTEIN_NAME\n""\t\t\tinference\t""protein motif:$INFERENCEH" >> ${ROT_AAs%.rotate.AA.sorted.fasta}.SCAN.tbl ;
 		done
 	done
 fi
@@ -925,6 +925,40 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 	if [ -s ${BLASTN_DB}.nsq ] || [ -s ${BLASTN_DB}.1.nsq ] || [ -s ${BLASTN_DB}.01.nsq ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running BLASTN, DTR contigs " $MDYT		
+
+
+		### new blastn
+		echo "$ROTATED_DTR_CONTIGS" | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU blastn -query {}.rotate.fasta -db ${BLASTN_DB} -outfmt '6 std qlen slen' -max_target_seqs 100 -perc_identity 90 -num_threads 1 -out {}.blastn.out >/dev/null 2>&1
+		for circle in $ROTATED_DTR_CONTIGS ; do
+			if [ -s "${circle%.rotate.fasta}.blastn.out" ]; then
+				python ${CENOTE_SCRIPT_DIR}/anicalc/anicalc.py -i ${circle%.rotate.fasta}.blastn.out -o ${circle%.rotate.fasta}.blastn_anicalc.out
+				awk '{OFS="\t"}{FS="\t"}{ if (NR==1) {print $1, $2, $6} else if ($4>=95 && $6>=85) {print $1, $2, $6}}' ${circle%.rotate.fasta}.blastn_anicalc.out > ${circle%.rotate.fasta}.blastn_intraspecific.out
+			fi
+			if [ -s "${circle%.rotate.fasta}.blastn_intraspecific.out" ]; then
+				INTRA_LENGTH=$( cat ${circle%.rotate.fasta}.blastn_intraspecific.out | wc -l | bc )	
+				if [ "$INTRA_LENGTH" -ge 2 ] ; then
+					ktClassifyBLAST -o ${circle%.rotate.fasta}.tax_guide.blastn.tab ${circle%.rotate.fasta}.blastn_intraspecific.out >/dev/null 2>&1
+					taxid=$( tail -n1 ${circle%.rotate.fasta}.tax_guide.blastn.tab | cut -f2 )
+					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage > ${circle%.rotate.fasta}.tax_guide.blastn.out
+					sleep 2s
+					if [ !  -z "${circle%.rotate.fasta}.tax_guide.blastn.out" ] ; then
+						awk '{ print "; "$3 }' ${circle%.rotate.fasta}.blastn_intraspecific.out | sed 's/-/ /g; s/, complete genome//g' >> ${circle%.rotate.fasta}.tax_guide.blastn.out
+					fi
+
+					if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid\|phage" ${circle%.rotate.fasta}.tax_guide.blastn.out ; then
+						echo $circle " is closely related to a virus that has already been deposited in GenBank nt. "
+						#cat ${circle%.rotate.fasta}.tax_guide.blastn.out
+						cp ${circle%.rotate.fasta}.tax_guide.blastn.out ${circle%.rotate.fasta}.tax_guide.KNOWN_VIRUS.out
+
+					else 
+						echo $circle "$(tput setaf 4) is closely related to a chromosomal sequence that has already been deposited in GenBank nt and will be checked for viral and plasmid domains. $(tput sgr 0)"
+						cat ${circle%.rotate.fasta}.tax_guide.blastn.out
+						cp ${circle%.rotate.fasta}.tax_guide.blastn.out ${circle%.rotate.fasta}.tax_guide.CELLULAR.out
+					fi
+				fi
+			fi
+		###
+		### old blastn
 		echo "$ROTATED_DTR_CONTIGS" | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU blastn -task megablast -db ${BLASTN_DB} -query {}.rotate.fasta -evalue 1e-50 -num_threads 1 -outfmt "6 qseqid sseqid stitle pident length qlen" -qcov_hsp_perc 50 -num_alignments 3 -out {}.blastn.out >/dev/null 2>&1
 		for circle in $ROTATED_DTR_CONTIGS ; do
 			if [ -s "${circle%.rotate.fasta}.blastn.out" ]; then
@@ -956,6 +990,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 				fi
 			fi
 		done
+		###
 	else
 		echo "BLASTN databases not found, skipping BLASTN step"
 	fi

@@ -218,7 +218,7 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 				fi
 				INFERENCEH=$( echo $HMM_INFO | cut -d " " -f1 ) ; 
 				PROTEIN_NAME=$( echo $HMM_INFO | cut -d " " -f2- ) ; 
-				echo -e "$START_BASEH\t""$END_BASEH\t""CDS\n""\t\t\tprotein_id\t""lcl|""$LINE\n""\t\t\tproduct\t""$PROTEIN_NAME\n""\t\t\tinference\t""similar to AA sequence:$INFERENCEH" >> ${ROT_AAs%.AA.sorted.fasta}.SCAN.tbl ;
+				echo -e "$START_BASEH\t""$END_BASEH\t""CDS\n""\t\t\tprotein_id\t""lcl|""$LINE\n""\t\t\tproduct\t""$PROTEIN_NAME\n""\t\t\tinference\t""protein motif:$INFERENCEH" >> ${ROT_AAs%.AA.sorted.fasta}.SCAN.tbl ;
 			done
 		fi
 	done
