@@ -400,7 +400,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 				END_BASE=$( echo "$LINE" | cut -d "#" -f 3 | sed 's/@//g' ) ; 
 				ORF_NAME=$( echo "$LINE" | cut -d "#" -f 1 | sed 's/@//g; s/\./_/g' ) ; 
 				AA_SEQ=$( echo "$LINE" | cut -f2 ) ;
-				ORIG_CONTIG=$( grep ">" ${NO_END%.prodigal.fasta}.fasta | cut -d " " -f2 )
+				ORIG_CONTIG=$( grep ">" ${NO_END} | cut -d " " -f2 )
 				if echo $AA_SEQ | grep -q "\*" ; then
 					INC3=""
 				else
@@ -505,7 +505,7 @@ if [ ! -z "$DTR_SEQS" ] ; then
 				END_BASE=$( echo "$LINE" | cut -d "#" -f 3 | sed 's/@//g' ) ; 
 				ORF_NAME=$( echo "$LINE" | cut -d "#" -f 1 | sed 's/@//g; s/\./_/g' ) ; 
 				AA_SEQ=$( echo "$LINE" | cut -f2 ) ;
-				ORIG_CONTIG=$( grep ">" ${CIRC%.prodigal.fasta}.fasta | cut -d " " -f2 )
+				ORIG_CONTIG=$( grep ">" ${CIRC} | cut -d " " -f2 )
 				if echo $AA_SEQ | grep -q "\*" ; then
 					INC3=""
 				else
@@ -600,7 +600,7 @@ if [ ! -z "$ITR_SEQS" ] ; then
 			END_BASE=$( echo "$LINE" | cut -d "#" -f 3 | sed 's/@//g' ) ; 
 			ORF_NAME=$( echo "$LINE" | cut -d "#" -f 1 | sed 's/@//g; s/\./_/g' ) ; 
 			AA_SEQ=$( echo "$LINE" | cut -f2 ) ;
-			ORIG_CONTIG=$( grep ">" ${CIRC%.AA.fasta}.fasta | cut -d " " -f2 )
+			ORIG_CONTIG=$( grep ">" ${CIRC} | cut -d " " -f2 )
 			if echo $AA_SEQ | grep -q "\*" ; then
 				INC3=""
 			else
