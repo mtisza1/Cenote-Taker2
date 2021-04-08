@@ -620,28 +620,28 @@ fi
 COMB3_TBL=$( find * -maxdepth 0 -type f -name "*.comb3.tbl" )
 if [ -n "$COMB3_TBL" ] ; then
 	for comb3 in $COMB3_TBL ; do
-		if grep -q "5primeInc\|3primeInc" ${feat_tbl2%.comb3.tbl}.AA.sorted.fasta ; then
-			grep "5primeInc\|3primeInc" ${feat_tbl2%.comb3.tbl}.AA.sorted.fasta
+		if grep -q "5primeInc\|3primeInc" ${comb3%.comb3.tbl}.AA.sorted.fasta ; then
+			grep "5primeInc\|3primeInc" ${comb3%.comb3.tbl}.AA.sorted.fasta
 			while read INCOMPLETE ; do
 				START_BASEH=$( echo $INCOMPLETE | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
 				END_BASEH=$( echo $INCOMPLETE | sed 's/.*- \(.*\)\].*/\1/' ) ; 
 				if echo "$INCOMPLETE" | grep -q "5primeInc" && echo "$INCOMPLETE" | grep -q "3primeInc" ; then
-					if grep -q "^${START_BASEH}	${END_BASEH}" $COMB3_TBL ; then
-						sed -i -e ':a' -e 'N' -e '$!ba' -e "s/${START_BASEH}	${END_BASEH}	CDS\n/<${START_BASEH}	>${END_BASEH}	CDS\n			codon_start	1\n/g" $COMB3_TBL
+					if grep -q "^${START_BASEH}	${END_BASEH}" $comb3 ; then
+						sed -i -e ':a' -e 'N' -e '$!ba' -e "s/${START_BASEH}	${END_BASEH}	CDS\n/<${START_BASEH}	>${END_BASEH}	CDS\n			codon_start	1\n/g" $comb3
 					fi
 				elif echo "$INCOMPLETE" | grep -q "5primeInc" ; then
-					if grep -q "^${START_BASEH}	${END_BASEH}" $COMB3_TBL ; then
-						sed -i -e ':a' -e 'N' -e '$!ba' -e "s/${START_BASEH}	${END_BASEH}	CDS\n/<${START_BASEH}	${END_BASEH}	CDS\n			codon_start	1\n/g" $COMB3_TBL
+					if grep -q "^${START_BASEH}	${END_BASEH}" $comb3 ; then
+						sed -i -e ':a' -e 'N' -e '$!ba' -e "s/${START_BASEH}	${END_BASEH}	CDS\n/<${START_BASEH}	${END_BASEH}	CDS\n			codon_start	1\n/g" $comb3
 					fi
 				elif echo "$INCOMPLETE" | grep -q "3primeInc" ; then
-					if grep -q "^${START_BASEH}	${END_BASEH}" $COMB3_TBL ; then
-						sed -i -e ':a' -e 'N' -e '$!ba' -e "s/${START_BASEH}	${END_BASEH}	CDS\n/${START_BASEH}	>${END_BASEH}	CDS\n			codon_start	1\n/g" $COMB3_TBL
+					if grep -q "^${START_BASEH}	${END_BASEH}" $comb3 ; then
+						sed -i -e ':a' -e 'N' -e '$!ba' -e "s/${START_BASEH}	${END_BASEH}	CDS\n/${START_BASEH}	>${END_BASEH}	CDS\n			codon_start	1\n/g" $comb3
 					fi
 				fi
 			done
 		fi
 		## bad names fix
-		sed -i 's/product	 /product	/g ; s/product	-/product	/g ; s/product	;/product	/g ; s/product	=/product	/g ; s/product	_/product	/g s/product	; /product	/g ; s/Length=.*//g ; s/; Provisional.//g ; s/; Validated.//g ; s/: .*//g ; s/; Reviewed.//g ; s/;$//g' $COMB3_TBL
+		sed -i 's/product	 /product	/g ; s/product	-/product	/g ; s/product	;/product	/g ; s/product	=/product	/g ; s/product	_/product	/g s/product	; /product	/g ; s/Length=.*//g ; s/; Provisional.//g ; s/; Validated.//g ; s/: .*//g ; s/; Reviewed.//g ; s/;$//g' $comb3
 		##
 	done
 fi
