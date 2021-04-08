@@ -165,13 +165,13 @@ While you should definitely ***definitely*** prune virus sequences from WGS data
 ```
 -p True -db virion --minimum_length_linear 3000 --lin_minimum_hallmark_genes 2
 ```
-Using `--lin_minimum_hallmark_genes 1 --virus_domain_db virion` with WGS or bacterial genome data will (in my experience) yield very few sequences that appear to be false positives, however, there are lots of "degraded" prophage sequences in these sequencing sets, i.e. some/most genes of the phage have been lost. That said, sequence with just 1 hallmark gene is neither a guarantee of a degraded phage (especially in the case of ssDNA viruses) nor is 2+ hallmark a guarantee of of a complete phage.
+Using `--lin_minimum_hallmark_genes 1 -db virion` with WGS or bacterial genome data will (in my experience) yield very few sequences that appear to be false positives, however, there are lots of "degraded" prophage sequences in these sequencing sets, i.e. some/most genes of the phage have been lost. That said, sequence with just 1 hallmark gene is neither a guarantee of a degraded phage (especially in the case of ssDNA viruses) nor is 2+ hallmark a guarantee of of a complete phage.
 
 **RNAseq assembly of any kind (if you only want RNA viruses)**
 ```
 -p False -db rna_virus
 ```
-If you also want DNA virus transcripts, or if your data is mixed RNA/DNA sequencing `--virus_domain_db standard` is the appropriate option.
+If you also want DNA virus transcripts, or if your data is mixed RNA/DNA sequencing, you might do a run with `-db rna_virus`, then, from this run, take the file "other_contigs/non_viral_domains_contigs.fna" and use it as input for another run with `-db virion`. Or else `-db standard` is a good option for DNA+RNA datasets.
 
 All arguments:
 ```

@@ -71,9 +71,21 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 				ORF_NAME=$( echo $LINE | cut -d " " -f1 | sed 's/\(.*\)\.[0-9].*_1/\1/' ) ; 
 				END_BASE=$( echo $LINE | cut -d " " -f1 | sed 's/.*\(\.[0-9].*_1\)/\1/' | sed 's/_1//g; s/\.//g' ) ; 
 				ORIG_CONTIG=$( grep ">" ${PHAN%.phan.fasta}.fna | cut -d " " -f2 ) ; 
-				AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ; 
+				AA_SEQ=$( echo "$LINE" | cut -f2 ) ; 
+				if echo $AA_SEQ | grep -q "\*" ; then
+					INC3=""
+				else
+					INC3="3primeInc"
+				fi
+				FAA=${AA_SEQ:0:1}
+				if [ $FIRST != "M" ] ; then
+					INC5="5primeInc"
+				else
+					INC5=""
+				fi
+
 				let COUNTER=COUNTER+1 ; 
-				echo ">"${ORF_NAME}"_"${COUNTER} "["$START_BASE" - "$END_BASE"]" $ORIG_CONTIG  ; echo $AA_SEQ ; 
+				echo ">"${ORF_NAME}"_"${COUNTER} "["$START_BASE" - "$END_BASE"]" ${INC5}${INC3} $ORIG_CONTIG  ; echo $AA_SEQ ; 
 			done > ${PHAN%.phan.fasta}.AA.fasta
 		done			
 	fi
@@ -92,8 +104,20 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 					END_BASE=$( echo "$LINE" | cut -d "#" -f 2 | sed 's/@//g' ) ; 
 				fi	
 				ORF_NAME=$( echo "$LINE" | cut -d "#" -f 1 | sed 's/@//g; s/\./_/g' ) ; 
-				AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ;
-				echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ; echo $AA_SEQ ; 
+				ORIG_CONTIG=$( grep ">" ${PROD%.prodigal.fasta}.fna | cut -d " " -f2 ) ; 
+				AA_SEQ=$( echo "$LINE" | cut -f2 ) ;
+				if echo $AA_SEQ | grep -q "\*" ; then
+					INC3=""
+				else
+					INC3="3primeInc"
+				fi
+				FAA=${AA_SEQ:0:1}
+				if [ $FIRST != "M" ] ; then
+					INC5="5primeInc"
+				else
+					INC5=""
+				fi
+				echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ${INC5}${INC3} $ORIG_CONTIG ; echo $AA_SEQ ; 
 			done > ${PROD%.prodigal.fasta}.AA.fasta
 		done
 	fi
@@ -592,7 +616,37 @@ if [ -n "$INT2_TBL" ] ; then
 else
 	echo "int2.tbl not found"
 fi
+### insert comb3.tbl edits
+COMB3_TBL=$( find * -maxdepth 0 -type f -name "*.comb3.tbl" )
+if [ -n "$COMB3_TBL" ] ; then
+	for comb3 in $COMB3_TBL ; do
+		if grep -q "5primeInc\|3primeInc" ${feat_tbl2%.comb3.tbl}.AA.sorted.fasta ; then
+			grep "5primeInc\|3primeInc" ${feat_tbl2%.comb3.tbl}.AA.sorted.fasta
+			while read INCOMPLETE ; do
+				START_BASEH=$( echo $INCOMPLETE | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
+				END_BASEH=$( echo $INCOMPLETE | sed 's/.*- \(.*\)\].*/\1/' ) ; 
+				if echo "$INCOMPLETE" | grep -q "5primeInc" && echo "$INCOMPLETE" | grep -q "3primeInc" ; then
+					if grep -q "^${START_BASEH}	${END_BASEH}" $COMB3_TBL ; then
+						sed -i -e ':a' -e 'N' -e '$!ba' -e "s/${START_BASEH}	${END_BASEH}	CDS\n/<${START_BASEH}	>${END_BASEH}	CDS\n			codon_start	1\n/g" $COMB3_TBL
+					fi
+				elif echo "$INCOMPLETE" | grep -q "5primeInc" ; then
+					if grep -q "^${START_BASEH}	${END_BASEH}" $COMB3_TBL ; then
+						sed -i -e ':a' -e 'N' -e '$!ba' -e "s/${START_BASEH}	${END_BASEH}	CDS\n/<${START_BASEH}	${END_BASEH}	CDS\n			codon_start	1\n/g" $COMB3_TBL
+					fi
+				elif echo "$INCOMPLETE" | grep -q "3primeInc" ; then
+					if grep -q "^${START_BASEH}	${END_BASEH}" $COMB3_TBL ; then
+						sed -i -e ':a' -e 'N' -e '$!ba' -e "s/${START_BASEH}	${END_BASEH}	CDS\n/${START_BASEH}	>${END_BASEH}	CDS\n			codon_start	1\n/g" $COMB3_TBL
+					fi
+				fi
+			done
+		fi
+		## bad names fix
+		sed -i 's/product	 /product	/g ; s/product	-/product	/g ; s/product	;/product	/g ; s/product	=/product	/g ; s/product	_/product	/g s/product	; /product	/g ; s/Length=.*//g ; s/; Provisional.//g ; s/; Validated.//g ; s/: .*//g ; s/; Reviewed.//g ; s/;$//g' $COMB3_TBL
+		##
+	done
+fi
 
+###
 rm -f *tmp.tbl
 COMB3_TBL=$( find * -maxdepth 0 -type f -name "*.comb3.tbl" )
 if [ -n "$COMB3_TBL" ] ; then

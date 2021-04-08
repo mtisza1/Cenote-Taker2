@@ -399,8 +399,20 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 				START_BASE=$( echo "$LINE" | cut -d "#" -f 2 | sed 's/@//g' ) ; 
 				END_BASE=$( echo "$LINE" | cut -d "#" -f 3 | sed 's/@//g' ) ; 
 				ORF_NAME=$( echo "$LINE" | cut -d "#" -f 1 | sed 's/@//g; s/\./_/g' ) ; 
-				AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ;
-				echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ; echo $AA_SEQ ; 
+				AA_SEQ=$( echo "$LINE" | cut -f2 ) ;
+				ORIG_CONTIG=$( grep ">" ${NO_END%.prodigal.fasta}.fasta | cut -d " " -f2 )
+				if echo $AA_SEQ | grep -q "\*" ; then
+					INC3=""
+				else
+					INC3="3primeInc"
+				fi
+				FAA=${AA_SEQ:0:1}
+				if [ $FIRST != "M" ] ; then
+					INC5="5primeInc"
+				else
+					INC5=""
+				fi
+				echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ${INC5}${INC3} $ORIG_CONTIG  ; echo $AA_SEQ ; 
 			done > ${NO_END%.fasta}.AA.sorted.fasta
 		done
 
@@ -492,8 +504,20 @@ if [ ! -z "$DTR_SEQS" ] ; then
 				START_BASE=$( echo "$LINE" | cut -d "#" -f 2 | sed 's/@//g' ) ; 
 				END_BASE=$( echo "$LINE" | cut -d "#" -f 3 | sed 's/@//g' ) ; 
 				ORF_NAME=$( echo "$LINE" | cut -d "#" -f 1 | sed 's/@//g; s/\./_/g' ) ; 
-				AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ;
-				echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ; echo $AA_SEQ ; 
+				AA_SEQ=$( echo "$LINE" | cut -f2 ) ;
+				ORIG_CONTIG=$( grep ">" ${CIRC%.prodigal.fasta}.fasta | cut -d " " -f2 )
+				if echo $AA_SEQ | grep -q "\*" ; then
+					INC3=""
+				else
+					INC3="3primeInc"
+				fi
+				FAA=${AA_SEQ:0:1}
+				if [ $FIRST != "M" ] ; then
+					INC5="5primeInc"
+				else
+					INC5=""
+				fi
+				echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ${INC5}${INC3} $ORIG_CONTIG  ; echo $AA_SEQ ; 
 			done > ${CIRC%.fasta}.AA.sorted.fasta
 		done	
 		cat $( find * -maxdepth 0 -type f -name "*.AA.sorted.fasta" ) > all_circular_genome_proteins.AA.fasta
@@ -575,8 +599,20 @@ if [ ! -z "$ITR_SEQS" ] ; then
 			START_BASE=$( echo "$LINE" | cut -d "#" -f 2 | sed 's/@//g' ) ; 
 			END_BASE=$( echo "$LINE" | cut -d "#" -f 3 | sed 's/@//g' ) ; 
 			ORF_NAME=$( echo "$LINE" | cut -d "#" -f 1 | sed 's/@//g; s/\./_/g' ) ; 
-			AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ;
-			echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ; echo $AA_SEQ ; 
+			AA_SEQ=$( echo "$LINE" | cut -f2 ) ;
+			ORIG_CONTIG=$( grep ">" ${CIRC%.AA.fasta}.fasta | cut -d " " -f2 )
+			if echo $AA_SEQ | grep -q "\*" ; then
+				INC3=""
+			else
+				INC3="3primeInc"
+			fi
+			FAA=${AA_SEQ:0:1}
+			if [ $FIRST != "M" ] ; then
+				INC5="5primeInc"
+			else
+				INC5=""
+			fi
+			echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ${INC5}${INC3} $ORIG_CONTIG  ; echo $AA_SEQ ; 
 		done > ${CIRC%.fasta}.AA.sorted.fasta
 	done	
 	cat $( find * -maxdepth 0 -type f -name "*.AA.sorted.fasta" ) > all_ITR_genome_proteins.AA.fasta
@@ -777,10 +813,21 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 				START_BASE=$( echo $LINE | sed 's/.*START=\(.*\)\] \[.*/\1/' ) ; 
 				ORF_NAME=$( echo $LINE | cut -d " " -f1 | sed 's/\(.*\)\.[0-9].*_1/\1/' ) ; 
 				END_BASE=$( echo $LINE | cut -d " " -f1 | sed 's/.*\(\.[0-9].*_1\)/\1/' | sed 's/_1//g; s/\.//g' ) ; 
-				ORIG_CONTIG=$( grep ">" ${PHAN%.phan.fasta}.fna | cut -d " " -f2 ) ; 
-				AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ; 
+				ORIG_CONTIG=$( grep ">" ${PHAN%.phan.fasta}.rotate.fasta | cut -d " " -f2 ) ; 
+				AA_SEQ=$( echo "$LINE" | cut -f2 ) ; 
+				if echo $AA_SEQ | grep -q "\*" ; then
+					INC3=""
+				else
+					INC3="3primeInc"
+				fi
+				FAA=${AA_SEQ:0:1}
+				if [ $FIRST != "M" ] ; then
+					INC5="5primeInc"
+				else
+					INC5=""
+				fi
 				let COUNTER=COUNTER+1 ; 
-				echo ">"${ORF_NAME}"_"${COUNTER} "["$START_BASE" - "$END_BASE"]" $ORIG_CONTIG  ; echo $AA_SEQ ; 
+				echo ">"${ORF_NAME}"_"${COUNTER} "["$START_BASE" - "$END_BASE"]" ${INC5}${INC3} $ORIG_CONTIG  ; echo $AA_SEQ ; 
 			done > ${PHAN%.phan.fasta}.rotate.AA.fasta
 		done			
 	fi
@@ -799,8 +846,20 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 					END_BASE=$( echo "$LINE" | cut -d "#" -f 2 | sed 's/@//g' ) ; 
 				fi	
 				ORF_NAME=$( echo "$LINE" | cut -d "#" -f 1 | sed 's/@//g; s/\./_/g' ) ; 
-				AA_SEQ=$( echo "$LINE" | cut -f2 | sed 's/\*//g' ) ;
-				echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ; echo $AA_SEQ ; 
+				ORIG_CONTIG=$( grep ">" ${PROD%.prodigal.fasta}.fasta | cut -d " " -f2 ) ;
+				AA_SEQ=$( echo "$LINE" | cut -f2 ) ;
+				if echo $AA_SEQ | grep -q "\*" ; then
+					INC3=""
+				else
+					INC3="3primeInc"
+				fi
+				FAA=${AA_SEQ:0:1}
+				if [ $FIRST != "M" ] ; then
+					INC5="5primeInc"
+				else
+					INC5=""
+				fi
+				echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ${INC5}${INC3} $ORIG_CONTIG  ; echo $AA_SEQ ; 
 			done > ${PROD%.prodigal.fasta}.AA.fasta
 		done
 	fi
@@ -932,34 +991,34 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 		for circle in $ROTATED_DTR_CONTIGS ; do
 			if [ -s "${circle%.rotate.fasta}.blastn.out" ]; then
 				python ${CENOTE_SCRIPT_DIR}/anicalc/anicalc.py -i ${circle%.rotate.fasta}.blastn.out -o ${circle%.rotate.fasta}.blastn_anicalc.out
-				awk '{OFS="\t"}{FS="\t"}{ if (NR==1) {print $1, $2, $6} else if ($4>=95 && $6>=85) {print $1, $2, $6}}' ${circle%.rotate.fasta}.blastn_anicalc.out > ${circle%.rotate.fasta}.blastn_intraspecific.out
+				awk '{OFS="\t"}{FS="\t"}{ if (NR==1) {print $1, $2, $6} else if ($4>=95 && $5>=85) {print $1, $2, $6}}' ${circle%.rotate.fasta}.blastn_anicalc.out > ${circle%.rotate.fasta}.blastn_intraspecific.out
 			fi
 			if [ -s "${circle%.rotate.fasta}.blastn_intraspecific.out" ]; then
-				INTRA_LENGTH=$( cat ${circle%.rotate.fasta}.blastn_intraspecific.out | wc -l | bc )	
-				if [ "$INTRA_LENGTH" -ge 2 ] ; then
+				INTRA_LINES=$( cat ${circle%.rotate.fasta}.blastn_intraspecific.out | wc -l | bc )	
+				if [ "$INTRA_LINES" -ge 2 ] ; then
 					ktClassifyBLAST -o ${circle%.rotate.fasta}.tax_guide.blastn.tab ${circle%.rotate.fasta}.blastn_intraspecific.out >/dev/null 2>&1
 					taxid=$( tail -n1 ${circle%.rotate.fasta}.tax_guide.blastn.tab | cut -f2 )
-					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage > ${circle%.rotate.fasta}.tax_guide.blastn.out
+					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -tab "\n" -element Lineage ScientificName > ${circle%.rotate.fasta}.tax_guide.blastn.out
 					sleep 2s
 					if [ !  -z "${circle%.rotate.fasta}.tax_guide.blastn.out" ] ; then
-						awk '{ print "; "$3 }' ${circle%.rotate.fasta}.blastn_intraspecific.out | sed 's/-/ /g; s/, complete genome//g' >> ${circle%.rotate.fasta}.tax_guide.blastn.out
-					fi
 
-					if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid\|phage" ${circle%.rotate.fasta}.tax_guide.blastn.out ; then
-						echo $circle " is closely related to a virus that has already been deposited in GenBank nt. "
-						#cat ${circle%.rotate.fasta}.tax_guide.blastn.out
-						cp ${circle%.rotate.fasta}.tax_guide.blastn.out ${circle%.rotate.fasta}.tax_guide.KNOWN_VIRUS.out
+						if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid\|phage" ${circle%.rotate.fasta}.tax_guide.blastn.out ; then
+							#echo $circle " is closely related to a virus that has already been deposited in GenBank nt. "
+							#cat ${circle%.rotate.fasta}.tax_guide.blastn.out
+							cp ${circle%.rotate.fasta}.tax_guide.blastn.out ${circle%.rotate.fasta}.tax_guide.KNOWN_VIRUS.out
 
-					else 
-						echo $circle "$(tput setaf 4) is closely related to a chromosomal sequence that has already been deposited in GenBank nt and will be checked for viral and plasmid domains. $(tput sgr 0)"
-						cat ${circle%.rotate.fasta}.tax_guide.blastn.out
-						cp ${circle%.rotate.fasta}.tax_guide.blastn.out ${circle%.rotate.fasta}.tax_guide.CELLULAR.out
+						else 
+							#echo $circle "$(tput setaf 4) is closely related to a chromosomal sequence that has already been deposited in GenBank nt and will be checked for viral and plasmid domains. $(tput sgr 0)"
+							cat ${circle%.rotate.fasta}.tax_guide.blastn.out
+							cp ${circle%.rotate.fasta}.tax_guide.blastn.out ${circle%.rotate.fasta}.tax_guide.CELLULAR.out
+						fi
 					fi
 				fi
 			fi
 		done
 		###
 		### old blastn
+		'''
 		echo "$ROTATED_DTR_CONTIGS" | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU blastn -task megablast -db ${BLASTN_DB} -query {}.rotate.fasta -evalue 1e-50 -num_threads 1 -outfmt "6 qseqid sseqid stitle pident length qlen" -qcov_hsp_perc 50 -num_alignments 3 -out {}.blastn.out >/dev/null 2>&1
 		for circle in $ROTATED_DTR_CONTIGS ; do
 			if [ -s "${circle%.rotate.fasta}.blastn.out" ]; then
@@ -991,6 +1050,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 				fi
 			fi
 		done
+		'''
 		###
 	else
 		echo "BLASTN databases not found, skipping BLASTN step"
@@ -1316,7 +1376,37 @@ if [ -n "$INT2_TBL" ] ; then
 
 	done
 fi
+### insert comb3.tbl edits
+COMB3_TBL=$( find * -maxdepth 0 -type f -name "*.comb3.tbl" )
+if [ -n "$COMB3_TBL" ] ; then
+	for comb3 in $COMB3_TBL ; do
+		if grep -q "5primeInc\|3primeInc" ${feat_tbl2%.comb3.tbl}.rotate.AA.sorted.fasta ; then
+			grep "5primeInc\|3primeInc" ${feat_tbl2%.comb3.tbl}.rotate.AA.sorted.fasta
+			while read INCOMPLETE ; do
+				START_BASEH=$( echo $INCOMPLETE | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
+				END_BASEH=$( echo $INCOMPLETE | sed 's/.*- \(.*\)\].*/\1/' ) ; 
+				if echo "$INCOMPLETE" | grep -q "5primeInc" && echo "$INCOMPLETE" | grep -q "3primeInc" ; then
+					if grep -q "^${START_BASEH}	${END_BASEH}" $COMB3_TBL ; then
+						sed -i -e ':a' -e 'N' -e '$!ba' -e "s/${START_BASEH}	${END_BASEH}	CDS\n/<${START_BASEH}	>${END_BASEH}	CDS\n			codon_start	1\n/g" $COMB3_TBL
+					fi
+				elif echo "$INCOMPLETE" | grep -q "5primeInc" ; then
+					if grep -q "^${START_BASEH}	${END_BASEH}" $COMB3_TBL ; then
+						sed -i -e ':a' -e 'N' -e '$!ba' -e "s/${START_BASEH}	${END_BASEH}	CDS\n/<${START_BASEH}	${END_BASEH}	CDS\n			codon_start	1\n/g" $COMB3_TBL
+					fi
+				elif echo "$INCOMPLETE" | grep -q "3primeInc" ; then
+					if grep -q "^${START_BASEH}	${END_BASEH}" $COMB3_TBL ; then
+						sed -i -e ':a' -e 'N' -e '$!ba' -e "s/${START_BASEH}	${END_BASEH}	CDS\n/${START_BASEH}	>${END_BASEH}	CDS\n			codon_start	1\n/g" $COMB3_TBL
+					fi
+				fi
+			done
+		fi
+		## bad names fix
+		sed -i 's/product	 /product	/g ; s/product	-/product	/g ; s/product	;/product	/g ; s/product	=/product	/g ; s/product	_/product	/g s/product	; /product	/g ; s/Length=.*//g ; s/; Provisional.//g ; s/; Validated.//g ; s/: .*//g ; s/; Reviewed.//g ; s/;$//g' $COMB3_TBL
+		##
+	done
+fi
 
+###
 rm -f *tmp.tbl
 COMB3_TBL=$( find * -maxdepth 0 -type f -name "*.comb3.tbl" )
 if [ -n "$COMB3_TBL" ] ; then
