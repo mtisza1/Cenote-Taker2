@@ -407,7 +407,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 					INC3="3primeInc"
 				fi
 				FAA=${AA_SEQ:0:1}
-				if [ $FIRST != "M" ] ; then
+				if [ "$FIRST" != "M" ] ; then
 					INC5="5primeInc"
 				else
 					INC5=""
@@ -512,7 +512,7 @@ if [ ! -z "$DTR_SEQS" ] ; then
 					INC3="3primeInc"
 				fi
 				FAA=${AA_SEQ:0:1}
-				if [ $FIRST != "M" ] ; then
+				if [ "$FIRST" != "M" ] ; then
 					INC5="5primeInc"
 				else
 					INC5=""
@@ -607,7 +607,7 @@ if [ ! -z "$ITR_SEQS" ] ; then
 				INC3="3primeInc"
 			fi
 			FAA=${AA_SEQ:0:1}
-			if [ $FIRST != "M" ] ; then
+			if [ "$FIRST" != "M" ] ; then
 				INC5="5primeInc"
 			else
 				INC5=""
@@ -821,7 +821,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 					INC3="3primeInc"
 				fi
 				FAA=${AA_SEQ:0:1}
-				if [ $FIRST != "M" ] ; then
+				if [ "$FIRST" != "M" ] ; then
 					INC5="5primeInc"
 				else
 					INC5=""
@@ -854,7 +854,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 					INC3="3primeInc"
 				fi
 				FAA=${AA_SEQ:0:1}
-				if [ $FIRST != "M" ] ; then
+				if [ "$FIRST" != "M" ] ; then
 					INC5="5primeInc"
 				else
 					INC5=""
