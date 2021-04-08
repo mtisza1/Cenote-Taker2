@@ -166,6 +166,11 @@ if is_tool("transeq") :
 else:
 	print ("transeq is not found. Exiting.")
 	quit()
+if is_tool("bedtools") :
+	print ("bedtools found")
+else:
+	print ("bedtools is not found. Exiting.")
+	quit()
 
 
 subprocess.call(['bash', str(cenote_script_path) + '/cenote-taker2.1.1.sh', str(args.original_contigs), str(args.F_READS), str(args.R_READS), str(args.run_title), str(args.isolation_source), str(args.collection_date), str(args.metagenome_type), str(args.srr_number), str(args.srx_number), str(args.biosample), str(args.bioproject),  str(args.template_file), str(args.circ_length_cutoff), str(args.linear_length_cutoff), str(args.virus_domain_db), str(args.LIN_MINIMUM_DOMAINS), str(args.handle_knowns), str(args.ASSEMBLER), str(args.MOLECULE_TYPE), str(args.HHSUITE_TOOL), str(args.DATA_SOURCE), str(args.BLASTP), str(args.PROPHAGE), str(args.FILTER_PLASMIDS), str(args.BLASTN_DB), str(cenote_script_path), str(args.CIRC_MINIMUM_DOMAINS), str(args.SCRATCH_DIR), str(args.MEM), str(args.CPU), str(args.ENFORCE_START_CODON), str(args.ORF_WITHIN), str(args.ANNOTATION_MODE)])
