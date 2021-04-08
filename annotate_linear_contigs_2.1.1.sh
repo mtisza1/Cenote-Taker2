@@ -622,10 +622,10 @@ if [ -n "$COMB3_TBL" ] ; then
 	for comb3 in $COMB3_TBL ; do
 		## tRNA overlap
 		if grep -q "[0-9]	tRNA" $comb3 ; then
-			grep "[0-9]	tRNA" $comb3 | awk -v name="${comb3%.comb3.tbl}" '{OFS="\t"}{FS="\t"}{print name, $0}' > ${comb3%.comb3.tbl}.tRNA.bed
+			grep "[0-9]	tRNA" $comb3 | awk -v name="${comb3%.comb3.tbl}" '{OFS="\t"}{FS="\t"}{print name, $1, $2}' > ${comb3%.comb3.tbl}.tRNA.bed
 		fi
 		if grep -q "	CDS" $comb3 ; then
-			grep "	CDS" $comb3 | awk -v name="${comb3%.comb3.tbl}" '{OFS="\t"}{FS="\t"}{print name, $0}' > ${comb3%.comb3.tbl}.CDS.bed
+			grep "	CDS" $comb3 | awk -v name="${comb3%.comb3.tbl}" '{OFS="\t"}{FS="\t"}{print name, $1, $2}' > ${comb3%.comb3.tbl}.CDS.bed
 		fi
 		if [ -s ${comb3%.comb3.tbl}.CDS.bed ] && [ -s ${comb3%.comb3.tbl}.tRNA.bed ] ; then
 			bedtools intersect -wa -a ${comb3%.comb3.tbl}.CDS.bed -b ${comb3%.comb3.tbl}.tRNA.bed | awk '{OFS="\t"}{FS="\t"}{print $2, $3, $4}' > ${comb3%.comb3.tbl}.ORFs_over_tRNAs.tsv
