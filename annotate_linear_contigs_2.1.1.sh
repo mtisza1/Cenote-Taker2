@@ -632,7 +632,7 @@ if [ -n "$COMB3_TBL" ] ; then
 			if [ -s ${comb3%.comb3.tbl}.ORFs_over_tRNAs.tsv ] ; then
 				head -n1 ${comb3} > ${comb3}.tmp
 				grep -v -f ${comb3%.comb3.tbl}.ORFs_over_tRNAs.tsv ${comb3} | grep -A3 "^[0-9]" >> ${comb3}.tmp
-				cp ${comb3}.tmp ${comb3}
+				sed '/--/d' ${comb3}.tmp > ${comb3}
 			fi
 		fi
 

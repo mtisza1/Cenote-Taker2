@@ -1357,8 +1357,8 @@ if [ -n "$COMB3_TBL" ] ; then
 			bedtools intersect -wa -a ${comb3%.comb3.tbl}.CDS.bed -b ${comb3%.comb3.tbl}.tRNA.bed | awk '{OFS="\t"}{FS="\t"}{ if ($4=="fwd") {print $2, $3} else {print $3, $2}}' > ${comb3%.comb3.tbl}.ORFs_over_tRNAs.tsv
 			if [ -s ${comb3%.comb3.tbl}.ORFs_over_tRNAs.tsv ] ; then
 				head -n1 ${comb3} > ${comb3}.tmp
-				grep -v -f ${comb3%.comb3.tbl}.ORFs_over_tRNAs.tsv ${comb3} | grep -A3 "^[0-9]" | sed '/--/d' >> ${comb3}.tmp
-				cp ${comb3}.tmp ${comb3}
+				grep -v -f ${comb3%.comb3.tbl}.ORFs_over_tRNAs.tsv ${comb3} | grep -A3 "^[0-9]" >> ${comb3}.tmp
+				sed '/--/d' ${comb3}.tmp > ${comb3}
 			fi
 		fi
 
@@ -1826,7 +1826,7 @@ if [ -n "$COMB3_TBL" ] ; then
 		elif grep -q "Bacteria" $tax_info ; then
 			vir_name="Phage" ;
 		elif grep -q "unclassified virus" $tax_info ; then
-			vir_name="Unclassified virus" ;		
+			vir_name="virus" ;		
 		elif grep -q "virus" $tax_info ; then
 			vir_name="Virus" ;
 		else
