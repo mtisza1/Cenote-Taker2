@@ -1366,7 +1366,7 @@ if [ -n "$COMB3_TBL" ] ; then
 			done
 		fi
 		## bad names fix
-		sed -i 's/product	 /product	/g ; s/product	-/product	/g ; s/product	\;/product	/g ; s/product	=/product	/g ; s/product	_/product	/g s/product	\; /product	/g ; s/Length=.*//g ; s/\; Provisional.//g ; s/\; Validated.//g ; s/: .*//g ; s/\; Reviewed.//g ; s/\;$//g' $comb3
+		sed -i 's/product	 /product	/g ; s/product	-/product	/g ; s/product	\;/product	/g ; s/product	=/product	/g ; s/product	_/product	/g ; s/product	\; /product	/g ; s/Length=.*//g ; s/\; Provisional.//g ; s/\; Validated.//g ; s/: .*//g ; s/\; Reviewed.//g ; s/\;$//g' $comb3
 		##
 	done
 fi
