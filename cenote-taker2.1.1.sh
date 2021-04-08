@@ -407,7 +407,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 					INC3="3primeInc"
 				fi
 				FAA=${AA_SEQ:0:1}
-				if [ "$FAA" != "M" ] ; then
+				if [ "$FAA" != "M" ] && [ $START_BASE -le 3 ] ; then
 					INC5="5primeInc"
 				else
 					INC5=""
@@ -512,7 +512,7 @@ if [ ! -z "$DTR_SEQS" ] ; then
 					INC3="3primeInc"
 				fi
 				FAA=${AA_SEQ:0:1}
-				if [ "$FAA" != "M" ] ; then
+				if [ "$FAA" != "M" ] && [ $START_BASE -le 3 ] ; then
 					INC5="5primeInc"
 				else
 					INC5=""
@@ -607,7 +607,7 @@ if [ ! -z "$ITR_SEQS" ] ; then
 				INC3="3primeInc"
 			fi
 			FAA=${AA_SEQ:0:1}
-			if [ "$FAA" != "M" ] ; then
+			if [ "$FAA" != "M" ] && [ $START_BASE -le 3 ] ; then
 				INC5="5primeInc"
 			else
 				INC5=""
@@ -821,7 +821,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 					INC3="3primeInc"
 				fi
 				FAA=${AA_SEQ:0:1}
-				if [ "$FAA" != "M" ] ; then
+				if [ "$FAA" != "M" ] && [ $START_BASE -le 3 ] ; then
 					INC5="5primeInc"
 				else
 					INC5=""
@@ -854,7 +854,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 					INC3="3primeInc"
 				fi
 				FAA=${AA_SEQ:0:1}
-				if [ "$FAA" != "M" ] ; then
+				if [ "$FAA" != "M" ] && [ $START_BASE -le 3 ] ; then
 					INC5="5primeInc"
 				else
 					INC5=""
@@ -1366,7 +1366,7 @@ if [ -n "$COMB3_TBL" ] ; then
 			done
 		fi
 		## bad names fix
-		sed -i 's/product	 /product	/g ; s/product	-/product	/g ; s/product	;/product	/g ; s/product	=/product	/g ; s/product	_/product	/g s/product	; /product	/g ; s/Length=.*//g ; s/; Provisional.//g ; s/; Validated.//g ; s/: .*//g ; s/; Reviewed.//g ; s/;$//g' $comb3
+		sed -i 's/product	 /product	/g ; s/product	-/product	/g ; s/product	\;/product	/g ; s/product	=/product	/g ; s/product	_/product	/g s/product	\; /product	/g ; s/Length=.*//g ; s/\; Provisional.//g ; s/\; Validated.//g ; s/: .*//g ; s/\; Reviewed.//g ; s/\;$//g' $comb3
 		##
 	done
 fi
@@ -1949,7 +1949,7 @@ if [ -d DTR_contigs_with_viral_domain ] ; then
 fi
 rm -rf bt2_indices/
 rm -f other_contigs/*.AA.fasta other_contigs/*.AA.sorted.fasta other_contigs/*.out other_contigs/*.dat other_contigs/*called_hmmscan.txt other_contigs/SPLIT_LARGE_GENOME_AA_*fasta ITR_containing_contigs/SPLIT_ITR_AA*fasta SPLIT_CIRCULAR_AA* *called_hmmscan.txt circular_contigs_spades_names.txt
-rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta no_end_contigs_with_viral_domain/*.comb*.tbl no_end_contigs_with_viral_domain/SPLIT_DTR_HMM2_GENOME_AA*fasta no_end_contigs_with_viral_domain/SPLIT_DTR_sort_GENOME_AA* no_end_contigs_with_viral_domain/SPLIT_DTR_RPS_AA* no_end_contigs_with_viral_domain/*used_positions.txt no_end_contigs_with_viral_domain/*seq_chunk_coordinates.csv
+rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta  no_end_contigs_with_viral_domain/SPLIT_DTR_HMM2_GENOME_AA*fasta no_end_contigs_with_viral_domain/SPLIT_DTR_sort_GENOME_AA* no_end_contigs_with_viral_domain/SPLIT_DTR_RPS_AA* no_end_contigs_with_viral_domain/*used_positions.txt no_end_contigs_with_viral_domain/*seq_chunk_coordinates.csv
 
 echo " "
 MDYT=$( date +"%m-%d-%y---%T" )

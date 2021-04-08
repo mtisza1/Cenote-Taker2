@@ -78,7 +78,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 					INC3="3primeInc"
 				fi
 				FAA=${AA_SEQ:0:1}
-				if [ "$FAA" != "M" ] ; then
+				if [ "$FAA" != "M" ] && [ $START_BASE -le 3 ]; then
 					INC5="5primeInc"
 				else
 					INC5=""
@@ -112,7 +112,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 					INC3="3primeInc"
 				fi
 				FAA=${AA_SEQ:0:1}
-				if [ "$FAA" != "M" ] ; then
+				if [ "$FAA" != "M" ] && [ $START_BASE -le 3 ] ; then
 					INC5="5primeInc"
 				else
 					INC5=""
@@ -640,7 +640,7 @@ if [ -n "$COMB3_TBL" ] ; then
 			done
 		fi
 		## bad names fix
-		sed -i 's/product	 /product	/g ; s/product	-/product	/g ; s/product	;/product	/g ; s/product	=/product	/g ; s/product	_/product	/g s/product	; /product	/g ; s/Length=.*//g ; s/; Provisional.//g ; s/; Validated.//g ; s/: .*//g ; s/; Reviewed.//g ; s/;$//g' $comb3
+		sed -i 's/product	 /product	/g ; s/product	-/product	/g ; s/product	\;/product	/g ; s/product	=/product	/g ; s/product	_/product	/g s/product	\; /product	/g ; s/Length=.*//g ; s/\; Provisional.//g ; s/\; Validated.//g ; s/: .*//g ; s/\; Reviewed.//g ; s/\;$//g' $comb3
 		##
 	done
 fi
