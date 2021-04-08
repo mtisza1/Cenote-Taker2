@@ -1017,41 +1017,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 			fi
 		done
 		###
-		### old blastn
-		'''
-		echo "$ROTATED_DTR_CONTIGS" | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU blastn -task megablast -db ${BLASTN_DB} -query {}.rotate.fasta -evalue 1e-50 -num_threads 1 -outfmt "6 qseqid sseqid stitle pident length qlen" -qcov_hsp_perc 50 -num_alignments 3 -out {}.blastn.out >/dev/null 2>&1
-		for circle in $ROTATED_DTR_CONTIGS ; do
-			if [ -s "${circle%.rotate.fasta}.blastn.out" ]; then
-				#echo ${circle%.rotate.fasta}.blastn.out" found"
-				sed 's/ /-/g' ${circle%.rotate.fasta}.blastn.out | awk '{if ($4 > 90) print}' | awk '{if (($5 / $6) > 0.5) print}' > ${circle%.rotate.fasta}.blastn.notnew.out ;
-			else
-				echo ${circle%.rotate.fasta}.blastn.out" not found, no close BLASTN hits for this sequence."
-			fi
-			if [ -s "${circle%.rotate.fasta}.blastn.notnew.out" ] ; then
 
-				#echo "$(tput setaf 4)"$circle" is not a novel species (>90% identical to sequence in GenBank nt database).$(tput sgr 0)"
-				ktClassifyBLAST -o ${circle%.rotate.fasta}.tax_guide.blastn.tab ${circle%.rotate.fasta}.blastn.notnew.out >/dev/null 2>&1
-				taxid=$( tail -n1 ${circle%.rotate.fasta}.tax_guide.blastn.tab | cut -f2 )
-				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage > ${circle%.rotate.fasta}.tax_guide.blastn.out
-				sleep 2s
-				if [ !  -z "${circle%.rotate.fasta}.tax_guide.blastn.out" ] ; then
-					awk '{ print "; "$3 }' ${circle%.rotate.fasta}.blastn.notnew.out | sed 's/-/ /g; s/, complete genome//g' >> ${circle%.rotate.fasta}.tax_guide.blastn.out
-				fi
-
-				if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid\|phage" ${circle%.rotate.fasta}.tax_guide.blastn.out ; then
-					echo $circle " is closely related to a virus that has already been deposited in GenBank nt. "
-					#cat ${circle%.rotate.fasta}.tax_guide.blastn.out
-					cp ${circle%.rotate.fasta}.tax_guide.blastn.out ${circle%.rotate.fasta}.tax_guide.KNOWN_VIRUS.out
-
-				else 
-					echo $circle "$(tput setaf 4) is closely related to a chromosomal sequence that has already been deposited in GenBank nt and will be checked for viral and plasmid domains. $(tput sgr 0)"
-					cat ${circle%.rotate.fasta}.tax_guide.blastn.out
-					cp ${circle%.rotate.fasta}.tax_guide.blastn.out ${circle%.rotate.fasta}.tax_guide.CELLULAR.out
-				fi
-			fi
-		done
-		'''
-		###
 	else
 		echo "BLASTN databases not found, skipping BLASTN step"
 	fi
