@@ -78,7 +78,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 					INC3="3primeInc"
 				fi
 				FAA=${AA_SEQ:0:1}
-				if [ "$FIRST" != "M" ] ; then
+				if [ "$FAA" != "M" ] ; then
 					INC5="5primeInc"
 				else
 					INC5=""
@@ -112,7 +112,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 					INC3="3primeInc"
 				fi
 				FAA=${AA_SEQ:0:1}
-				if [ "$FIRST" != "M" ] ; then
+				if [ "$FAA" != "M" ] ; then
 					INC5="5primeInc"
 				else
 					INC5=""
@@ -621,8 +621,7 @@ COMB3_TBL=$( find * -maxdepth 0 -type f -name "*.comb3.tbl" )
 if [ -n "$COMB3_TBL" ] ; then
 	for comb3 in $COMB3_TBL ; do
 		if grep -q "5primeInc\|3primeInc" ${comb3%.comb3.tbl}.AA.sorted.fasta ; then
-			grep "5primeInc\|3primeInc" ${comb3%.comb3.tbl}.AA.sorted.fasta
-			while read INCOMPLETE ; do
+			grep "5primeInc\|3primeInc" ${comb3%.comb3.tbl}.AA.sorted.fasta | while read INCOMPLETE ; do
 				START_BASEH=$( echo $INCOMPLETE | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
 				END_BASEH=$( echo $INCOMPLETE | sed 's/.*- \(.*\)\].*/\1/' ) ; 
 				if echo "$INCOMPLETE" | grep -q "5primeInc" && echo "$INCOMPLETE" | grep -q "3primeInc" ; then
