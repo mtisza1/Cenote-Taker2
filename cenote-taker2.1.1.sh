@@ -924,7 +924,7 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 	fi
 	for ROT in $ROTATE_SORT_AAs ; do 
 		if [ ! -s ${ROT%.rotate.AA.sorted.fasta}.rotate.AA.no_hmmscan1.fasta ] ; then
-			cp ${ROT} ${ROT%.AA.sorted.fasta}.rotate.AA.no_hmmscan1.fasta
+			cp ${ROT} ${ROT%.rotate.AA.sorted.fasta}.rotate.AA.no_hmmscan1.fasta
 		fi
 	done	
 	DTR_AA_FOR_HMM2=$( find * -maxdepth 0 -type f -name "${run_title}*AA.no_hmmscan1.fasta" )
@@ -955,7 +955,7 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 	fi
 	for ROT in $ROTATE_SORT_AAs ; do 
 		if [ ! -s ${ROT%.rotate.AA.sorted.fasta}.rotate.AA.no_hmmscan2.fasta ] ; then
-			cp ${ROT%.rotate.AA.sorted.fasta}.rotate.AA.no_hmmscan1.fasta ${ROT%.AA.sorted.fasta}.rotate.AA.no_hmmscan2.fasta
+			cp ${ROT%.rotate.AA.sorted.fasta}.rotate.AA.no_hmmscan1.fasta ${ROT%.rotate.AA.sorted.fasta}.rotate.AA.no_hmmscan2.fasta
 		fi
 	done
 	for ROT_AAs in $ROTATE_SORT_AAs ; do
