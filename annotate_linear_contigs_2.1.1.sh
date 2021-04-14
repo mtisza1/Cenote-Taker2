@@ -32,6 +32,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 				ktClassifyBLAST -o ${nucl_fa%.fna}.tax_guide.blastx.tab ${nucl_fa%.fna}.tax_guide.blastx.out >/dev/null 2>&1
 				taxid=$( tail -n1 ${nucl_fa%.fna}.tax_guide.blastx.tab | cut -f2 )
 				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fna}.tax_guide.blastx.out	
+				sleep 0.4s
 			fi
 		elif grep -q "virophage" ${nucl_fa%.fna}.tax_guide.blastx.out ; then
 			echo "Virophage" >> ${nucl_fa%.fna}.tax_guide.blastx.out
@@ -43,6 +44,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 			ktClassifyBLAST -o ${nucl_fa%.fna}.tax_guide.blastx.tab ${nucl_fa%.fna}.tax_guide.blastx.out >/dev/null 2>&1
 			taxid=$( tail -n1 ${nucl_fa%.fna}.tax_guide.blastx.tab | cut -f2 )
 			efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fna}.tax_guide.blastx.out
+			sleep 0.4s
 		fi
 		if [ ! -s ${nucl_fa%.fna}.tax_guide.blastx.out ] ; then
 			echo "No homologues found" > ${nucl_fa%.fna}.tax_guide.blastx.out
@@ -272,7 +274,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; t
 					ktClassifyBLAST -o ${nucl_fa%.fna}.tax_guide.blastn.tab ${nucl_fa%.fna}.blastn_intraspecific.out >/dev/null 2>&1
 					taxid=$( grep -v "qname" ${nucl_fa%.fna}.tax_guide.blastn.tab | tail -n+2 | head -n1 | cut -f2 )
 					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -tab "\n" -element Lineage ScientificName > ${nucl_fa%.fna}.tax_guide.blastn.out
-					sleep 2s
+					sleep 1s
 					if [ !  -z "${nucl_fa%.fna}.tax_guide.blastn.out" ] ; then
 
 						if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid\|phage" ${nucl_fa%.fna}.tax_guide.blastn.out ; then
@@ -724,6 +726,7 @@ if [ -n "$COMB3_TBL" ] ; then
 					ktClassifyBLAST -o ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out >/dev/null 2>&1
 					taxid=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab | cut -f2 )
 					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+					sleep 0.4s
 				fi
 			fi
 		fi

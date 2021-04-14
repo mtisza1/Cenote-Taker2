@@ -774,7 +774,8 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 			else
 				ktClassifyBLAST -o ${nucl_fa%.fasta}.tax_guide.blastx.tab ${nucl_fa%.fasta}.tax_guide.blastx.out >/dev/null 2>&1
 				taxid=$( tail -n1 ${nucl_fa%.fasta}.tax_guide.blastx.tab | cut -f2 )
-				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fasta}.tax_guide.blastx.out	
+				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fasta}.tax_guide.blastx.out
+				sleep 0.4s
 			fi
 		elif grep -q "virophage" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
 			echo "Virophage" >> ${nucl_fa%.fasta}.tax_guide.blastx.out
@@ -786,6 +787,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 			ktClassifyBLAST -o ${nucl_fa%.fasta}.tax_guide.blastx.tab ${nucl_fa%.fasta}.tax_guide.blastx.out >/dev/null 2>&1
 			taxid=$( tail -n1 ${nucl_fa%.fasta}.tax_guide.blastx.tab | cut -f2 )
 			efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fasta}.tax_guide.blastx.out
+			sleep 0.4s
 		fi
 		if [ ! -s ${nucl_fa%.fasta}.tax_guide.blastx.out ] ; then
 			echo "No homologues found" > ${nucl_fa%.fasta}.tax_guide.blastx.out
@@ -1006,7 +1008,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 					ktClassifyBLAST -o ${circle%.rotate.fasta}.tax_guide.blastn.tab ${circle%.rotate.fasta}.blastn_intraspecific.out >/dev/null 2>&1
 					taxid=$( grep -v "qname" ${circle%.rotate.fasta}.tax_guide.blastn.tab | tail -n+2 | head -n1 | cut -f2 )
 					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -tab "\n" -element Lineage ScientificName > ${circle%.rotate.fasta}.tax_guide.blastn.out
-					sleep 2s
+					sleep 1s
 					if [ !  -z "${circle%.rotate.fasta}.tax_guide.blastn.out" ] ; then
 
 						if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid\|phage" ${circle%.rotate.fasta}.tax_guide.blastn.out ; then
@@ -1456,6 +1458,7 @@ if [ -n "$COMB3_TBL" ] ; then
 					ktClassifyBLAST -o ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out >/dev/null 2>&1
 					taxid=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab | cut -f2 )
 					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+					sleep 0.4s
 				fi
 			fi
 		fi
@@ -1952,7 +1955,7 @@ if [ -d sequin_and_genome_maps ] ; then
 	COMB4_TBL=$( find * -maxdepth 0 -type f -name "*.tbl" )
 	if [ -n "$COMB4_TBL" ] ; then
 		for feat_tbl2 in $COMB4_TBL ; do
-			if [ -s ${feat_tbl2%tbl}.gtf ] ; then
+			if [ -s ${feat_tbl2%.tbl}.gtf ] ; then
 				rm -f ${feat_tbl2%.tbl}.gtf
 			fi
 			grep "^[0-9]\|^<[0-9]" -A3 $feat_tbl2 | sed '/--/d' | sed 's/ /_/g' | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n		//g' | while read LINE ; do
@@ -1985,13 +1988,13 @@ if [ -d sequin_and_genome_maps ] ; then
 	COMB4_TBL=$( find * -maxdepth 0 -type f -name "*.tbl" )
 	if [ -n "$COMB4_TBL" ] ; then
 		for feat_tbl2 in $COMB4_TBL ; do
-			if [ -s ${feat_tbl2%tbl}.gtf ] ; then
+			if [ -s ${feat_tbl2%.tbl}.gtf ] ; then
 				CONJ_COUNT=$( grep -i "virb\|type-IV\|secretion system\|conjugation\|conjugal\|transposon\| tra[a-z] \|	tra[a-z]\|trb[b-z]\|pilus" $feat_tbl2 | grep -v "TRAF\|TRAP\|protein tyrosine phosphatase\|ttRBP\|SpoU\|transport" | wc -l )
 				STRUCTURAL_COUNT=$( grep -i "capsid\|terminase\|portal\|baseplate\|base plate\|tail\|collar\|zot\|zonular\|minor coat\|packaging\|	virion protein" $feat_tbl2 | wc -l )
 				if [[ $CONJ_COUNT -gt 0 ]] && [[ $STRUCTURAL_COUNT == 0 ]] ; then
 					grep -v "TRAF\|TRAP\|protein tyrosine phosphatase\|ttRBP\|SpoU\|transport" $feat_tbl2 | grep -B2 -i "virb\|type-IV\|secretion system\|conjugation\|conjugal\|transposon\| tra[a-z] \|	tra[a-z]\|trb[b-z]\|pilus" | grep "^[0-9]\|^<[0-9]" | cut -f1,2 | while read START_STOP ; do 
-						grep "$START_STOP" ${feat_tbl2%tbl}.gtf
-					done > ${feat_tbl2%tbl}.putative_conjugative_machinery.gtf
+						grep "$START_STOP" ${feat_tbl2%.tbl}.gtf
+					done > ${feat_tbl2%.tbl}.putative_conjugative_machinery.gtf
 				fi
 			fi
 		done
