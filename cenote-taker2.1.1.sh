@@ -1018,7 +1018,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 
 						else 
 							#echo $circle "$(tput setaf 4) is closely related to a chromosomal sequence that has already been deposited in GenBank nt and will be checked for viral and plasmid domains. $(tput sgr 0)"
-							cat ${circle%.rotate.fasta}.tax_guide.blastn.out
+							#cat ${circle%.rotate.fasta}.tax_guide.blastn.out
 							cp ${circle%.rotate.fasta}.tax_guide.blastn.out ${circle%.rotate.fasta}.tax_guide.CELLULAR.out
 						fi
 					fi
