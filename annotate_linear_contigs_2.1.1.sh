@@ -537,7 +537,7 @@ if [ -n "$dark_orf_list" ] ; then
 			rm -f $dark_orf
 		done
 	else
-		echo "$(tput setaf 5) Valid option for HHsuite tool (i.e. -hhsearch or -hhblits) was not provided. Skipping step for "$dark_orf" $(tput sgr 0)"
+		echo "$(tput setaf 5) Valid option for HHsuite tool (i.e. hhsearch or hhblits) was not provided. Skipping step for "$dark_orf" $(tput sgr 0)"
 		for dark_orf in $dark_orf_list ; do	
 			cat $dark_orf >> ${dark_orf%*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
 			rm -f $dark_orf

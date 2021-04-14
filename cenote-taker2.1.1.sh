@@ -1284,7 +1284,7 @@ if [ -n "$dark_orf_list" ] ; then
 			rm -f ${dark_orf%.for_hhpred.fasta}.out.hhr 
 		done
 	else
-		echo "$(tput setaf 5) Valid option for HHsuite tool (i.e. -hhsearch or -hhblits) was not provided. Skipping step for "$dark_orf" $(tput sgr 0)"
+		echo "$(tput setaf 5) Valid option for HHsuite tool (i.e. hhsearch or hhblits) was not provided. Skipping step for "$dark_orf" $(tput sgr 0)"
 		for dark_orf in $dark_orf_list ; do	
 			cat $dark_orf >> ${dark_orf%.rotate*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
 			rm -f $dark_orf
@@ -2034,7 +2034,7 @@ if [ -s ${run_title}_PRUNING_INFO_TABLE.tsv ] ; then
 
 fi
 
-echo "ORIGINAL_NAME	CENOTE_NAME	END_FEATURE	LENGTH	ORF_CALLER	NUM_HALLMARKS	HALLMARK_NAMES" > ${run_title}_CONTIG_SUMMARY.tsv
+echo "ORIGINAL_NAME	CENOTE_NAME	ORGANISM_NAME	END_FEATURE	LENGTH	ORF_CALLER	NUM_HALLMARKS	HALLMARK_NAMES	BLASTN_INFO" > ${run_title}_CONTIG_SUMMARY.tsv
 CIRCULAR_HALLMARK_CONTIGS=$( find * -maxdepth 1 -type f -wholename "DTR_contigs_with_viral_domain/*fna" )
 
 if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
@@ -2049,13 +2049,37 @@ if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 			NUM_HALLMARKS=0
 			HALLMARK_NAMES="none"
 		fi
-		if [ -s DTR_contigs_with_viral_domain/DTR_seqs_for_phanotate.txt ] && grep -q "${LINEAR}" DTR_contigs_with_viral_domain/DTR_seqs_for_phanotate.txt ; then
-			ORF_CALLER="PHANTOTATE"
+		if [ -s DTR_contigs_with_viral_domain/DTR_seqs_for_phanotate.txt ] ; then
+			if grep -q "${LINEAR}" DTR_contigs_with_viral_domain/DTR_seqs_for_phanotate.txt ; then
+				ORF_CALLER="PHANOTATE"
+			else
+				ORF_CALLER="Prodigal"
+			fi
 		else
 			ORF_CALLER="Prodigal"
 		fi
 		END_FEATURE="DTR"
-		echo "${ORIGINAL_NAME}	${CENOTE_NAME}	${END_FEATURE}	${LENGTH}	${ORF_CALLER}	${NUM_HALLMARKS}	${HALLMARK_NAMES}" >> ${run_title}_CONTIG_SUMMARY.tsv
+		if [ -s sequin_and_genome_maps/${CENOTE_NAME}.fsa ] ; then
+			ORGANISM=$( head -n1 sequin_and_genome_maps/${CENOTE_NAME}.fsa | sed 's/.*\[organism=\(.*\)\] \[moltype=.*/\1/' )
+		else
+			ORGANISM="Unknown"
+		fi
+		if [ -s ${LINEAR%.fna}.tax_guide.KNOWN_VIRUS.out ] ; then
+			PRE_BLASTN=$( tail -n1 ${LINEAR%.fna}.tax_guide.KNOWN_VIRUS.out )
+			ANI=$( tail -n+2 ${LINEAR%.fna}.blastn_intraspecific.out | head -n1 | cut -f3 )
+			AF=$( tail -n+2 ${LINEAR%.fna}.blastn_intraspecific.out | head -n1 | cut -f4 )
+			BLASTN_INFO=$( echo "$PRE_BLASTN", ANI=${ANI}%, AF=${AF}% )
+		elif [ -s ${LINEAR%.fna}.tax_guide.CELLULAR.out ] ; then
+			PRE_BLASTN=$( tail -n1 ${LINEAR%.fna}.tax_guide.CELLULAR.out )
+			ANI=$( tail -n+2 ${LINEAR%.fna}.blastn_intraspecific.out | head -n1 | cut -f3 )
+			AF=$( tail -n+2 ${LINEAR%.fna}.blastn_intraspecific.out | head -n1 | cut -f4 )
+			BLASTN_INFO=$( echo "$PRE_BLASTN", ANI=${ANI}%, AF=${AF}% )
+		elif [ "$handle_knowns" != "blast_knowns" ] ; then
+			BLASTN_INFO="BLASTN not conducted"
+		else
+			BLASTN_INFO="no high coverage hits"
+		fi		
+		echo "${ORIGINAL_NAME}	${CENOTE_NAME}	${ORGANISM}	${END_FEATURE}	${LENGTH}	${ORF_CALLER}	${NUM_HALLMARKS}	${HALLMARK_NAMES}	${BLASTN_INFO}" >> ${run_title}_CONTIG_SUMMARY.tsv
 	done
 fi
 
@@ -2082,12 +2106,36 @@ if [ -n "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ; then
 			HALLMARK_NAMES="none"
 		fi
 		END_FEATURE="None"
-		if [ -s no_end_contigs_with_viral_domain/LIN_seqs_for_phanotate.txt ] && grep -q "${LINEAR}" no_end_contigs_with_viral_domain/LIN_seqs_for_phanotate.txt ; then
-			ORF_CALLER="PHANTOTATE"
+		if [ -s no_end_contigs_with_viral_domain/LIN_seqs_for_phanotate.txt ] ; then 
+			if grep -q "${LINEAR}" no_end_contigs_with_viral_domain/LIN_seqs_for_phanotate.txt ; then
+				ORF_CALLER="PHANOTATE"
+			else
+				ORF_CALLER="Prodigal"
+			fi
 		else
 			ORF_CALLER="Prodigal"
 		fi
-		echo "${ORIGINAL_NAME}	${CENOTE_NAME}	${END_FEATURE}	${LENGTH}	${ORF_CALLER}	${NUM_HALLMARKS}	${HALLMARK_NAMES}" >> ${run_title}_CONTIG_SUMMARY.tsv
+		if [ -s sequin_and_genome_maps/${CENOTE_NAME}.fsa ] ; then
+			ORGANISM=$( head -n1 sequin_and_genome_maps/${CENOTE_NAME}.fsa | sed 's/.*\[organism=\(.*\)\] \[moltype=.*/\1/' )
+		else
+			ORGANISM="Unknown"
+		fi
+		if [ -s ${LINEAR%.fna}.tax_guide.KNOWN_VIRUS.out ] ; then
+			PRE_BLASTN=$( tail -n1 ${LINEAR%.fna}.tax_guide.KNOWN_VIRUS.out )
+			ANI=$( tail -n+2 ${LINEAR%.fna}.blastn_intraspecific.out | head -n1 | cut -f3 )
+			AF=$( tail -n+2 ${LINEAR%.fna}.blastn_intraspecific.out | head -n1 | cut -f4 )
+			BLASTN_INFO=$( echo "$PRE_BLASTN", ANI=${ANI}%, AF=${AF}% )
+		elif [ -s ${LINEAR%.fna}.tax_guide.CELLULAR.out ] ; then
+			PRE_BLASTN=$( tail -n1 ${LINEAR%.fna}.tax_guide.CELLULAR.out )
+			ANI=$( tail -n+2 ${LINEAR%.fna}.blastn_intraspecific.out | head -n1 | cut -f3 )
+			AF=$( tail -n+2 ${LINEAR%.fna}.blastn_intraspecific.out | head -n1 | cut -f4 )
+			BLASTN_INFO=$( echo "$PRE_BLASTN", ANI=${ANI}%, AF=${AF}% )
+		elif [ "$handle_knowns" != "blast_knowns" ] ; then
+			BLASTN_INFO="BLASTN not conducted"
+		else
+			BLASTN_INFO="no high coverage hits"
+		fi	
+		echo "${ORIGINAL_NAME}	${CENOTE_NAME}	${ORGANISM}	${END_FEATURE}	${LENGTH}	${ORF_CALLER}	${NUM_HALLMARKS}	${HALLMARK_NAMES}	${BLASTN_INFO}" >> ${run_title}_CONTIG_SUMMARY.tsv
 	done
 fi
 
