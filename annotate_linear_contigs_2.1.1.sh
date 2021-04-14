@@ -253,41 +253,38 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 fi
 
 
-#- blastn all dtr seqs
+#- blastn all linear seqs
 if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 	if [ -s ${BLASTN_DB}.nsq ] || [ -s ${BLASTN_DB}.1.nsq ] || [ -s ${BLASTN_DB}.01.nsq ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
-		echo "time update: running BLASTN, linear contigs " $MDYT		
-		echo "$LINEAR_HALLMARK_CONTIGS" | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU blastn -task megablast -db ${BLASTN_DB} -query {}.fna -evalue 1e-50 -num_threads 1 -outfmt "6 qseqid sseqid stitle pident length qlen" -qcov_hsp_perc 50 -num_alignments 3 -out {}.blastn.out >/dev/null 2>&1
+		echo "time update: running BLASTN, linear contigs " $MDYT
+
+		### new blastn
+		echo "$LINEAR_HALLMARK_CONTIGS" | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU blastn -query {}.fna -db ${BLASTN_DB} -outfmt '6 std qlen slen' -max_target_seqs 100 -perc_identity 90 -num_threads 1 -out {}.blastn.out >/dev/null 2>&1
 		for nucl_fa in $LINEAR_HALLMARK_CONTIGS ; do
 			if [ -s "${nucl_fa%.fna}.blastn.out" ]; then
-				sed 's/ /-/g' ${nucl_fa%.fna}.blastn.out | awk '{if ($4 > 90) print}' | awk '{if (($5 / $6) > 0.5) print}' > ${nucl_fa%.fna}.blastn.notnew.out ;
-			else
-				echo ${nucl_fa%.fna}.blastn.out" not found, no close BLASTN hits for this sequence."
+				python ${CENOTE_SCRIPT_DIR}/anicalc/anicalc.py -i ${nucl_fa%.fna}.blastn.out -o ${nucl_fa%.fna}.blastn_anicalc.out
+				awk '{OFS="\t"}{FS="\t"}{ if (NR==1) {print $1, $2, $4, $5} else if ($4>=95 && $5>=85) {print $1, $2, $4, $5}}' ${nucl_fa%.fna}.blastn_anicalc.out > ${nucl_fa%.fna}.blastn_intraspecific.out
 			fi
-			if [ -s "${nucl_fa%.fna}.blastn.notnew.out" ] ; then
+			if [ -s "${nucl_fa%.fna}.blastn_intraspecific.out" ]; then
+				INTRA_LINES=$( cat ${nucl_fa%.fna}.blastn_intraspecific.out | wc -l | bc )	
+				if [ "$INTRA_LINES" -ge 2 ] ; then
+					ktClassifyBLAST -o ${nucl_fa%.fna}.tax_guide.blastn.tab ${nucl_fa%.fna}.blastn_intraspecific.out >/dev/null 2>&1
+					taxid=$( grep -v "qname" ${circle%.rotate.fasta}.tax_guide.blastn.tab | tail -n+2 | head -n1 | cut -f2 )
+					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -tab "\n" -element Lineage ScientificName > ${nucl_fa%.fna}.tax_guide.blastn.out
+					sleep 2s
+					if [ !  -z "${nucl_fa%.fna}.tax_guide.blastn.out" ] ; then
 
-				#echo "$(tput setaf 4)"$nucl_fa" is not a novel species (>90% identical to sequence in GenBank nt database).$(tput sgr 0)"
-				ktClassifyBLAST -o ${nucl_fa%.fna}.tax_guide.blastn.tab ${nucl_fa%.fna}.blastn.notnew.out >/dev/null 2>&1
-				taxid=$( tail -n1 ${nucl_fa%.fna}.tax_guide.blastn.tab | cut -f2 )
-				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage > ${nucl_fa%.fna}.tax_guide.blastn.out
-				sleep 2s
-				if [ !  -z "${nucl_fa%.fna}.tax_guide.blastn.out" ] ; then
-					awk '{ print "; "$3 }' ${nucl_fa%.fna}.blastn.notnew.out | sed 's/-/ /g; s/, complete genome//g' >> ${nucl_fa%.fna}.tax_guide.blastn.out
-				fi
-
-				if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid\|phage" ${nucl_fa%.fna}.tax_guide.blastn.out ; then
-					echo $nucl_fa " is closely related to a virus that has already been deposited in GenBank nt."
-					#cat ${nucl_fa%.fna}.tax_guide.blastn.out
-					cp ${nucl_fa%.fna}.tax_guide.blastn.out ${nucl_fa%.fna}.tax_guide.KNOWN_VIRUS.out
-
-				else 
-					#echo $nucl_fa "$(tput setaf 4) is closely related to a chromosomal sequence that has already been deposited in GenBank nt and will be checked for viral and plasmid domains. $(tput sgr 0)"
-					cat ${nucl_fa%.fna}.tax_guide.blastn.out
-					cp ${nucl_fa%.fna}.tax_guide.blastn.out ${nucl_fa%.fna}.tax_guide.CELLULAR.out
+						if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid\|phage" ${nucl_fa%.fna}.tax_guide.blastn.out ; then
+							cp ${nucl_fa%.fna}.tax_guide.blastn.out ${nucl_fa%.fna}.tax_guide.KNOWN_VIRUS.out
+						else 
+							cp ${nucl_fa%.fna}.tax_guide.blastn.out ${nucl_fa%.fna}.tax_guide.CELLULAR.out
+						fi
+					fi
 				fi
 			fi
 		done
+		###
 	else
 		echo "BLASTN databases not found, skipping BLASTN step"
 	fi
@@ -675,7 +672,7 @@ if [ -n "$COMB3_TBL" ] ; then
 		if grep -i -q "CRESS\|genomovir\|circovir\|bacilladnavir\|redondovir\|nanovir\|geminivir\|smacovir" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
 			echo ${feat_tbl2%.comb3.tbl}" is a CRESS virus of some kind"
 		else
-			CONJ_COUNT=$( grep -i "virb\|type-IV\|secretion system\|conjuga\|transposon\|tra[a-z] \|trb[b-z]\|pilus" $feat_tbl2 | wc -l )
+			CONJ_COUNT=$( grep -i "virb\|type-IV\|secretion system\|conjugation\|conjugal\|transposon\| tra[a-z] \|	tra[a-z]\|trb[b-z]\|pilus" $feat_tbl2 | grep -v "TRAF\|TRAP\|protein tyrosine phosphatase\|ttRBP\|SpoU\|transport" | wc -l )
 			STRUCTURAL_COUNT=$( grep -i "capsid\|terminase\|portal\|baseplate\|base plate\|tail\|collar\|zot\|zonular\|minor coat\|packaging\|	virion protein" $feat_tbl2 | wc -l )
 			if [[ $CONJ_COUNT -gt 0 ]] && [[ $STRUCTURAL_COUNT == 0 ]] ; then
 				TAX_ORF="Conjugative Transposon"

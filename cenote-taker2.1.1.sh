@@ -998,13 +998,13 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 		for circle in $ROTATED_DTR_CONTIGS ; do
 			if [ -s "${circle%.rotate.fasta}.blastn.out" ]; then
 				python ${CENOTE_SCRIPT_DIR}/anicalc/anicalc.py -i ${circle%.rotate.fasta}.blastn.out -o ${circle%.rotate.fasta}.blastn_anicalc.out
-				awk '{OFS="\t"}{FS="\t"}{ if (NR==1) {print $1, $2, $6} else if ($4>=95 && $5>=85) {print $1, $2, $6}}' ${circle%.rotate.fasta}.blastn_anicalc.out > ${circle%.rotate.fasta}.blastn_intraspecific.out
+				awk '{OFS="\t"}{FS="\t"}{ if (NR==1) {print $1, $2, $4, $5} else if ($4>=95 && $5>=85) {print $1, $2, $4, $5}}' ${circle%.rotate.fasta}.blastn_anicalc.out > ${circle%.rotate.fasta}.blastn_intraspecific.out
 			fi
 			if [ -s "${circle%.rotate.fasta}.blastn_intraspecific.out" ]; then
 				INTRA_LINES=$( cat ${circle%.rotate.fasta}.blastn_intraspecific.out | wc -l | bc )	
 				if [ "$INTRA_LINES" -ge 2 ] ; then
 					ktClassifyBLAST -o ${circle%.rotate.fasta}.tax_guide.blastn.tab ${circle%.rotate.fasta}.blastn_intraspecific.out >/dev/null 2>&1
-					taxid=$( tail -n1 ${circle%.rotate.fasta}.tax_guide.blastn.tab | cut -f2 )
+					taxid=$( grep -v "qname" ${circle%.rotate.fasta}.tax_guide.blastn.tab | tail -n+2 | head -n1 | cut -f2 )
 					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -tab "\n" -element Lineage ScientificName > ${circle%.rotate.fasta}.tax_guide.blastn.out
 					sleep 2s
 					if [ !  -z "${circle%.rotate.fasta}.tax_guide.blastn.out" ] ; then
@@ -1403,7 +1403,7 @@ if [ -n "$COMB3_TBL" ] ; then
 		if grep -i -q "CRESS\|genomovir\|circovir\|bacilladnavir\|redondovir\|nanovir\|geminivir\|smacovir" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
 			echo ${feat_tbl2%.comb3.tbl}" is a CRESS virus of some kind"
 		else
-			CONJ_COUNT=$( grep -i "virb\|type-IV\|secretion system\|conjuga\|transposon\|tra[a-z] \|trb[b-z]\|pilus" $feat_tbl2 | wc -l )
+			CONJ_COUNT=$( grep -i "virb\|type-IV\|secretion system\|conjugation\|conjugal\|transposon\| tra[a-z] \|	tra[a-z]\|trb[b-z]\|pilus" $feat_tbl2 | grep -v "TRAF\|TRAP\|protein tyrosine phosphatase\|ttRBP\|SpoU\|transport" | wc -l )
 			STRUCTURAL_COUNT=$( grep -i "capsid\|terminase\|portal\|baseplate\|base plate\|tail\|collar\|zot\|zonular\|minor coat\|packaging\|	virion protein" $feat_tbl2 | wc -l )
 			if [[ $CONJ_COUNT -gt 0 ]] && [[ $STRUCTURAL_COUNT == 0 ]] ; then
 				TAX_ORF="Conjugative Transposon"
@@ -1885,12 +1885,28 @@ if [ -n "$COMB3_TBL" ] ; then
 		else
 			CRISPR=""
 		fi
-		if [ -s ${NUCL_FILE%.fna}.blastn.notnew.out ] ; then
-			PRE_BLASTN=$( head -n1 ${NUCL_FILE%.fna}.blastn.notnew.out | cut -f3 )
-			BLASTN_INFO=$( echo "; BLASTN hit: $PRE_BLASTN" )
-		elif [ -s ${NUCL_FILE%.rotate.fasta}.blastn.notnew.out ] ; then
-			PRE_BLASTN=$( head -n1 ${NUCL_FILE%.rotate.fasta}.blastn.notnew.out | cut -f3 )
-			BLASTN_INFO=$( echo "; BLASTN hit: $PRE_BLASTN" )			
+		if [ -s ${NUCL_FILE%.fna}.tax_guide.KNOWN_VIRUS.out ] ; then
+			PRE_BLASTN=$( tail -n1 ${NUCL_FILE%.fna}.tax_guide.KNOWN_VIRUS.out )
+			ANI=$( tail -n+2 ${NUCL_FILE%.fna}.blastn_intraspecific.out | head -n1 | cut -f3 )
+			AF=$( tail -n+2 ${NUCL_FILE%.fna}.blastn_intraspecific.out | head -n1 | cut -f4 )
+			BLASTN_INFO=$( echo "; BLASTN hit: $PRE_BLASTN", ANI=${ANI}%, AF=${AF}% )
+			fsa_head=$( echo $PRE_BLASTN " isolate" )
+		elif [ -s ${NUCL_FILE%.fna}.tax_guide.CELLULAR.out ] ; then
+			PRE_BLASTN=$( tail -n1 ${NUCL_FILE%.fna}.tax_guide.CELLULAR.out )
+			ANI=$( tail -n+2 ${NUCL_FILE%.fna}.blastn_intraspecific.out | head -n1 | cut -f3 )
+			AF=$( tail -n+2 ${NUCL_FILE%.fna}.blastn_intraspecific.out | head -n1 | cut -f4 )
+			BLASTN_INFO=$( echo "; BLASTN hit: $PRE_BLASTN", ANI=${ANI}%, AF=${AF}% )
+		elif [ -s ${NUCL_FILE%.rotate.fasta}.tax_guide.KNOWN_VIRUS.out ] ; then
+			PRE_BLASTN=$( tail -n1 ${NUCL_FILE%.rotate.fasta}.tax_guide.KNOWN_VIRUS.out )
+			ANI=$( tail -n+2 ${NUCL_FILE%.rotate.fasta}.blastn_intraspecific.out | head -n1 | cut -f3 )
+			AF=$( tail -n+2 ${NUCL_FILE%.rotate.fasta}.blastn_intraspecific.out | head -n1 | cut -f4 )
+			BLASTN_INFO=$( echo "; BLASTN hit: $PRE_BLASTN", ANI=${ANI}%, AF=${AF}% )
+			fsa_head=$( echo $PRE_BLASTN " isolate" )
+		elif [ -s ${NUCL_FILE%.rotate.fasta}.tax_guide.CELLULAR.out ] ; then
+			PRE_BLASTN=$( tail -n1 ${NUCL_FILE%.rotate.fasta}.tax_guide.CELLULAR.out )
+			ANI=$( tail -n+2 ${NUCL_FILE%.rotate.fasta}.blastn_intraspecific.out | head -n1 | cut -f3 )
+			AF=$( tail -n+2 ${NUCL_FILE%.rotate.fasta}.blastn_intraspecific.out | head -n1 | cut -f4 )
+			BLASTN_INFO=$( echo "; BLASTN hit: $PRE_BLASTN", ANI=${ANI}%, AF=${AF}% )
 		else
 			BLASTN_INFO=""
 		fi
@@ -1963,6 +1979,26 @@ if [ -d sequin_and_genome_maps ] ; then
 	fi
 	cd ..
 fi
+### conjugative machinery table
+if [ -d sequin_and_genome_maps ] ; then
+	cd sequin_and_genome_maps
+	COMB4_TBL=$( find * -maxdepth 0 -type f -name "*.tbl" )
+	if [ -n "$COMB4_TBL" ] ; then
+		for feat_tbl2 in $COMB4_TBL ; do
+			if [ -s ${feat_tbl2%tbl}.gtf ] ; then
+				CONJ_COUNT=$( grep -i "virb\|type-IV\|secretion system\|conjugation\|conjugal\|transposon\| tra[a-z] \|	tra[a-z]\|trb[b-z]\|pilus" $feat_tbl2 | grep -v "TRAF\|TRAP\|protein tyrosine phosphatase\|ttRBP\|SpoU\|transport" | wc -l )
+				STRUCTURAL_COUNT=$( grep -i "capsid\|terminase\|portal\|baseplate\|base plate\|tail\|collar\|zot\|zonular\|minor coat\|packaging\|	virion protein" $feat_tbl2 | wc -l )
+				if [[ $CONJ_COUNT -gt 0 ]] && [[ $STRUCTURAL_COUNT == 0 ]] ; then
+					grep -v "TRAF\|TRAP\|protein tyrosine phosphatase\|ttRBP\|SpoU\|transport" $feat_tbl2 | grep -B2 -i "virb\|type-IV\|secretion system\|conjugation\|conjugal\|transposon\| tra[a-z] \|	tra[a-z]\|trb[b-z]\|pilus" | grep "^[0-9]\|^<[0-9]" | cut -f1,2 | while read START_STOP ; do 
+						grep "$START_STOP" ${feat_tbl2%tbl}.gtf
+					done > ${feat_tbl2%tbl}.putative_conjugative_machinery.gtf
+				fi
+			fi
+		done
+	fi
+	cd ..
+fi
+###
 
 echo "removing ancillary files"
 
