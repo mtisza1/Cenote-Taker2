@@ -998,7 +998,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 		for circle in $ROTATED_DTR_CONTIGS ; do
 			if [ -s "${circle%.rotate.fasta}.blastn.out" ]; then
 				python ${CENOTE_SCRIPT_DIR}/anicalc/anicalc.py -i ${circle%.rotate.fasta}.blastn.out -o ${circle%.rotate.fasta}.blastn_anicalc.out
-				awk '{OFS="\t"}{FS="\t"}{ if (NR==1) {print $1, $2, $4, $5} else if ($4>=95 && $5>=85) {print $1, $2, $4, $5}}' ${circle%.rotate.fasta}.blastn_anicalc.out > ${circle%.rotate.fasta}.blastn_intraspecific.out
+				awk '{OFS="\t"}{FS="\t"}{ if (NR==1) {print $1, $2, $4, $5} else if ($4>=95 && $5>=85) {print $1, $2, $4, $5}}' ${circle%.rotate.fasta}.blastn_anicalc.out | head -n2 > ${circle%.rotate.fasta}.blastn_intraspecific.out
 			fi
 			if [ -s "${circle%.rotate.fasta}.blastn_intraspecific.out" ]; then
 				INTRA_LINES=$( cat ${circle%.rotate.fasta}.blastn_intraspecific.out | wc -l | bc )	

@@ -264,13 +264,13 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; t
 		for nucl_fa in $LINEAR_HALLMARK_CONTIGS ; do
 			if [ -s "${nucl_fa%.fna}.blastn.out" ]; then
 				python ${CENOTE_SCRIPT_DIR}/anicalc/anicalc.py -i ${nucl_fa%.fna}.blastn.out -o ${nucl_fa%.fna}.blastn_anicalc.out
-				awk '{OFS="\t"}{FS="\t"}{ if (NR==1) {print $1, $2, $4, $5} else if ($4>=95 && $5>=85) {print $1, $2, $4, $5}}' ${nucl_fa%.fna}.blastn_anicalc.out > ${nucl_fa%.fna}.blastn_intraspecific.out
+				awk '{OFS="\t"}{FS="\t"}{ if (NR==1) {print $1, $2, $4, $5} else if ($4>=95 && $5>=85) {print $1, $2, $4, $5}}' ${nucl_fa%.fna}.blastn_anicalc.out | head -n2 > ${nucl_fa%.fna}.blastn_intraspecific.out
 			fi
 			if [ -s "${nucl_fa%.fna}.blastn_intraspecific.out" ]; then
 				INTRA_LINES=$( cat ${nucl_fa%.fna}.blastn_intraspecific.out | wc -l | bc )	
 				if [ "$INTRA_LINES" -ge 2 ] ; then
 					ktClassifyBLAST -o ${nucl_fa%.fna}.tax_guide.blastn.tab ${nucl_fa%.fna}.blastn_intraspecific.out >/dev/null 2>&1
-					taxid=$( grep -v "qname" ${circle%.rotate.fasta}.tax_guide.blastn.tab | tail -n+2 | head -n1 | cut -f2 )
+					taxid=$( grep -v "qname" ${nucl_fa%.fna}.tax_guide.blastn.tab | tail -n+2 | head -n1 | cut -f2 )
 					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -tab "\n" -element Lineage ScientificName > ${nucl_fa%.fna}.tax_guide.blastn.out
 					sleep 2s
 					if [ !  -z "${nucl_fa%.fna}.tax_guide.blastn.out" ] ; then
