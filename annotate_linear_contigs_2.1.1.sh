@@ -134,14 +134,14 @@ fi
 #-# 4 hhmscan linear contigs
 LIN_SORT_AAs=$( find * -maxdepth 0 -type f -name "${run_title}*AA.sorted.fasta" )
 if [ -n "$LIN_SORT_AAs" ] ; then
-	cat $( find * -maxdepth 0 -type f -name "${run_title}*AA.sorted.fasta" ) > all_DTR_sort_genome_proteins.AA.fasta
-	TOTAL_AA_SEQS=$( grep -F ">" all_DTR_sort_genome_proteins.AA.fasta | wc -l | bc )
+	cat $( find * -maxdepth 0 -type f -name "${run_title}*AA.sorted.fasta" ) > all_LIN_sort_genome_proteins.AA.fasta
+	TOTAL_AA_SEQS=$( grep -F ">" all_LIN_sort_genome_proteins.AA.fasta | wc -l | bc )
 	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
 	if [ $AA_SEQS_PER_FILE = 0 ] ; then
 		AA_SEQS_PER_FILE=1
 	fi
-	awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_sort_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_sort_genome_proteins.AA.fasta
-	SPLIT_AA_DTR_sort=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_sort_GENOME_AA_*.fasta" )
+	awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_LIN_sort_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_LIN_sort_genome_proteins.AA.fasta
+	SPLIT_AA_DTR_sort=$( find * -maxdepth 0 -type f -name "SPLIT_LIN_sort_GENOME_AA_*.fasta" )
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: running hmmscan1, annotating linear contigs " $MDYT
 	if  [[ $virus_domain_db = "standard" ]] ; then
@@ -156,24 +156,24 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 		rm -f ./*{0..9}.fasta
 		break
 	fi
-	HMM_REP_NUMEBR=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan_replicate.out" | wc -l )
+	HMM_REP_NUMEBR=$( find * -maxdepth 0 -type f -name "SPLIT_LIN_sort_GENOME_AA_*AA.hmmscan_replicate.out" | wc -l )
 	if [[ $FOR_PLASMIDS = "True" ]]; then
 		if [ $HMM_REP_NUMEBR -gt 0 ] ; then
-			cat SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan.out SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan_replicate.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_COMBINED.AA.hmmscan.sort.out
+			cat SPLIT_LIN_sort_GENOME_AA_*AA.hmmscan.out SPLIT_LIN_sort_GENOME_AA_*AA.hmmscan_replicate.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_LIN_COMBINED.AA.hmmscan.sort.out
 		else
-			cat SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_COMBINED.AA.hmmscan.sort.out
+			cat SPLIT_LIN_sort_GENOME_AA_*AA.hmmscan.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_LIN_COMBINED.AA.hmmscan.sort.out
 		fi
 	else
 		if [ $HMM_REP_NUMEBR -gt 0 ] ; then
-			cat SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan.out SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan_replicate.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_COMBINED.AA.hmmscan.sort.out
+			cat SPLIT_LIN_sort_GENOME_AA_*AA.hmmscan.out SPLIT_LIN_sort_GENOME_AA_*AA.hmmscan_replicate.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_LIN_COMBINED.AA.hmmscan.sort.out
 		else
-			cat SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_COMBINED.AA.hmmscan.sort.out
+			cat SPLIT_LIN_sort_GENOME_AA_*AA.hmmscan.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_LIN_COMBINED.AA.hmmscan.sort.out
 		fi
 	fi		
-	if [ -s SPLIT_DTR_COMBINED.AA.hmmscan.sort.out ] ; then
-		cut -f3 SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
-			grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out > ${HIT}.AA.hmmscan.sort.out
-			grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.AA.called_hmmscan1.txt
+	if [ -s SPLIT_LIN_COMBINED.AA.hmmscan.sort.out ] ; then
+		cut -f3 SPLIT_LIN_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
+			grep "${HIT}_" SPLIT_LIN_COMBINED.AA.hmmscan.sort.out > ${HIT}.AA.hmmscan.sort.out
+			grep "${HIT}_" SPLIT_LIN_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.AA.called_hmmscan1.txt
 			HMMSCAN_NUM=$( cat ${HIT}.AA.called_hmmscan1.txt | wc -l | bc )
 			TOT_AA_NUM=$( grep -F ">" ${HIT}.AA.sorted.fasta | wc -l | bc )
 			if [ $HMMSCAN_NUM -lt $TOT_AA_NUM ] ; then
@@ -190,27 +190,27 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 	done
 	DTR_AA_FOR_HMM2=$( find * -maxdepth 0 -type f -name "${run_title}*AA.no_hmmscan1.fasta" )
 	if [ -n "$DTR_AA_FOR_HMM2" ] ; then
-		cat $( find * -maxdepth 0 -type f -name "${run_title}*AA.no_hmmscan1.fasta" ) > all_DTR_HMM2_proteins.AA.fasta
-		TOTAL_AA_SEQS=$( grep -F ">" all_DTR_HMM2_proteins.AA.fasta | wc -l | bc )
+		cat $( find * -maxdepth 0 -type f -name "${run_title}*AA.no_hmmscan1.fasta" ) > all_LIN_HMM2_proteins.AA.fasta
+		TOTAL_AA_SEQS=$( grep -F ">" all_LIN_HMM2_proteins.AA.fasta | wc -l | bc )
 		if [ $TOTAL_AA_SEQS -ge 1 ] ; then 
 			AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
 			if [ $AA_SEQS_PER_FILE = 0 ] ; then
 				AA_SEQS_PER_FILE=1
 			fi
-			awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_HMM2_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_HMM2_proteins.AA.fasta
-			SPLIT_DTR_HMM2=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_HMM2_GENOME_AA_*.fasta" )
+			awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_LIN_HMM2_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_LIN_HMM2_proteins.AA.fasta
+			SPLIT_LIN_HMM2=$( find * -maxdepth 0 -type f -name "SPLIT_LIN_HMM2_GENOME_AA_*.fasta" )
 			MDYT=$( date +"%m-%d-%y---%T" )
 			echo "time update: running hmmscan2, annotating linear contigs " $MDYT
-			echo "$SPLIT_DTR_HMM2" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan2.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.fasta >/dev/null 2>&1
-			cat SPLIT_DTR_HMM2_GENOME_AA_*AA.hmmscan2.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out
+			echo "$SPLIT_LIN_HMM2" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan2.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.fasta >/dev/null 2>&1
+			cat SPLIT_LIN_HMM2_GENOME_AA_*AA.hmmscan2.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_LIN_HMM2_COMBINED.AA.hmmscan2.sort.out
 		else
 			echo "no AA seqs for hmmscan2, annotating linear contigs"
 		fi
 	fi
-	if [ -s SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out ] ; then
-		cut -f3 SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
-			grep "${HIT}_" SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out > ${HIT}.AA.hmmscan2.sort.out
-			grep "${HIT}_" SPLIT_DTR_HMM2_COMBINED.AA.hmmscan2.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.AA.called_hmmscan2.txt
+	if [ -s SPLIT_LIN_HMM2_COMBINED.AA.hmmscan2.sort.out ] ; then
+		cut -f3 SPLIT_LIN_HMM2_COMBINED.AA.hmmscan2.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
+			grep "${HIT}_" SPLIT_LIN_HMM2_COMBINED.AA.hmmscan2.sort.out > ${HIT}.AA.hmmscan2.sort.out
+			grep "${HIT}_" SPLIT_LIN_HMM2_COMBINED.AA.hmmscan2.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.AA.called_hmmscan2.txt
 			HMMSCAN_NUM=$( cat ${HIT}.AA.called_hmmscan2.txt | wc -l | bc )
 			TOT_AA_NUM=$( grep -F ">" ${HIT}.AA.no_hmmscan1.fasta | wc -l | bc )
 			if [ $HMMSCAN_NUM -lt $TOT_AA_NUM ] ; then
@@ -296,18 +296,18 @@ PROTEIN_NO_HMMSCAN2=$( find * -maxdepth 0 -type f -name "*.AA.no_hmmscan2.fasta"
 
 if [ -n "$PROTEIN_NO_HMMSCAN2" ]; then
 
-	cat $( find * -maxdepth 0 -type f -name "*.AA.no_hmmscan2.fasta" ) > all_DTR_rps_proteins.AA.fasta
-	TOTAL_AA_SEQS=$( grep -F ">" all_DTR_rps_proteins.AA.fasta | wc -l | bc )
+	cat $( find * -maxdepth 0 -type f -name "*.AA.no_hmmscan2.fasta" ) > all_LIN_rps_proteins.AA.fasta
+	TOTAL_AA_SEQS=$( grep -F ">" all_LIN_rps_proteins.AA.fasta | wc -l | bc )
 	if [ $TOTAL_AA_SEQS -ge 1 ] ; then 
 		AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
 		if [ $AA_SEQS_PER_FILE = 0 ] ; then
 			AA_SEQS_PER_FILE=1
 		fi
-		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_RPS_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_rps_proteins.AA.fasta
-		SPLIT_DTR_AA_RPS=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_RPS_AA_*.fasta" )
+		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_LIN_RPS_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_LIN_rps_proteins.AA.fasta
+		SPLIT_LIN_AA_RPS=$( find * -maxdepth 0 -type f -name "SPLIT_LIN_RPS_AA_*.fasta" )
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running RPSBLAST, annotating linear contigs " $MDYT
-		echo "$SPLIT_DTR_AA_RPS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {}.fasta -line_length 200 -out {}.rpsb.out >/dev/null 2>&1
+		echo "$SPLIT_LIN_AA_RPS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {}.fasta -line_length 200 -out {}.rpsb.out >/dev/null 2>&1
 		cat *rpsb.out | awk '{ if ($0 ~ /^>/) {printf $0 ; getline; print $0} else { print $0}}' > COMBINED_RESULTS.rotate.AA.rpsblast.out
 		perl ${CENOTE_SCRIPT_DIR}/rpsblastreport2tbl_mt_annotation_pipe_biowulf.pl ;
 		grep "protein_id	" COMBINED_RESULTS.NT.tbl | sed 's/.*protein_id	lcl|//g' | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read CONTIG ; do
