@@ -2003,17 +2003,6 @@ if [ -d sequin_and_genome_maps ] ; then
 fi
 ###
 
-echo "removing ancillary files"
-
-if [ -d DTR_contigs_with_viral_domain ] ; then
-	cd DTR_contigs_with_viral_domain
-	rm -f *.all_start_stop.txt *.bad_starts.txt *.comb.tbl *.comb2.tbl *.good_start_orfs.txt *.hypo_start_stop.txt *.nucl_orfs.fa *.remove_hypo.txt *.log *.promer.contigs_with_ends.fa *.promer.promer *.out.hhr *.starting_orf.txt *.out.hhr *.nucl_orfs.txt *.called_hmmscan.txt *.hmmscan_replicate.out *.hmmscan.out *.rotate.no_hmmscan.fasta *.starting_orf.1.fa *.phan.*fasta *used_positions.txt *.prodigal.for_prodigal.fa *.prodigal.gff *.trnascan-se2.txt *.for_blastp.txt *.for_hhpred.txt circular_contigs_spades_names.txt SPLIT_CIRCULAR_AA*fasta all_circular_contigs_${run_title}.fna SPLIT_DTR_* *called_hmmscan*txt *HH.tbl 
-	cd ..
-fi
-rm -rf bt2_indices/
-rm -f other_contigs/*.AA.fasta other_contigs/*.AA.sorted.fasta other_contigs/*.out other_contigs/*.dat other_contigs/*called_hmmscan.txt other_contigs/SPLIT_LARGE_GENOME_AA_*fasta ITR_containing_contigs/SPLIT_ITR_AA*fasta SPLIT_CIRCULAR_AA* *called_hmmscan.txt circular_contigs_spades_names.txt
-rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta  no_end_contigs_with_viral_domain/SPLIT_DTR_HMM2_GENOME_AA*fasta no_end_contigs_with_viral_domain/SPLIT_DTR_sort_GENOME_AA* no_end_contigs_with_viral_domain/SPLIT_DTR_RPS_AA* no_end_contigs_with_viral_domain/*used_positions.txt no_end_contigs_with_viral_domain/*seq_chunk_coordinates.csv
-
 echo " "
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "time update: Finishing " $MDYT
@@ -2049,8 +2038,9 @@ if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 			NUM_HALLMARKS=0
 			HALLMARK_NAMES="none"
 		fi
+		JUST_FILE=$( echo "$LINEAR" | sed 's/.*\///g' )
 		if [ -s DTR_contigs_with_viral_domain/DTR_seqs_for_phanotate.txt ] ; then
-			if grep -q "${LINEAR}" DTR_contigs_with_viral_domain/DTR_seqs_for_phanotate.txt ; then
+			if grep -q "${JUST_FILE}" DTR_contigs_with_viral_domain/DTR_seqs_for_phanotate.txt ; then
 				ORF_CALLER="PHANOTATE"
 			else
 				ORF_CALLER="Prodigal"
@@ -2106,8 +2096,9 @@ if [ -n "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ; then
 			HALLMARK_NAMES="none"
 		fi
 		END_FEATURE="None"
+		JUST_FILE=$( echo "$LINEAR" | sed 's/.*\///g' )
 		if [ -s no_end_contigs_with_viral_domain/LIN_seqs_for_phanotate.txt ] ; then 
-			if grep -q "${LINEAR}" no_end_contigs_with_viral_domain/LIN_seqs_for_phanotate.txt ; then
+			if grep -q "${JUST_FILE}" no_end_contigs_with_viral_domain/LIN_seqs_for_phanotate.txt ; then
 				ORF_CALLER="PHANOTATE"
 			else
 				ORF_CALLER="Prodigal"
@@ -2138,6 +2129,17 @@ if [ -n "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ; then
 		echo "${ORIGINAL_NAME}	${CENOTE_NAME}	${ORGANISM}	${END_FEATURE}	${LENGTH}	${ORF_CALLER}	${NUM_HALLMARKS}	${HALLMARK_NAMES}	${BLASTN_INFO}" >> ${run_title}_CONTIG_SUMMARY.tsv
 	done
 fi
+
+echo "removing ancillary files"
+
+if [ -d DTR_contigs_with_viral_domain ] ; then
+	cd DTR_contigs_with_viral_domain
+	rm -f *.all_start_stop.txt *.bad_starts.txt *.comb.tbl *.comb2.tbl *.good_start_orfs.txt *.hypo_start_stop.txt *.nucl_orfs.fa *.remove_hypo.txt *.log *.promer.contigs_with_ends.fa *.promer.promer *.out.hhr *.starting_orf.txt *.out.hhr *.nucl_orfs.txt *.called_hmmscan.txt *.hmmscan_replicate.out *.hmmscan.out *.rotate.no_hmmscan.fasta *.starting_orf.1.fa *.phan.*fasta *used_positions.txt *.prodigal.for_prodigal.fa *.prodigal.gff *.trnascan-se2.txt *.for_blastp.txt *.for_hhpred.txt circular_contigs_spades_names.txt SPLIT_CIRCULAR_AA*fasta all_circular_contigs_${run_title}.fna SPLIT_DTR_* *called_hmmscan*txt *HH.tbl 
+	cd ..
+fi
+rm -rf bt2_indices/
+rm -f other_contigs/*.AA.fasta other_contigs/*.AA.sorted.fasta other_contigs/*.out other_contigs/*.dat other_contigs/*called_hmmscan.txt other_contigs/SPLIT_LARGE_GENOME_AA_*fasta ITR_containing_contigs/SPLIT_ITR_AA*fasta SPLIT_CIRCULAR_AA* *called_hmmscan.txt circular_contigs_spades_names.txt
+rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta  no_end_contigs_with_viral_domain/SPLIT_DTR_HMM2_GENOME_AA*fasta no_end_contigs_with_viral_domain/SPLIT_DTR_sort_GENOME_AA* no_end_contigs_with_viral_domain/SPLIT_DTR_RPS_AA* no_end_contigs_with_viral_domain/*used_positions.txt no_end_contigs_with_viral_domain/*seq_chunk_coordinates.csv
 
 echo "$(tput setaf 3)output directory: "$run_title" $(tput sgr 0)"
 echo "$(tput setaf 3) >>>>>>CENOTE-TAKER 2 HAS FINISHED TAKING CENOTES<<<<<< $(tput sgr 0)"
