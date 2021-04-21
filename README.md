@@ -14,10 +14,13 @@ An ulterior motive for creating and distributing Cenote-Taker 2 is to facilitate
 Using a HPC with at least 16 CPUs and 16g of dedicated memory is recommended for most runs. (Annotation of a few selected genomes or the Cenote Unlimted Breadsticks can be done with less memory/CPU). 
 
 To update from older versions (note that biopython and bedtools are now required): 
-`conda activate cenote-taker2_env`
-`conda install -c bioconda biopython bedtools`
-`cd Cenote-Taker2`
-`git pull`
+```
+conda activate cenote-taker2_env
+conda install -c bioconda biopython bedtools
+cd Cenote-Taker2
+git pull
+```
+
 Then update the HMM database.
 
 Update to HMM databases (hallmark genes) occurred on March 4th, 2021. See instructions below to update your database.
