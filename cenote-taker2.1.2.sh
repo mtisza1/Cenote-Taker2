@@ -1498,7 +1498,7 @@ fi
 LIST_OF_VIRAL_DOMAIN_CONTIGS=$( find * -maxdepth 1 -type f -wholename "no_end_contigs_with_viral_domain/*fna" )
 
 if [ -n "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ; then
-	. ${CENOTE_SCRIPT_DIR}/annotate_linear_contigs_2.1.1.sh
+	. ${CENOTE_SCRIPT_DIR}/annotate_linear_contigs_2.1.2.sh
 else
 	echo "No linear contigs with minimum hallmark genes found."
 fi
