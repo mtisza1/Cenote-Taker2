@@ -674,7 +674,7 @@ if [ -n "$COMB3_TBL" ] ; then
 		if grep -i -q "CRESS\|genomovir\|circovir\|bacilladnavir\|redondovir\|nanovir\|geminivir\|smacovir" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
 			echo ${feat_tbl2%.comb3.tbl}" is a CRESS virus of some kind"
 		else
-			CONJ_COUNT=$( grep -i "virb\|type-IV\|secretion system\|conjugation\|conjugal\|transposon\| tra[a-z] \|	tra[a-z]\|trb[b-z]\|pilus" $feat_tbl2 | grep -v "TRAF\|TRAP\|protein tyrosine phosphatase\|ttRBP\|SpoU\|transport" | wc -l )
+			CONJ_COUNT=$( grep -i "virb\|type-IV\|secretion system\|conjugation\|conjugal\|transposon\| tra[a-z] \|	tra[a-z]\|trb[b-z]\|pilus" $feat_tbl2 | grep -v "TRAF\|TRAP\|protein tyrosine phosphatase\|ttRBP\|SpoU\|transport\|central" | wc -l )
 			STRUCTURAL_COUNT=$( grep -i "capsid\|terminase\|portal\|baseplate\|base plate\|tail\|collar\|zot\|zonular\|minor coat\|packaging\|	virion protein" $feat_tbl2 | wc -l )
 			if [[ $CONJ_COUNT -gt 0 ]] && [[ $STRUCTURAL_COUNT == 0 ]] ; then
 				TAX_ORF="Conjugative Transposon"
