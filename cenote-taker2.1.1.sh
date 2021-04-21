@@ -157,7 +157,7 @@ fi
 
 if [ -s ${base_directory}/${CRISPR_FILE} ] ; then 
 	echo ${base_directory}/${CRISPR_FILE} ; 
-elif [ "${CRISPR_FILE}" == "none" ]
+elif [ "${CRISPR_FILE}" == "none" ] ; then
 	echo "no CRISPR file given"
 else  
 	cp ${CRISPR_FILE} ${base_directory}/ ; 
