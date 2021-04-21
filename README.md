@@ -2,8 +2,8 @@
 Cenote-Taker 2 is a dual function bioinformatics tool. On the one hand, Cenote-Taker 2 discovers/predicts virus sequences from any kind of genome or metagenomic assembly. Second, virus sequences/genomes are annotated with a variety of sequences features, genes, and taxonomy. Either the discovery or the the annotation module can be used independently.
 ```diff
 + The code is currently functional. Feel free to use Cenote-Taker 2 at will.
-+ Major update on March 4th 2021: Version 2.1.1
-+ Cenote-Taker 2.1.1 is has improved paralellization (faster), better output file structure, more customization, improved hallmark models, and unlimited breadsticks.
++ Major update on April 21st 2021: Version 2.1.2
++ Cenote-Taker 2.1.2 has improved outputs with more information in the summary file and better formatting of genome maps
 ```
 
 If you just want to discover/predict virus sequences and get a report on those sequences, use [Cenote Unlimited Breadsticks](https://github.com/mtisza1/Cenote_Unlimited_Breadsticks), also provided in the Cenote-Taker 2 repo.
@@ -13,7 +13,12 @@ If you just want to annotate your virus sequences and make genome maps, run Ceno
 An ulterior motive for creating and distributing Cenote-Taker 2 is to facilitate annotation and deposition of viral genomes into GenBank where they can be used by the scientific public.  Therefore, I hope you consider depositing the submittable outputs (.sqn) after reviewing them. I am not affiliated with GenBank. See "Use Cases" below, and read the [Cenote-Taker 2 wiki](https://github.com/mtisza1/Cenote-Taker2/wiki) for useful information on using the pipeline (e.g. expected outputs) and screeds on myriad topics.
 Using a HPC with at least 16 CPUs and 16g of dedicated memory is recommended for most runs. (Annotation of a few selected genomes or the Cenote Unlimted Breadsticks can be done with less memory/CPU). 
 
-To update from older versions: `cd Cenote-Taker2` then `git pull`. Then update the HMM database.
+To update from older versions (note that biopython and bedtools are now required): 
+`conda activate cenote-taker2_env`
+`conda install -c bioconda biopython bedtools`
+`cd Cenote-Taker2`
+`git pull`
+Then update the HMM database.
 
 Update to HMM databases (hallmark genes) occurred on March 4th, 2021. See instructions below to update your database.
 
@@ -121,24 +126,24 @@ python update_ct2_databases.py --hmm True
 # Running Cenote-Taker 2
 Cenote-Taker 2 currently runs in a python wrapper. 
 1. Activate the Conda environment.
-```
+
 Check environments:
-conda info --envs
+`conda info --envs`
 
 Default:
-conda activate cenote-taker2_env
+`conda activate cenote-taker2_env`
 
 Or if you've put your conda environment in a custom location:
-conda activate /path/to/better/directory/cenote-taker2_env
-```
+`conda activate /path/to/better/directory/cenote-taker2_env`
+
 2. Run the python script (see options below).
-```
-python /path/to/Cenote-Taker2/run_cenote-taker2.py
+
+`python /path/to/Cenote-Taker2/run_cenote-taker2.py`
 
 (Or, if you want to save a log of the run)
 
-python /path/to/Cenote-Taker2/run_cenote-taker2.py 2>&1 | tee output.log
-```
+`python /path/to/Cenote-Taker2/run_cenote-taker2.py 2>&1 | tee output.log`
+
 
 ### Use Case Suggestions/Settings
 #### *Annotation*
@@ -192,7 +197,7 @@ usage: run_cenote-taker2.py [-h]
                             [--known_strains HANDLE_KNOWNS]
                             [--blastn_db BLASTN_DB]
                             [--enforce_start_codon ENFORCE_START_CODON]
-                            [-hh HHSUITE_TOOL]
+                            [-hh HHSUITE_TOOL] [--crispr_file CRISPR_FILE]
                             [--isolation_source ISOLATION_SOURCE]
                             [--Environmental_sample ENVIRONMENTAL_SAMPLE]
                             [--collection_date COLLECTION_DATE]
@@ -332,6 +337,12 @@ optional arguments:
                         many times over. Do not use on large input contig
                         files). 'no_hhsuite_tool': forgoes annotation of ORFs
                         with hhsuite. Fastest way to complete a run.
+  --crispr_file CRISPR_FILE
+                        Tab-separated file with CRISPR hits in the following
+                        format: CONTIG_NAME HOST_NAME NUMBER_OF_MATCHES. You
+                        could use this tool:
+                        https://github.com/edzuf/CrisprOpenDB. Then reformat
+                        for Cenote-Taker 2
   --isolation_source ISOLATION_SOURCE
                         Default: unknown -- Describes the local geographical
                         source of the organism from which the sequence was
