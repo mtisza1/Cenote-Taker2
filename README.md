@@ -54,7 +54,8 @@ If you just want a lightweight (7GB), non-annotating virus discovery tool, use [
 - Therefore, you may need to be in an interactive job on an HPC
 ```
 1. Change to the directory you'd like to be the parent to the install directory
-2. Ensure Conda is installed and working. Use version 4.8.2 or better.
+2. Ensure Conda is installed and working (required for installation and execution of Cenote-Taker 2). Use version 4.8.2 or better.
+Note: instructions for installing Conda are probably specific to your university's/organization's requirements, so it is always best to ask your IT professional or HPC administrator. Generally, you will want to install [Miniconda](https://docs.conda.io/en/latest/miniconda.html#linux-installers) in your data directory.
 ```
 conda -V
 ```
