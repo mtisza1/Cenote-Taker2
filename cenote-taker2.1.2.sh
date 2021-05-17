@@ -314,7 +314,7 @@ if [ -z "$original_fastas" ] ; then
 	fi			
 	if [ -s other_contigs/all_non_circular.fasta ] ; then
 		grep "^>" other_contigs/all_non_circular.fasta | sed 's/>//g' | cut -d " " -f1 | while read LINE ; do 
-			grep -A1 "$LINE [a-zA-Z]" other_contigs/all_non_circular.fasta > other_contigs/$LINE.fasta ; 
+			grep -A1 "$LINE [^\s]" other_contigs/all_non_circular.fasta > other_contigs/$LINE.fasta ; 
 		done
 	fi
 else
@@ -346,7 +346,7 @@ else
 	fi
 	if [ -s other_contigs/all_non_circular.fasta ] ; then
 		grep "^>" other_contigs/all_non_circular.fasta | sed 's/>//g' | cut -d " " -f1 | while read LINE ; do 
-			grep -A1 "$LINE [a-zA-Z0-9]" other_contigs/all_non_circular.fasta > other_contigs/$LINE.fasta ; 
+			grep -A1 "$LINE [^\s]" other_contigs/all_non_circular.fasta > other_contigs/$LINE.fasta ; 
 		done
 	fi
 
@@ -380,7 +380,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 					if [ $LOW_START -lt 1000 ] && [ $HIGH_DIST -lt 1000 ] ; then 
 						echo ${DAT%.2.3.5.80.10.40.500000.10000.dat} "contains ITRs:" ; 
 						echo $LENGTH "5-prime ITR:" $LOW_START "3-prime ITR:" $HIGH_END ; 
-						mv ../ITR_containing_contigs/${DAT%.fasta.2.3.5.80.10.40.500000.10000.dat}.fasta
+						mv ${DAT%.2.3.5.80.10.40.500000.10000.dat} ../ITR_containing_contigs/${DAT%.fasta.2.3.5.80.10.40.500000.10000.dat}.fasta
 						echo "$(tput setaf 4) Making ITR .tbl file $(tput sgr 0)"
 						L_END_A=$( grep "^$LOW_START" $DAT | cut -d " " -f2 )
 						L_START_B=$( grep "^$LOW_START" $DAT | cut -d " " -f4 )

@@ -26,8 +26,8 @@ required_args.add_argument("-c", "--contigs", dest="original_contigs", type=str,
 required_args.add_argument("-r", "--run_title", dest="run_title", type=str, required=True, help='Name of this run. A directory of this name will be created. Must be unique from older runs or older run will be renamed. Must be less than 18 characters, using ONLY letters, numbers and underscores (_)')
 
 required_args.add_argument("-p", "--prune_prophage", dest="PROPHAGE", type=str2bool, required=True, help='True or False. Attempt to identify and remove flanking chromosomal regions from non-circular contigs with viral hallmarks (True is highly recommended for sequenced material not enriched for viruses. Virus enriched samples probably should be False (you might check with ViromeQC). Also, please use False if --lin_minimum_hallmark_genes is set to 0)')
-required_args.add_argument("-m", "--mem", dest="MEM", type=int, required=True, help='example: 56	Gigabytes of memory available for Cenote-Taker2. Typically, 16 to 32 should be used. Lower memory will work in theory, but could extend the length of the run ')
-required_args.add_argument("-t", "--cpu", dest="CPU", type=int, required=True, help='Example: 32	Number of CPUs available for Cenote-Taker2. Typically, 32 CPUs should be used. For large datasets, increased performance can be seen up to 120 CPUs. Fewer than 16 CPUs will work in theory, but could extend the length of the run ')
+required_args.add_argument("-m", "--mem", dest="MEM", type=int, required=True, help='example: 56 -- Gigabytes of memory available for Cenote-Taker2. Typically, 16 to 32 should be used. Lower memory will work in theory, but could extend the length of the run ')
+required_args.add_argument("-t", "--cpu", dest="CPU", type=int, required=True, help='Example: 32 -- Number of CPUs available for Cenote-Taker2. Approximately 32 CPUs should be used moderately sized metagenomic assemblies. For large datasets, increased performance can be seen up to 120 CPUs. Fewer than 16 CPUs will work in theory, but could extend the length of the run. See GitHub repo for suggestions. ')
 
 
 
