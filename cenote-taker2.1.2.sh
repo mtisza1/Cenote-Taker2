@@ -624,7 +624,8 @@ if [ ! -z "$ITR_SEQS" ] ; then
 			fi
 			echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ${INC5}${INC3} $ORIG_CONTIG  ; echo $AA_SEQ ; 
 		done > ${CIRC%.fasta}.AA.sorted.fasta
-	done	
+	done
+	cd ITR_containing_contigs
 	cat $( find * -maxdepth 0 -type f -name "*.AA.sorted.fasta" ) > all_ITR_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_ITR_genome_proteins.AA.fasta | wc -l | bc )
 	if [ $TOTAL_AA_SEQS -ge 1 ] ; then
@@ -681,7 +682,7 @@ if [ ! -z "$ITR_SEQS" ] ; then
 	else
 		echo "no AA seqs found in ITR contigs, discover viruses module"
 	fi
-
+	cd ${base_directory}/${run_title}
 	for REMAINDER in $ITR_SEQS ; do
 		if [ -s $REMAINDER ] ; then
 			sed 's/ /#/g' $REMAINDER | bioawk -c fastx '{print ">"$name"#ITRs" ; print $seq}' | 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
