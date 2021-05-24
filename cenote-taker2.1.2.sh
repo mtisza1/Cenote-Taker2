@@ -674,7 +674,7 @@ if [ ! -z "$ITR_SEQS" ] ; then
 					rm ${HIT}.AA.fasta
 
 				elif [ -s ${HIT}.fasta ] ; then
-					sed 's/ /#/g' ${HIT}.fasta | bioawk -c fastx '{print ">"$name"#ITRs" ; print $seq}' | 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
+					sed 's/ /#/g' ${HIT}.fasta | bioawk -c fastx '{print ">"$name"#ITRs" ; print $seq}' | 's/#/ /g' >> ../other_contigs/non_viral_domains_contigs.fna
 					rm -f ${HIT}.fasta
 				fi
 			done
@@ -684,7 +684,7 @@ if [ ! -z "$ITR_SEQS" ] ; then
 	fi
 	for REMAINDER in $ITR_SEQS ; do
 		if [ -s $REMAINDER ] ; then
-			sed 's/ /#/g' $REMAINDER | bioawk -c fastx '{print ">"$name"#ITRs" ; print $seq}' | 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
+			sed 's/ /#/g' $REMAINDER | bioawk -c fastx '{print ">"$name"#ITRs" ; print $seq}' | 's/#/ /g' >> ../other_contigs/non_viral_domains_contigs.fna
 			rm -f $REMAINDER
 		fi
 	done
@@ -1481,13 +1481,16 @@ cd ${base_directory}/${run_title}
 LIST_OF_ITR_DOMAIN_CONTIGS=$( find * -maxdepth 1 -type f -wholename "ITR_containing_contigs/*fna" )
 
 if [ -n "$LIST_OF_ITR_DOMAIN_CONTIGS" ] ; then
+	if [ ! -d no_end_contigs_with_viral_domain ] ; then
+		mkdir no_end_contigs_with_viral_domain
+	fi
 	cd ITR_containing_contigs
 	LIST_OF_ITR_DOMAIN_CONTIGS=$( find * -maxdepth 0 -type f -regextype sed -regex ".*.fna" )
 	echo "$LIST_OF_ITR_DOMAIN_CONTIGS" | sed 's/.fna//g' | while read ITR_SEQ ; do
 		if [ "$PROPHAGE" == "True" ] ;then
-			cp ${ITR_SEQ}.fna no_end_contigs_with_viral_domain/${ITR_SEQ}_vs99.fna
+			cp ${ITR_SEQ}.fna ../no_end_contigs_with_viral_domain/${ITR_SEQ}_vs99.fna
 		else
-			cp ${ITR_SEQ}.fna no_end_contigs_with_viral_domain/${ITR_SEQ}.fna
+			cp ${ITR_SEQ}.fna ../no_end_contigs_with_viral_domain/${ITR_SEQ}.fna
 		fi
 	done
 	cd ${base_directory}/${run_title}
