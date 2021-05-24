@@ -601,6 +601,7 @@ ITR_SEQS=$( find * -maxdepth 1 -type f -wholename "ITR_containing_contigs/*fasta
 
 if [ ! -z "$ITR_SEQS" ] ; then 
 	cd ITR_containing_contigs
+	ITR_SEQS=$( find * -maxdepth 0 -type f -wholename "*fasta" )
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: Calling ORFs for ITR sequences with prodigal " $MDYT
 	echo "$ITR_SEQS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t prodigal -a {}.AA.fasta -i {}.fasta -p meta -q >/dev/null 2>&1
@@ -625,7 +626,6 @@ if [ ! -z "$ITR_SEQS" ] ; then
 			echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ${INC5}${INC3} $ORIG_CONTIG  ; echo $AA_SEQ ; 
 		done > ${CIRC%.fasta}.AA.sorted.fasta
 	done
-	cd ITR_containing_contigs
 	cat $( find * -maxdepth 0 -type f -name "*.AA.sorted.fasta" ) > all_ITR_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_ITR_genome_proteins.AA.fasta | wc -l | bc )
 	if [ $TOTAL_AA_SEQS -ge 1 ] ; then
@@ -682,7 +682,6 @@ if [ ! -z "$ITR_SEQS" ] ; then
 	else
 		echo "no AA seqs found in ITR contigs, discover viruses module"
 	fi
-	cd ${base_directory}/${run_title}
 	for REMAINDER in $ITR_SEQS ; do
 		if [ -s $REMAINDER ] ; then
 			sed 's/ /#/g' $REMAINDER | bioawk -c fastx '{print ">"$name"#ITRs" ; print $seq}' | 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
