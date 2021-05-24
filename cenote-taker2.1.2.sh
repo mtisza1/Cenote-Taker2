@@ -1489,10 +1489,10 @@ if [ -n "$LIST_OF_ITR_DOMAIN_CONTIGS" ] ; then
 	echo "$LIST_OF_ITR_DOMAIN_CONTIGS" | sed 's/.fna//g' | while read ITR_SEQ ; do
 		if [ "$PROPHAGE" == "True" ] ;then
 			cp ${ITR_SEQ}.fna ../no_end_contigs_with_viral_domain/${ITR_SEQ}_vs99.fna
-			cp ${ITR_SEQ}.ITR.tbl ../no_end_contigs_with_viral_domain/${ITR_SEQ}_vs99.ITR.tbl			
+			grep -A1 "^[0-9]\{1,6\}	[0-9]\{1,6\}	repeat_region" ${ITR_SEQ}.ITR.tbl | sed '/--/d' > ../no_end_contigs_with_viral_domain/${ITR_SEQ}_vs99.ITR.tbl			
 		else
 			cp ${ITR_SEQ}.fna ../no_end_contigs_with_viral_domain/${ITR_SEQ}.fna
-			cp ${ITR_SEQ}.ITR.tbl ../no_end_contigs_with_viral_domain/${ITR_SEQ}.ITR.tbl			
+			grep -A1 "^[0-9]\{1,6\}	[0-9]\{1,6\}	repeat_region" ${ITR_SEQ}.ITR.tbl | sed '/--/d' > ../no_end_contigs_with_viral_domain/${ITR_SEQ}.ITR.tbl			
 		fi
 	done
 	cd ${base_directory}/${run_title}
