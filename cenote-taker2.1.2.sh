@@ -1531,7 +1531,11 @@ if [ "$PROPHAGE" == "True" ] ;then
 else
 	if [ -n "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ; then
 		for LIN in $LIST_OF_VIRAL_DOMAIN_CONTIGS ; do
-			sed 's/ /#/g' $LIN | bioawk -c fastx '{print ">"$name" no_end_feature" ; print $seq}' | sed 's/#/ /g' >> final_combined_virus_sequences_${run_title}.fna
+			if [ -s ${LIN%.fna}.ITR.tbl ] ; then
+				sed 's/ /#/g' $LIN | bioawk -c fastx '{print ">"$name" ITR" ; print $seq}' | sed 's/#/ /g' >> final_combined_virus_sequences_${run_title}.fna
+			else
+				sed 's/ /#/g' $LIN | bioawk -c fastx '{print ">"$name" no_end_feature" ; print $seq}' | sed 's/#/ /g' >> final_combined_virus_sequences_${run_title}.fna
+			fi
 		done
 	fi
 fi		
