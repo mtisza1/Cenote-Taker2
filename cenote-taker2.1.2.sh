@@ -1521,7 +1521,7 @@ if [ "$PROPHAGE" == "True" ] ;then
 	if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 		for LIN in $LINEAR_HALLMARK_CONTIGS ; do
 			ORIGINAL_NAME=$( head -n1 ${LIN%_vs[0-9][0-9].fna}.fna | cut -d " " -f2 )
-			if [ -s ${LIN%_vs[0-9][0-9].fna}.ITR.tbl ] ; then
+			if [ -s ${LIN%.fna}.ITR.tbl ] ; then
 				sed 's/ /#/g' $LIN | bioawk -v ORI="$ORIGINAL_NAME" -c fastx '{print ">"$name" "ORI" ITR" ; print $seq}' | sed 's/#/ /g' >> final_combined_virus_sequences_${run_title}.fna
 			else
 				sed 's/ /#/g' $LIN | bioawk -v ORI="$ORIGINAL_NAME" -c fastx '{print ">"$name" "ORI" no_end_feature" ; print $seq}' | sed 's/#/ /g' >> final_combined_virus_sequences_${run_title}.fna
@@ -2110,7 +2110,11 @@ if [ -n "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ; then
 			NUM_HALLMARKS=0
 			HALLMARK_NAMES="none"
 		fi
-		END_FEATURE="None"
+		if [ -s ${LINEAR%.fna}.ITR.tbl ] ; then
+			END_FEATURE="ITR"
+		else
+			END_FEATURE="None"
+		fi
 		JUST_FILE=$( echo "$LINEAR" | sed 's/.*\///g' )
 		if [ -s no_end_contigs_with_viral_domain/LIN_seqs_for_phanotate.txt ] ; then 
 			if grep -q "${JUST_FILE}" no_end_contigs_with_viral_domain/LIN_seqs_for_phanotate.txt ; then
