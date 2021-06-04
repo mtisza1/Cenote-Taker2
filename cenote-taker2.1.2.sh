@@ -226,7 +226,7 @@ if [ ${original_contigs: -6} == ".fasta" ]; then
 	echo "cenote_shortcut" > ${run_title}_CONTIG_SUMMARY.tsv
 	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta >/dev/null 2>&1
 	rm -f apc_aln*
-	APC_CIRCS=$( find * -maxdepth 0 -type f -name "${run_title}*.fa" )
+	APC_CIRCS=$( find . -maxdepth 1 -type f -name "${run_title}*.fa" )
 	if [ -n "$APC_CIRCS" ] ;then
 		for fa1 in $APC_CIRCS ; do
 			CIRC_SEQ_NAME=$( head -n1 $fa1 | sed 's/|.*//g' ) ; 
@@ -244,7 +244,7 @@ elif [ ${original_contigs: -6} == ".fastg" ]; then
 	echo "cenote_shortcut" > ${run_title}_CONTIG_SUMMARY.tsv
 	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta >/dev/null 2>&1
 	rm -f apc_aln*
-	APC_CIRCS=$( find * -maxdepth 0 * -type f -name "${run_title}*.fa" )
+	APC_CIRCS=$( find . -maxdepth 1 * -type f -name "${run_title}*.fa" )
 	if [ -n "$APC_CIRCS" ] ;then
 		for fa1 in $APC_CIRCS ; do 
 			CIRC_SEQ_NAME=$( head -n1 $fa1 | sed 's/|.*//g' ) ; 
@@ -262,7 +262,7 @@ else
 fi
 
 # Removing cirles that are smaller than user specified cutoff
-CIRC_CONTIGS=$( find * -maxdepth 0 -type f -name "*.fasta" )
+CIRC_CONTIGS=$( find . -maxdepth 1 -type f -name "*.fasta" )
 if [ ! -z "$CIRC_CONTIGS" ] ;then
 	for CIRCLE1 in $CIRC_CONTIGS ; do
 		CIRCLE1_LENGTH=$( bioawk -c fastx '{print length($seq) }' $CIRCLE1 )
@@ -300,7 +300,7 @@ else
 fi
 
 # Detecting whether any circular contigs were present
-original_fastas=$( find * -maxdepth 0 -type f -name "*.fasta" )
+original_fastas=$( find . -maxdepth 1 -type f -name "*.fasta" )
 # "$(tput setaf 5)$var1$(tput sgr 0)"
 
 if [ -z "$original_fastas" ] ; then
@@ -353,7 +353,7 @@ else
 fi
 
 cd other_contigs
-CONTIGS_NON_CIRCULAR=$( find * -maxdepth 0 -type f -name "*[0-9].fasta" )
+CONTIGS_NON_CIRCULAR=$( find . -maxdepth 1 -type f -name "*[0-9].fasta" )
 
 if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 	MDYT=$( date +"%m-%d-%y---%T" )
@@ -394,7 +394,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 			fi ; 
 		done
 	fi
-	CONTIGS_NON_CIRCULAR=$( find * -maxdepth 0 -type f -name "*[0-9].fasta" )
+	CONTIGS_NON_CIRCULAR=$( find . -maxdepth 1 -type f -name "*[0-9].fasta" )
 	mkdir ../no_end_contigs_with_viral_domain
 	if [ $LIN_MINIMUM_DOMAINS -le 0 ] ; then
 		for LIN in $CONTIGS_NON_CIRCULAR ; do
@@ -428,7 +428,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running linear contigs with hmmscan against virus hallmark gene database: $virus_domain_db " $MDYT	
-		cat $( find * -maxdepth 0 -type f -name "*.AA.sorted.fasta" ) > all_large_genome_proteins.AA.fasta
+		cat $( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" ) > all_large_genome_proteins.AA.fasta
 		TOTAL_AA_SEQS=$( grep -F ">" all_large_genome_proteins.AA.fasta | wc -l | bc )
 		if [ $TOTAL_AA_SEQS -ge 1 ] ; then 
 			AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
@@ -436,7 +436,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 				AA_SEQS_PER_FILE=1
 			fi
 			awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_LARGE_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_large_genome_proteins.AA.fasta
-			SPLIT_AA_LARGE=$( find * -maxdepth 0 -type f -name "SPLIT_LARGE_GENOME_AA_*.fasta" )
+			SPLIT_AA_LARGE=$( find . -maxdepth 1 -type f -name "SPLIT_LARGE_GENOME_AA_*.fasta" )
 			if  [[ $virus_domain_db = "standard" ]] ; then
 				echo "$SPLIT_AA_LARGE" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1
 				echo "$SPLIT_AA_LARGE" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.fasta >/dev/null 2>&1
@@ -449,7 +449,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 				rm -f ./*{0..9}.fasta
 				break
 			fi		
-			HMM_REP_NUMEBR=$( find * -maxdepth 0 -type f -name "SPLIT_LARGE_GENOME_AA_*AA.hmmscan_replicate.out" | wc -l )
+			HMM_REP_NUMEBR=$( find . -maxdepth 1 -type f -name "SPLIT_LARGE_GENOME_AA_*AA.hmmscan_replicate.out" | wc -l )
 			if [[ $FOR_PLASMIDS = "True" ]]; then
 				if [ $HMM_REP_NUMEBR -gt 0 ] ; then
 					cat SPLIT_LARGE_GENOME_AA_*AA.hmmscan.out SPLIT_LARGE_GENOME_AA_*AA.hmmscan_replicate.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > LARGE_GENOME_COMBINED.AA.hmmscan.sort.out
@@ -496,7 +496,7 @@ fi
 cd ..
 
 
-DTR_SEQS=$( find * -maxdepth 0 -type f -regextype sed -regex "${run_title}[0-9]\{1,6\}.fasta" )
+DTR_SEQS=$( find . -maxdepth 1 -type f -regextype sed -regex "${run_title}[0-9]\{1,6\}.fasta" )
 
 
 if [ ! -z "$DTR_SEQS" ] ; then
@@ -530,7 +530,7 @@ if [ ! -z "$DTR_SEQS" ] ; then
 				echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ${INC5}${INC3} $ORIG_CONTIG  ; echo $AA_SEQ ; 
 			done > ${CIRC%.fasta}.AA.sorted.fasta
 		done	
-		cat $( find * -maxdepth 0 -type f -name "*.AA.sorted.fasta" ) > all_circular_genome_proteins.AA.fasta
+		cat $( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" ) > all_circular_genome_proteins.AA.fasta
 		TOTAL_AA_SEQS=$( grep -F ">" all_circular_genome_proteins.AA.fasta | wc -l | bc )
 		if [ $TOTAL_AA_SEQS -ge 1 ] ; then 
 			AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
@@ -540,7 +540,7 @@ if [ ! -z "$DTR_SEQS" ] ; then
 			awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_CIRCULAR_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_circular_genome_proteins.AA.fasta
 			MDYT=$( date +"%m-%d-%y---%T" )
 			echo "time update: running hmmscan on circular/DTR contigs " $MDYT
-			SPLIT_AA_CIRC=$( find * -maxdepth 0 -type f -name "SPLIT_CIRCULAR_AA_*.fasta" )
+			SPLIT_AA_CIRC=$( find . -maxdepth 1 -type f -name "SPLIT_CIRCULAR_AA_*.fasta" )
 			if  [[ $virus_domain_db = "standard" ]] ; then
 				echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1
 				echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.fasta	>/dev/null 2>&1
@@ -553,7 +553,7 @@ if [ ! -z "$DTR_SEQS" ] ; then
 				rm -f ./*{0..9}.fasta
 				break
 			fi
-			HMM_REP_NUMEBR=$( find * -maxdepth 0 -type f -name "SPLIT_CIRCULAR_AA_*AA.hmmscan_replicate.out" | wc -l )
+			HMM_REP_NUMEBR=$( find . -maxdepth 1 -type f -name "SPLIT_CIRCULAR_AA_*AA.hmmscan_replicate.out" | wc -l )
 			if [[ $FOR_PLASMIDS = "True" ]]; then
 				if [ $HMM_REP_NUMEBR -gt 0 ] ; then
 					cat SPLIT_CIRCULAR_AA_*AA.hmmscan.out SPLIT_CIRCULAR_AA_*AA.hmmscan_replicate.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out
@@ -601,7 +601,7 @@ ITR_SEQS=$( find * -maxdepth 1 -type f -wholename "ITR_containing_contigs/*fasta
 
 if [ ! -z "$ITR_SEQS" ] ; then 
 	cd ITR_containing_contigs
-	ITR_SEQS=$( find * -maxdepth 0 -type f -wholename "*fasta" )
+	ITR_SEQS=$( find . -maxdepth 1 -type f -wholename "*fasta" )
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: Calling ORFs for ITR sequences with prodigal " $MDYT
 	echo "$ITR_SEQS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t prodigal -a {}.AA.fasta -i {}.fasta -p meta -q >/dev/null 2>&1
@@ -626,7 +626,7 @@ if [ ! -z "$ITR_SEQS" ] ; then
 			echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ${INC5}${INC3} $ORIG_CONTIG  ; echo $AA_SEQ ; 
 		done > ${CIRC%.fasta}.AA.sorted.fasta
 	done
-	cat $( find * -maxdepth 0 -type f -name "*.AA.sorted.fasta" ) > all_ITR_genome_proteins.AA.fasta
+	cat $( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" ) > all_ITR_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_ITR_genome_proteins.AA.fasta | wc -l | bc )
 	if [ $TOTAL_AA_SEQS -ge 1 ] ; then
 		AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
@@ -636,7 +636,7 @@ if [ ! -z "$ITR_SEQS" ] ; then
 		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_ITR_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_ITR_genome_proteins.AA.fasta
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running hmmscan on ITR contigs " $MDYT
-		SPLIT_AA_CIRC=$( find * -maxdepth 0 -type f -name "SPLIT_ITR_AA_*.fasta" )
+		SPLIT_AA_CIRC=$( find . -maxdepth 1 -type f -name "SPLIT_ITR_AA_*.fasta" )
 		if  [[ $virus_domain_db = "standard" ]] ; then
 			echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1
 			echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.fasta >/dev/null 2>&1
@@ -649,7 +649,7 @@ if [ ! -z "$ITR_SEQS" ] ; then
 			rm -f ./*{0..9}.fasta
 			break
 		fi
-		HMM_REP_NUMEBR=$( find * -maxdepth 0 -type f -name "SPLIT_ITR_AA_*AA.hmmscan_replicate.out" | wc -l )
+		HMM_REP_NUMEBR=$( find . -maxdepth 1 -type f -name "SPLIT_ITR_AA_*AA.hmmscan_replicate.out" | wc -l )
 		if [[ $FOR_PLASMIDS = "True" ]]; then
 			if [ $HMM_REP_NUMEBR -gt 0 ] ; then
 				cat SPLIT_ITR_AA_*AA.hmmscan.out SPLIT_ITR_AA_*AA.hmmscan_replicate.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > ITR_GENOME_COMBINED.AA.hmmscan.sort.out
@@ -718,7 +718,7 @@ if [ -d DTR_contigs_with_viral_domain ] ; then
 fi
 #-# rotate DTRs
 rm -f *no_hmmscan1.fasta
-CIRCULAR_HALLMARK_CONTIGS=$( find * -maxdepth 0 -type f -name "*fna" )
+CIRCULAR_HALLMARK_CONTIGS=$( find . -maxdepth 1 -type f -name "*fna" )
 if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 	echo "Annotating DTR contigs"
 	#echo $PWD
@@ -766,7 +766,7 @@ if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 fi
 
 #-# blastx for translation decision
-ROTATED_DTR_CONTIGS=$( find * -maxdepth 0 -type f -regextype sed -regex "${run_title}[0-9]\{1,6\}.rotate.fasta" )
+ROTATED_DTR_CONTIGS=$( find . -maxdepth 1 -type f -regextype sed -regex "${run_title}[0-9]\{1,6\}.rotate.fasta" )
 
 if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 	MDYT=$( date +"%m-%d-%y---%T" )
@@ -875,7 +875,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 			done > ${PROD%.prodigal.fasta}.AA.fasta
 		done
 	fi
-	ROTATE_AAs=$( find * -maxdepth 0 -type f -name "${run_title}*rotate.AA.fasta" )
+	ROTATE_AAs=$( find . -maxdepth 1 -type f -name "${run_title}*rotate.AA.fasta" )
 	if [ -n "$ROTATE_AAs" ] ; then
 		for ROT in $ROTATE_AAs ; do 
 			bioawk -c fastx '{FS="\t"; OFS=" "} {print ">"$name $3, $4, $5, $6, $7; print $seq}' $ROT > ${ROT%.fasta}.sorted.fasta
@@ -884,9 +884,9 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 fi
 
 #-# 4 hhmscan circles/DTRs
-ROTATE_SORT_AAs=$( find * -maxdepth 0 -type f -name "${run_title}*rotate.AA.sorted.fasta" )
+ROTATE_SORT_AAs=$( find . -maxdepth 1 -type f -name "${run_title}*rotate.AA.sorted.fasta" )
 if [ -n "$ROTATE_SORT_AAs" ] ; then
-	cat $( find * -maxdepth 0 -type f -name "${run_title}*rotate.AA.sorted.fasta" ) > all_DTR_sort_genome_proteins.AA.fasta
+	cat $( find . -maxdepth 1 -type f -name "${run_title}*rotate.AA.sorted.fasta" ) > all_DTR_sort_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_DTR_sort_genome_proteins.AA.fasta | wc -l | bc )
 	if [ $TOTAL_AA_SEQS -ge 1 ] ; then
 		AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
@@ -894,7 +894,7 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 			AA_SEQS_PER_FILE=1
 		fi
 		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_sort_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_sort_genome_proteins.AA.fasta
-		SPLIT_AA_DTR_sort=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_sort_GENOME_AA_*.fasta" )
+		SPLIT_AA_DTR_sort=$( find . -maxdepth 1 -type f -name "SPLIT_DTR_sort_GENOME_AA_*.fasta" )
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running hmmscan1, annotate DTR contigs " $MDYT
 		if  [[ $virus_domain_db = "standard" ]] ; then
@@ -909,7 +909,7 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 			rm -f ./*{0..9}.fasta
 			break
 		fi
-		HMM_REP_NUMEBR=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan_replicate.out" | wc -l )
+		HMM_REP_NUMEBR=$( find . -maxdepth 1 -type f -name "SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan_replicate.out" | wc -l )
 		if [[ $FOR_PLASMIDS = "True" ]]; then
 			if [ $HMM_REP_NUMEBR -gt 0 ] ; then
 				cat SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan.out SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan_replicate.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_COMBINED.AA.hmmscan.sort.out
@@ -939,9 +939,9 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 			cp ${ROT} ${ROT%.rotate.AA.sorted.fasta}.rotate.AA.no_hmmscan1.fasta
 		fi
 	done	
-	DTR_AA_FOR_HMM2=$( find * -maxdepth 0 -type f -name "${run_title}*AA.no_hmmscan1.fasta" )
+	DTR_AA_FOR_HMM2=$( find . -maxdepth 1 -type f -name "${run_title}*AA.no_hmmscan1.fasta" )
 	if [ -n "$DTR_AA_FOR_HMM2" ] ; then
-		cat $( find * -maxdepth 0 -type f -name "${run_title}*AA.no_hmmscan1.fasta" ) > all_DTR_HMM2_proteins.AA.fasta
+		cat $( find . -maxdepth 1 -type f -name "${run_title}*AA.no_hmmscan1.fasta" ) > all_DTR_HMM2_proteins.AA.fasta
 		TOTAL_AA_SEQS=$( grep -F ">" all_DTR_HMM2_proteins.AA.fasta | wc -l | bc )
 		if [ $TOTAL_AA_SEQS -ge 1 ] ; then
 			AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
@@ -949,7 +949,7 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 				AA_SEQS_PER_FILE=1
 			fi
 			awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_HMM2_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_HMM2_proteins.AA.fasta
-			SPLIT_DTR_HMM2=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_HMM2_GENOME_AA_*.fasta" )
+			SPLIT_DTR_HMM2=$( find . -maxdepth 1 -type f -name "SPLIT_DTR_HMM2_GENOME_AA_*.fasta" )
 			MDYT=$( date +"%m-%d-%y---%T" )
 			echo "time update: running hmmscan2, annotate DTR contigs " $MDYT
 			echo "$SPLIT_DTR_HMM2" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan2.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.fasta >/dev/null 2>&1
@@ -972,9 +972,9 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 	done
 	for ROT_AAs in $ROTATE_SORT_AAs ; do
 		echo ">Feature "${ROT_AAs%.rotate.AA.sorted.fasta}" Table1" > ${ROT_AAs%.rotate.AA.sorted.fasta}.SCAN.tbl
-		CALL_ALL_HMM=$( find * -maxdepth 0 -type f -regextype sed -regex "${ROT_AAs%.rotate.AA.sorted.fasta}\..*called_hmmscan.*txt" )
+		CALL_ALL_HMM=$( find . -maxdepth 1 -type f -regextype sed -regex "${ROT_AAs%.rotate.AA.sorted.fasta}\..*called_hmmscan.*txt" )
 		if [ -n "$CALL_ALL_HMM" ] ; then
-			cat $( find * -maxdepth 0 -type f -regextype sed -regex "${ROT_AAs%.rotate.AA.sorted.fasta}\..*called_hmmscan.*txt" ) > ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt
+			cat $( find . -maxdepth 1 -type f -regextype sed -regex "${ROT_AAs%.rotate.AA.sorted.fasta}\..*called_hmmscan.*txt" ) > ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt
 			if [ -s ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt ] ; then
 				cat ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt | sed 's/ $//g' | while read LINE ; do 
 					PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
@@ -1042,12 +1042,12 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 	fi
 fi
 
-PROTEIN_NO_HMMSCAN2=$( find * -maxdepth 0 -type f -name "*.rotate.AA.no_hmmscan2.fasta" )
+PROTEIN_NO_HMMSCAN2=$( find . -maxdepth 1 -type f -name "*.rotate.AA.no_hmmscan2.fasta" )
 
 if [ -n "$PROTEIN_NO_HMMSCAN2" ]; then
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: running RPSBLAST, annotate DTR contigs" $MDYT
-	cat $( find * -maxdepth 0 -type f -name "*.rotate.AA.no_hmmscan2.fasta" ) > all_DTR_rps_proteins.AA.fasta
+	cat $( find . -maxdepth 1 -type f -name "*.rotate.AA.no_hmmscan2.fasta" ) > all_DTR_rps_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_DTR_rps_proteins.AA.fasta | wc -l | bc )
 	if [ $TOTAL_AA_SEQS -ge 1 ] ; then
 	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
@@ -1055,7 +1055,7 @@ if [ -n "$PROTEIN_NO_HMMSCAN2" ]; then
 			AA_SEQS_PER_FILE=1
 		fi
 		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_DTR_RPS_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_DTR_rps_proteins.AA.fasta
-		SPLIT_DTR_AA_RPS=$( find * -maxdepth 0 -type f -name "SPLIT_DTR_RPS_AA_*.fasta" )
+		SPLIT_DTR_AA_RPS=$( find . -maxdepth 1 -type f -name "SPLIT_DTR_RPS_AA_*.fasta" )
 
 		echo "$SPLIT_DTR_AA_RPS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {}.fasta -line_length 200 -out {}.rpsb.out >/dev/null 2>&1
 		cat *rpsb.out | awk '{ if ($0 ~ /^>/) {printf $0 ; getline; print $0} else { print $0}}' > COMBINED_RESULTS.rotate.AA.rpsblast.out
@@ -1158,7 +1158,7 @@ fi
 if [ "$ORF_WITHIN" == "True" ] ; then
 	echo "$(tput setaf 5) Removing ORFS within ORFs that are 'hypothetical' $(tput sgr 0)"
 
-	INT_TBL=$( find * -maxdepth 0 -type f -name "*.int.tbl" )
+	INT_TBL=$( find . -maxdepth 1 -type f -name "*.int.tbl" )
 	if [ -n "$INT_TBL" ] ; then
 		for feat_tbl3 in $INT_TBL ; do
 			grep "^[0-9]" $feat_tbl3 | awk '{FS="\t"; OFS="\t"} {print $1, $2}' > ${feat_tbl3%.int.tbl}.all_start_stop.txt ;
@@ -1249,7 +1249,7 @@ if [ "$ORF_WITHIN" == "True" ] ; then
 		done
 	fi
 else
-	INT_TBL=$( find * -maxdepth 0 -type f -name "*.int.tbl" )
+	INT_TBL=$( find . -maxdepth 1 -type f -name "*.int.tbl" )
 	if [ -n "$INT_TBL" ] ; then
 		for feat_tbl3 in $INT_TBL ; do
 			sed 's/(Fragment)//g; s/\. .*//g; s/{.*//g; s/\[.*//g; s/Putative hypothetical protein/hypothetical protein/g; s/Uncultured bacteri.*/hypothetical protein/g; s/RNA helicase$/helicase/g; s/Os.*/hypothetical protein/g; s/\.$//g; s/Unplaced genomic scaffold.*/hypothetical protein/g; s/Putative hypothetical protein/hypothetical protein/g; s/Contig.*/hypothetical protein/g; s/Uncharacterized protein/hypothetical protein/g; s/uncharacterized protein/hypothetical protein/g; s/Uncharacterised protein/hypothetical protein/g ; s/length=.*//g' $feat_tbl3 | sed '/--/d' > ${feat_tbl3%.int.tbl}.int2.tbl ; 
@@ -1260,7 +1260,7 @@ fi
 # Grabbing ORFs wihout RPSBLAST hits and separating them into individual files for HHsearch
 echo "$(tput setaf 5) Grabbing ORFs wihout RPS-BLAST hits and separating them into individual files for HHsearch $(tput sgr 0)"
 
-INT2_TBL=$( find * -maxdepth 0 -type f -name "*.int2.tbl" )
+INT2_TBL=$( find . -maxdepth 1 -type f -name "*.int2.tbl" )
 if [ -n "$INT2_TBL" ] ; then
 	for blastp_tbl1 in $INT2_TBL ; do
 		grep -i -e 'hypothetical protein' -e 'unnamed protein product' -e 'Predicted protein' -e 'predicted protein' -e 'Uncharacterized protein' -e 'Domain of unknown function' -e 'product	gp' -B2 $blastp_tbl1 | grep "^[0-9]" | awk '{print $1 " - " $2}' > ${blastp_tbl1%.int2.tbl}.for_hhpred.txt ;
@@ -1274,7 +1274,7 @@ if  [[ $HHSUITE_TOOL = "hhsearch" ]] || [[ $HHSUITE_TOOL = "hhblits" ]] ; then
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: running HHsearch or HHblits " $MDYT
 fi
-dark_orf_list=$( find * -maxdepth 0 -type f -name "*.for_hhpred.fasta" )
+dark_orf_list=$( find . -maxdepth 1 -type f -name "*.for_hhpred.fasta" )
 #-#- can this be parallelized?
 if [ -n "$dark_orf_list" ] ; then
 	if  [[ $HHSUITE_TOOL = "hhsearch" ]] ; then
@@ -1307,7 +1307,7 @@ rm -f *.rotate.AA.fasta
 
 perl ${CENOTE_SCRIPT_DIR}/hhpredreport2tbl_mt_annotation_pipe_biowulf1_gjs_edits.pl
 
-HH_TBL=$( find * -maxdepth 0 -type f -name "*.HH.tbl" )
+HH_TBL=$( find . -maxdepth 1 -type f -name "*.HH.tbl" )
 if [ -n "$HH_TBL" ] ; then
 	for HH_tbl1 in $HH_TBL ; do 
 		sed 's/OS=.*//g; s/ ;//g; s/similar to AA sequence:UniProtKB:>\([0-9][A-Z].*\)/protein motif:PDB:\1/g; s/UniProtKB:>tr|.*|\(.\)/UniProtKB:\1/g; s/similar to AA sequence:UniProtKB:>\([a-z].*\)/protein motif:Scop:\1/g; s/similar to AA sequence:UniProtKB:>\(PF.*\)/protein motif:PFAM:\1/g; s/ is .*//g; s/ are .*//g' $HH_tbl1 | sed '/product/ s/; [a-zA-Z0-9_]\{1,20\}//g; s/;.*//g' > ${HH_tbl1%.HH.tbl}.HH2.tbl
@@ -1362,7 +1362,7 @@ if [ -n "$INT2_TBL" ] ; then
 	done
 fi
 ### insert comb3.tbl edits
-COMB3_TBL=$( find * -maxdepth 0 -type f -name "*.comb3.tbl" )
+COMB3_TBL=$( find . -maxdepth 1 -type f -name "*.comb3.tbl" )
 if [ -n "$COMB3_TBL" ] ; then
 	for comb3 in $COMB3_TBL ; do
 		## tRNA overlap
@@ -1409,7 +1409,7 @@ fi
 
 ###
 rm -f *tmp.tbl
-COMB3_TBL=$( find * -maxdepth 0 -type f -name "*.comb3.tbl" )
+COMB3_TBL=$( find . -maxdepth 1 -type f -name "*.comb3.tbl" )
 if [ -n "$COMB3_TBL" ] ; then
 	for feat_tbl2 in *.comb3.tbl ; do 
 		if grep -i -q "CRESS\|genomovir\|circovir\|bacilladnavir\|redondovir\|nanovir\|geminivir\|smacovir" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
@@ -1485,7 +1485,7 @@ if [ -n "$LIST_OF_ITR_DOMAIN_CONTIGS" ] ; then
 		mkdir no_end_contigs_with_viral_domain
 	fi
 	cd ITR_containing_contigs
-	LIST_OF_ITR_DOMAIN_CONTIGS=$( find * -maxdepth 0 -type f -regextype sed -regex ".*.fna" )
+	LIST_OF_ITR_DOMAIN_CONTIGS=$( find . -maxdepth 1 -type f -regextype sed -regex ".*.fna" )
 	echo "$LIST_OF_ITR_DOMAIN_CONTIGS" | sed 's/.fna//g' | while read ITR_SEQ ; do
 		if [ "$PROPHAGE" == "True" ] ;then
 			cp ${ITR_SEQ}.fna ../no_end_contigs_with_viral_domain/${ITR_SEQ}_vs99.fna
@@ -1971,7 +1971,7 @@ fi
 echo "Making gtf tables from final feature tables"
 if [ -d sequin_and_genome_maps ] ; then
 	cd sequin_and_genome_maps
-	COMB4_TBL=$( find * -maxdepth 0 -type f -name "*.tbl" )
+	COMB4_TBL=$( find . -maxdepth 1 -type f -name "*.tbl" )
 	if [ -n "$COMB4_TBL" ] ; then
 		for feat_tbl2 in $COMB4_TBL ; do
 			if [ -s ${feat_tbl2%.tbl}.gtf ] ; then
@@ -2004,7 +2004,7 @@ fi
 ### conjugative machinery table
 if [ -d sequin_and_genome_maps ] ; then
 	cd sequin_and_genome_maps
-	COMB4_TBL=$( find * -maxdepth 0 -type f -name "*.tbl" )
+	COMB4_TBL=$( find . -maxdepth 1 -type f -name "*.tbl" )
 	if [ -n "$COMB4_TBL" ] ; then
 		for feat_tbl2 in $COMB4_TBL ; do
 			if [ -s ${feat_tbl2%.tbl}.gtf ] ; then

@@ -5,7 +5,7 @@
 cd no_end_contigs_with_viral_domain/
 
 echo "pruning script opened"
-vd_fastas=$( find * -maxdepth 0 -type f -name "*.fna" )
+vd_fastas=$( find . -maxdepth 1 -type f -name "*.fna" )
 
 if [ -n "$vd_fastas" ] ; then
 	echo "fna files found"
@@ -39,14 +39,14 @@ if [ -n "$vd_fastas" ] ; then
 	### redo hmmscan parallelization
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: HMMSCAN of common viral domains beginning" $MDYT
-	cat $( find * -maxdepth 0 -type f -name "*.AA.sorted1.fasta" ) > all_prunable_seq_proteins.AA.fasta
+	cat $( find . -maxdepth 1 -type f -name "*.AA.sorted1.fasta" ) > all_prunable_seq_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_prunable_seq_proteins.AA.fasta | wc -l | bc )
 	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
 	if [ $AA_SEQS_PER_FILE = 0 ] ; then
 		AA_SEQS_PER_FILE=1
 	fi
 	awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_PRUNE_SEQ_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_prunable_seq_proteins.AA.fasta
-	SPLIT_AA_PRUNE=$( find * -maxdepth 0 -type f -name "SPLIT_PRUNE_SEQ_AA_*.fasta" )
+	SPLIT_AA_PRUNE=$( find . -maxdepth 1 -type f -name "SPLIT_PRUNE_SEQ_AA_*.fasta" )
 	echo "$SPLIT_AA_PRUNE" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan2.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.fasta >/dev/null 2>&1
 	cat SPLIT_PRUNE_SEQ_AA_*AA.hmmscan2.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_PRUNE_SEQ_COMBINED.AA.hmmscan2.sort.out
 	if [ -s SPLIT_PRUNE_SEQ_COMBINED.AA.hmmscan2.sort.out ] ; then
@@ -59,7 +59,7 @@ if [ -n "$vd_fastas" ] ; then
 
 		done
 	fi
-	CALLED_VIRAL=$( find * -maxdepth 0 -type f -name "*.AA.called_hmmscan2.txt" )
+	CALLED_VIRAL=$( find . -maxdepth 1 -type f -name "*.AA.called_hmmscan2.txt" )
 	if [ -n "$CALLED_VIRAL" ] ; then
 		for NO_END in $CALLED_VIRAL ; do
 			cat $NO_END | sed 's/ $//g' | while read LINE ; do 
@@ -77,7 +77,7 @@ if [ -n "$vd_fastas" ] ; then
 			done
 		done
 	fi
-	SCAN1_TBL=$( find * -maxdepth 0 -type f -name "*.SCAN.tbl" )
+	SCAN1_TBL=$( find . -maxdepth 1 -type f -name "*.SCAN.tbl" )
 	if [ -n "$SCAN1_TBL" ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: making tables for hmmscan and rpsblast outputs " $MDYT
@@ -103,16 +103,16 @@ if [ -n "$vd_fastas" ] ; then
 		done
 	fi
 	### redo RPS part
-	NO_HMMSCAN_AA=$( find * -maxdepth 0 -type f -name "*.AA.prune_no_hmmscan2.fasta" )
+	NO_HMMSCAN_AA=$( find . -maxdepth 1 -type f -name "*.AA.prune_no_hmmscan2.fasta" )
 	if [ -n "$NO_HMMSCAN_AA" ] ; then
-		cat $( find * -maxdepth 0 -type f -name "*.AA.prune_no_hmmscan2.fasta" ) > all_prunable_rps_proteins.AA.fasta
+		cat $( find . -maxdepth 1 -type f -name "*.AA.prune_no_hmmscan2.fasta" ) > all_prunable_rps_proteins.AA.fasta
 		TOTAL_AA_SEQS=$( grep -F ">" all_prunable_rps_proteins.AA.fasta | wc -l | bc )
 		AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
 		if [ $AA_SEQS_PER_FILE = 0 ] ; then
 			AA_SEQS_PER_FILE=1
 		fi
 		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_PRUNE_RPS_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_prunable_rps_proteins.AA.fasta
-		SPLIT_AA_RPS=$( find * -maxdepth 0 -type f -name "SPLIT_PRUNE_RPS_AA_*.fasta" )
+		SPLIT_AA_RPS=$( find . -maxdepth 1 -type f -name "SPLIT_PRUNE_RPS_AA_*.fasta" )
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running RPSBLAST on each sequence " $MDYT
 		echo "$SPLIT_AA_RPS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {}.fasta -line_length 200 -out {}.rpsb.out >/dev/null 2>&1
@@ -125,7 +125,7 @@ if [ -n "$vd_fastas" ] ; then
 
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: parsing tables into virus_signal.seq files for hmmscan and rpsblast outputs " $MDYT
-	HMM_TBL=$( find * -maxdepth 0 -type f -name "*.HMMSCAN_TABLE.txt" )
+	HMM_TBL=$( find . -maxdepth 1 -type f -name "*.HMMSCAN_TABLE.txt" )
 	if [ -n "$HMM_TBL" ] ; then
 		for TABLE1 in $HMM_TBL ; do
 			#echo $TABLE1
@@ -183,7 +183,7 @@ if [ $PROPHAGE == "False" ] ; then
 else
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: Identifying virus chunks, chromosomal junctions, and pruning contigs as necessary " $MDYT
-	SIGNAL_SEQ=$( find * -maxdepth 0 -type f -name "*virus_signal.seq" )
+	SIGNAL_SEQ=$( find . -maxdepth 1 -type f -name "*virus_signal.seq" )
 	if [ -n "$SIGNAL_SEQ" ] ; then
 		for VSEQ in *virus_signal.seq ; do
 			python ${CENOTE_SCRIPT_DIR}/cenote_virus_segments_V6.py $VSEQ
@@ -193,7 +193,7 @@ else
 	fi
 
 	# reformat .fastas to get viral segments of prophage
-	CHUNK_COORDINATES=$( find * -maxdepth 0 -type f -name "*.virus_signal.seq_chunk_coordinates.csv" )
+	CHUNK_COORDINATES=$( find . -maxdepth 1 -type f -name "*.virus_signal.seq_chunk_coordinates.csv" )
 	if [ -n "$CHUNK_COORDINATES" ] ; then
 		VIR_COUNTER=0 
 		for CHUNKS in *.virus_signal.seq_chunk_coordinates.csv ; do
