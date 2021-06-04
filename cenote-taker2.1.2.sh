@@ -426,7 +426,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 			done > ${NO_END%.fasta}.AA.sorted.fasta
 		done
 		LIN_NO_ITR_AA=$( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" )
-		if [ -n $LIN_NO_ITR_AA ] ; then
+		if [ -n "$LIN_NO_ITR_AA" ] ; then
 			MDYT=$( date +"%m-%d-%y---%T" )
 			echo "time update: running linear contigs with hmmscan against virus hallmark gene database: $virus_domain_db " $MDYT	
 			cat $( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" ) > all_large_genome_proteins.AA.fasta
