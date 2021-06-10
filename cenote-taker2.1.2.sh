@@ -1490,7 +1490,7 @@ if [ -n "$LIST_OF_ITR_DOMAIN_CONTIGS" ] ; then
 	fi
 	cd ITR_containing_contigs
 	LIST_OF_ITR_DOMAIN_CONTIGS=$( find . -maxdepth 1 -type f -regextype sed -regex ".*.fna" )
-	echo "$LIST_OF_ITR_DOMAIN_CONTIGS" | sed 's/.fna//g' | while read ITR_SEQ ; do
+	echo "$LIST_OF_ITR_DOMAIN_CONTIGS" | sed 's/.fna//g ; s/\.\///g' | while read ITR_SEQ ; do
 		if [ "$PROPHAGE" == "True" ] ;then
 			sed "s/${ITR_SEQ}/${ITR_SEQ}_vs99/g" ${ITR_SEQ}.fna > ../no_end_contigs_with_viral_domain/${ITR_SEQ}_vs99.fna
 			grep -A1 "^[0-9]\{1,6\}	[0-9]\{1,6\}	repeat_region" ${ITR_SEQ}.ITR.tbl | sed '/--/d' > ../no_end_contigs_with_viral_domain/${ITR_SEQ}_vs99.ITR.tbl			
