@@ -775,7 +775,7 @@ ROTATED_DTR_CONTIGS=$( find . -maxdepth 1 -type f -regextype sed -regex "./${run
 if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: running BLASTX, DTR contigs " $MDYT
-	echo "$ROTATED_DTR_CONTIGS" | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU -t blastx -evalue 1e-4 -outfmt "6 qseqid stitle pident evalue length" -threshold 21 -word_size 4 -num_threads 1 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query {}.rotate.fasta -out {}.tax_guide.blastx.out >/dev/null 2>&1
+	echo "$ROTATED_DTR_CONTIGS" | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU -t blastx -evalue 1e-4 -outfmt "6 qseqid stitle pident evalue length" -threshold 21 -word_size 5 -num_threads 1 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query {}.rotate.fasta -out {}.tax_guide.blastx.out >/dev/null 2>&1
 	echo "$ROTATED_DTR_CONTIGS" | sed 's/.rotate.fasta/.fasta/g' | while read nucl_fa ; do
 		if [ ! -s "${nucl_fa%.fasta}.tax_guide.blastx.out" ]; then
 			echo "No homologues found" > ${nucl_fa%.fasta}.tax_guide.blastx.out ;
@@ -888,7 +888,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 fi
 
 #-# 4 hhmscan circles/DTRs
-ROTATE_SORT_AAs=$( find . -maxdepth 1 -type f -name "${run_title}*rotate.AA.sorted.fasta" )
+ROTATE_SORT_AAs=$( find . -maxdepth 1 -type f -name "${run_title}*rotate.AA.sorted.fasta" | sed 's/\.\///g' )
 if [ -n "$ROTATE_SORT_AAs" ] ; then
 	cat $( find . -maxdepth 1 -type f -name "${run_title}*rotate.AA.sorted.fasta" ) > all_DTR_sort_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_DTR_sort_genome_proteins.AA.fasta | wc -l | bc )

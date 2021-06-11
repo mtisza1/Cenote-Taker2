@@ -18,7 +18,7 @@ fi
 if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: running BLASTX, annotate linear contigs " $MDYT
-	echo "$LINEAR_HALLMARK_CONTIGS" | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU -t blastx -evalue 1e-4 -outfmt "6 qseqid stitle pident evalue length" -threshold 21 -word_size 4 -num_threads 1 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query {}.fna -out {}.tax_guide.blastx.out >/dev/null 2>&1
+	echo "$LINEAR_HALLMARK_CONTIGS" | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU -t blastx -evalue 1e-4 -outfmt "6 qseqid stitle pident evalue length" -threshold 21 -word_size 5 -num_threads 1 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query {}.fna -out {}.tax_guide.blastx.out >/dev/null 2>&1
 	echo "$LINEAR_HALLMARK_CONTIGS" | while read nucl_fa ; do
 		if [ ! -s "${nucl_fa%.fna}.tax_guide.blastx.out" ]; then
 			echo "No homologues found" > ${nucl_fa%.fna}.tax_guide.blastx.out ;
@@ -132,7 +132,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 fi
 
 #-# 4 hhmscan linear contigs
-LIN_SORT_AAs=$( find . -maxdepth 1 -type f -name "${run_title}*AA.sorted.fasta" )
+LIN_SORT_AAs=$( find . -maxdepth 1 -type f -name "${run_title}*AA.sorted.fasta" | sed 's/\.\///g' )
 if [ -n "$LIN_SORT_AAs" ] ; then
 	cat $( find . -maxdepth 1 -type f -name "${run_title}*AA.sorted.fasta" ) > all_LIN_sort_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_LIN_sort_genome_proteins.AA.fasta | wc -l | bc )
@@ -292,7 +292,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; t
 	fi
 fi
 
-PROTEIN_NO_HMMSCAN2=$( find . -maxdepth 1 -type f -name "*.AA.no_hmmscan2.fasta" )
+PROTEIN_NO_HMMSCAN2=$( find . -maxdepth 1 -type f -name "*.AA.no_hmmscan2.fasta" | sed 's/\.\///g' )
 
 if [ -n "$PROTEIN_NO_HMMSCAN2" ]; then
 
