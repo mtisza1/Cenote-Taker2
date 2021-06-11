@@ -500,7 +500,7 @@ fi
 cd ..
 
 
-DTR_SEQS=$( find . -maxdepth 1 -type f -regextype sed -regex "${run_title}[0-9]\{1,6\}.fasta" )
+DTR_SEQS=$( find . -maxdepth 1 -type f -regextype sed -regex "./${run_title}[0-9]\{1,6\}.fasta" | sed 's/\.\///g' )
 
 
 if [ ! -z "$DTR_SEQS" ] ; then
@@ -770,7 +770,7 @@ if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 fi
 
 #-# blastx for translation decision
-ROTATED_DTR_CONTIGS=$( find . -maxdepth 1 -type f -regextype sed -regex "${run_title}[0-9]\{1,6\}.rotate.fasta" )
+ROTATED_DTR_CONTIGS=$( find . -maxdepth 1 -type f -regextype sed -regex "./${run_title}[0-9]\{1,6\}.rotate.fasta" | sed 's/\.\///g' )
 
 if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 	MDYT=$( date +"%m-%d-%y---%T" )
@@ -976,9 +976,9 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 	done
 	for ROT_AAs in $ROTATE_SORT_AAs ; do
 		echo ">Feature "${ROT_AAs%.rotate.AA.sorted.fasta}" Table1" > ${ROT_AAs%.rotate.AA.sorted.fasta}.SCAN.tbl
-		CALL_ALL_HMM=$( find . -maxdepth 1 -type f -regextype sed -regex "${ROT_AAs%.rotate.AA.sorted.fasta}\..*called_hmmscan.*txt" )
+		CALL_ALL_HMM=$( find . -maxdepth 1 -type f -regextype sed -regex "./${ROT_AAs%.rotate.AA.sorted.fasta}\..*called_hmmscan.*txt" | sed 's/\.\///g' )
 		if [ -n "$CALL_ALL_HMM" ] ; then
-			cat $( find . -maxdepth 1 -type f -regextype sed -regex "${ROT_AAs%.rotate.AA.sorted.fasta}\..*called_hmmscan.*txt" ) > ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt
+			cat $( find . -maxdepth 1 -type f -regextype sed -regex "./${ROT_AAs%.rotate.AA.sorted.fasta}\..*called_hmmscan.*txt" | sed 's/\.\///g' ) > ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt
 			if [ -s ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt ] ; then
 				cat ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt | sed 's/ $//g' | while read LINE ; do 
 					PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
