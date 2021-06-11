@@ -879,7 +879,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 			done > ${PROD%.prodigal.fasta}.AA.fasta
 		done
 	fi
-	ROTATE_AAs=$( find . -maxdepth 1 -type f -name "${run_title}*rotate.AA.fasta" )
+	ROTATE_AAs=$( find . -maxdepth 1 -type f -name "${run_title}*rotate.AA.fasta" | sed 's/\.\///g' )
 	if [ -n "$ROTATE_AAs" ] ; then
 		for ROT in $ROTATE_AAs ; do 
 			bioawk -c fastx '{FS="\t"; OFS=" "} {print ">"$name $3, $4, $5, $6, $7; print $seq}' $ROT > ${ROT%.fasta}.sorted.fasta
