@@ -123,7 +123,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 			done > ${PROD%.prodigal.fasta}.AA.fasta
 		done
 	fi
-	TRANS_AAs=$( find . -maxdepth 1 -type f -name "${run_title}*AA.fasta" )
+	TRANS_AAs=$( find . -maxdepth 1 -type f -name "${run_title}*AA.fasta" | sed 's/\.\///g' )
 	if [ -n "$TRANS_AAs" ] ; then
 		for ROT in $TRANS_AAs ; do 
 			bioawk -c fastx '{FS="\t"; OFS=" "} {print ">"$name $3, $4, $5, $6, $7; print $seq}' $ROT > ${ROT%.fasta}.sorted.fasta
