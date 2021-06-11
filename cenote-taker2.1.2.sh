@@ -1524,7 +1524,11 @@ if [ "$PROPHAGE" == "True" ] ;then
 	LINEAR_HALLMARK_CONTIGS=$( find * -maxdepth 1 -type f -regextype sed -regex ".*_vs[0-9]\{1,2\}.fna" )
 	if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 		for LIN in $LINEAR_HALLMARK_CONTIGS ; do
-			ORIGINAL_NAME=$( head -n1 ${LIN%_vs[0-9][0-9].fna}.fna | cut -d " " -f2 )
+			if [ -s ${LIN%.fna}.ITR.tbl ] ; then
+				ORIGINAL_NAME=$( head -n1 ${LIN} | cut -d " " -f2 )
+			else
+				ORIGINAL_NAME=$( head -n1 ${LIN%_vs[0-9][0-9].fna}.fna | cut -d " " -f2 )
+			fi
 			if [ -s ${LIN%.fna}.ITR.tbl ] ; then
 				sed 's/ /#/g' $LIN | bioawk -v ORI="$ORIGINAL_NAME" -c fastx '{print ">"$name" "ORI" ITR" ; print $seq}' | sed 's/#/ /g' >> final_combined_virus_sequences_${run_title}.fna
 			else
@@ -2110,10 +2114,15 @@ if [ -n "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ; then
 	for LINEAR in $LIST_OF_VIRAL_DOMAIN_CONTIGS ; do 
 		CENOTE_NAME=$( head -n1 $LINEAR | cut -d " " -f1 | sed 's/>//g' )
 		if [ "$PROPHAGE" == "True" ] ; then
-			ORIGINAL_NAME=$( head -n1 ${LINEAR%_vs[0-9][0-9].fna}.fna | cut -d " " -f2 )
+			if [ -s ${LINEAR%.fna}.ITR.tbl ] ; then
+				ORIGINAL_NAME=$( head -n1 $LINEAR | cut -d " " -f2 )
+			else
+				ORIGINAL_NAME=$( head -n1 ${LINEAR%_vs[0-9][0-9].fna}.fna | cut -d " " -f2 )
+			fi
 		else
 			ORIGINAL_NAME=$( head -n1 $LINEAR | cut -d " " -f2 )
 		fi
+
 		LENGTH=$( bioawk -c fastx '{print length($seq)}' $LINEAR )
 		if [ -s ${LINEAR%.fna}.AA.hmmscan.sort.out ] ; then
 			NUM_HALLMARKS=$( cat ${LINEAR%.fna}.AA.hmmscan.sort.out | wc -l | bc )
