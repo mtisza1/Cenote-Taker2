@@ -1890,7 +1890,11 @@ if [ -n "$COMB3_TBL" ] ; then
 			TOPOLOGY="linear"
 			NUCL_FILE="${feat_tbl2%.comb3.tbl}.fna"
 			if [ "$PROPHAGE" == "True" ] ; then
-				input_contig_name=$( head -n1 ${feat_tbl2%_vs[0-9][0-9].comb3.tbl}.fna | cut -d " " -f 2 | sed 's/|.*//g; s/>//g' )
+				if [ -s ${feat_tbl2%.comb3.tbl}.ITR.tbl ] ; then
+					input_contig_name=$( head -n1 ${feat_tbl2%.comb3.tbl}.fna | cut -d " " -f 2 | sed 's/|.*//g; s/>//g' )
+				else
+					input_contig_name=$( head -n1 ${feat_tbl2%_vs[0-9][0-9].comb3.tbl}.fna | cut -d " " -f 2 | sed 's/|.*//g; s/>//g' )
+				fi
 			else
 				input_contig_name=$( head -n1 ${feat_tbl2%.comb3.tbl}.fna | cut -d " " -f 2 | sed 's/|.*//g; s/>//g' )
 			fi
