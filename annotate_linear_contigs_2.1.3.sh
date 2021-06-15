@@ -228,9 +228,9 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 	done
 	for ROT_AAs in $LIN_SORT_AAs ; do
 		echo ">Feature "${ROT_AAs%.AA.sorted.fasta}" Table1" > ${ROT_AAs%.AA.sorted.fasta}.SCAN.tbl
-		CALL_ALL_HMM=$( find . -maxdepth 1 -type f -regextype sed -regex "${ROT_AAs%.AA.sorted.fasta}.*called_hmmscan.*txt" )
+		CALL_ALL_HMM=$( find . -maxdepth 1 -type f -regextype sed -regex "./${ROT_AAs%.AA.sorted.fasta}.*called_hmmscan.*txt" )
 		if [ -n "$CALL_ALL_HMM" ] ; then
-			cat $( find . -maxdepth 1 -type f -regextype sed -regex "${ROT_AAs%.AA.sorted.fasta}\..*called_hmmscan.*txt" ) > ${ROT_AAs%.AA.sorted.fasta}.all_called_hmmscans.txt
+			cat $( find . -maxdepth 1 -type f -regextype sed -regex "./${ROT_AAs%.AA.sorted.fasta}\..*called_hmmscan.*txt" ) > ${ROT_AAs%.AA.sorted.fasta}.all_called_hmmscans.txt
 			if [ -s ${ROT_AAs%.AA.sorted.fasta}.all_called_hmmscans.txt ] ; then
 				cat ${ROT_AAs%.AA.sorted.fasta}.all_called_hmmscans.txt | sed 's/ $//g' | while read LINE ; do 
 					PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
