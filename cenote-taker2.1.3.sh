@@ -14,7 +14,7 @@ echo "00000000000000000000000000"
 echo "00000000000000000000000000$(tput sgr 0)"
 
 echo " "
-echo "Version 2.1.2"
+echo "Version 2.1.3"
 echo " "
 
 sleep 2s
@@ -1507,7 +1507,7 @@ fi
 LIST_OF_VIRAL_DOMAIN_CONTIGS=$( find * -maxdepth 1 -type f -wholename "no_end_contigs_with_viral_domain/*fna" )
 
 if [ -n "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ; then
-	. ${CENOTE_SCRIPT_DIR}/annotate_linear_contigs_2.1.2.sh
+	. ${CENOTE_SCRIPT_DIR}/annotate_linear_contigs_2.1.3.sh
 else
 	echo "No linear contigs with minimum hallmark genes found."
 fi
@@ -1853,7 +1853,7 @@ if [ -n "$COMB3_TBL" ] ; then
 		elif grep -q "ssRNA virus" $tax_info ; then
 			vir_name="ssRNA virus" ;
 		elif grep -q "unclassified RNA virus" $tax_info ; then
-			vir_name="unclassified RNA viruse" ;
+			vir_name="unclassified RNA virus" ;
 		elif grep -q "unclassified ssDNA bacterial virus" $tax_info ; then
 			vir_name="unclassified ssDNA bacterial virus" ;
 		elif grep -q "phage" $tax_info ; then

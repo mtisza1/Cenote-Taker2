@@ -218,7 +218,7 @@ else
 	fi
 fi
 
-POST_PRUNE_CONTIGS=$( find * -maxdepth 1 -type f -regextype sed -regex ".*_vs[0-9]\{1,2\}.fna" )
+POST_PRUNE_CONTIGS=$( find . -maxdepth 1 -type f -regextype sed -regex ".*_vs[0-9]\{1,2\}.fna"| sed 's/\.\///g' )
 
 if [ -n "$POST_PRUNE_CONTIGS" ] ; then
 	MDYT=$( date +"%m-%d-%y---%T" )
