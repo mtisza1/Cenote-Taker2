@@ -14,6 +14,7 @@ echo "00000000000000000000000000"
 echo "00000000000000000000000000$(tput sgr 0)"
 
 echo " "
+echo "version 0.1.1"
 sleep 2s
 
 # Setting input parameters
@@ -109,7 +110,7 @@ if [ ${original_contigs: -6} == ".fasta" ]; then
 	echo "unlimited_breadsticks" > ${run_title}_CONTIG_SUMMARY.tsv
 	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta  >/dev/null 2>&1
 	rm -f apc_aln*
-	APC_CIRCS=$( find * -maxdepth 0 -type f -name "${run_title}*.fa" )
+	APC_CIRCS=$( find . -maxdepth 1 -type f -name "${run_title}*.fa" | sed 's/\.\///g' )
 	if [ -n "$APC_CIRCS" ] ;then
 		for fa1 in $APC_CIRCS ; do 
 			CIRC_SEQ_NAME=$( head -n1 $fa1 | sed 's/|.*//g' ) ; 
@@ -127,7 +128,7 @@ elif [ ${original_contigs: -6} == ".fastg" ]; then
 	echo "unlimited_breadsticks" > ${run_title}_CONTIG_SUMMARY.tsv
 	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta >/dev/null 2>&1
 	rm -f apc_aln*
-	APC_CIRCS=$( find * -maxdepth 0 * -type f -name "${run_title}*.fa" )
+	APC_CIRCS=$( find . -maxdepth 1 * -type f -name "${run_title}*.fa" | sed 's/\.\///g' )
 	if [ -n "$APC_CIRCS" ] ;then
 		for fa1 in $APC_CIRCS ; do 
 			CIRC_SEQ_NAME=$( head -n1 $fa1 | sed 's/|.*//g' ) ; 
@@ -145,7 +146,7 @@ else
 fi
 
 # Removing cirles that are smaller than user specified cutoff
-CIRC_CONTIGS=$( find * -maxdepth 0 -type f -name "*.fasta" )
+CIRC_CONTIGS=$( find . -maxdepth 1 -type f -name "*.fasta" | sed 's/\.\///g' )
 if [ ! -z "$CIRC_CONTIGS" ] ;then
 	for CIRCLE1 in $CIRC_CONTIGS ; do
 		CIRCLE1_LENGTH=$( bioawk -c fastx '{print length($seq) }' $CIRCLE1 )
@@ -157,7 +158,7 @@ fi
 rm -f *.too_short.fasta
 
 # Detecting whether any circular contigs were present
-original_fastas=$( find * -maxdepth 0 -type f -name "*.fasta" )
+original_fastas=$( find . -maxdepth 1 -type f -name "*.fasta" | sed 's/\.\///g' )
 # "$(tput setaf 5)$var1$(tput sgr 0)"
 
 if [ -z "$original_fastas" ] ; then
@@ -210,7 +211,7 @@ else
 fi
 
 cd other_contigs
-CONTIGS_NON_CIRCULAR=$( find * -maxdepth 0 -type f -name "*[0-9].fasta" )
+CONTIGS_NON_CIRCULAR=$( find . -maxdepth 1 -type f -name "*[0-9].fasta" | sed 's/\.\///g' )
 
 if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 	echo "$(tput setaf 4) Looking for non-circular contigs that have at least 1 virus-specific or plasmid-specific domain $(tput sgr 0)"
@@ -232,14 +233,14 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 	###instructions for large genomes
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: splitting running hmmscan for linear contigs against virus hallmark gene database: $virus_domain_db " $MDYT	
-	cat $( find * -maxdepth 0 -type f -name "*.AA.sorted.fasta" ) > all_large_genome_proteins.AA.fasta
+	cat $( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" ) > all_large_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_large_genome_proteins.AA.fasta | wc -l | bc )
 	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
 	if [ $AA_SEQS_PER_FILE = 0 ] ; then
 		AA_SEQS_PER_FILE=1
 	fi
 	awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_LARGE_GENOME_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_large_genome_proteins.AA.fasta
-	SPLIT_AA_LARGE=$( find * -maxdepth 0 -type f -name "SPLIT_LARGE_GENOME_AA_*.fasta" )
+	SPLIT_AA_LARGE=$( find . -maxdepth 1 -type f -name "SPLIT_LARGE_GENOME_AA_*.fasta" | sed 's/\.\///g' )
 	if  [[ $virus_domain_db = "standard" ]] ; then
 		echo "$SPLIT_AA_LARGE" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1
 		echo "$SPLIT_AA_LARGE" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.fasta >/dev/null 2>&1
@@ -252,7 +253,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 		rm -f ./*{0..9}.fasta
 		break
 	fi		
-	HMM_REP_NUMEBR=$( find * -maxdepth 0 -type f -name "SPLIT_LARGE_GENOME_AA_*AA.hmmscan_replicate.out" | wc -l )
+	HMM_REP_NUMEBR=$( find . -maxdepth 1 -type f -name "SPLIT_LARGE_GENOME_AA_*AA.hmmscan_replicate.out" | wc -l )
 	if [[ $FOR_PLASMIDS = "True" ]]; then
 		if [ $HMM_REP_NUMEBR -gt 0 ] ; then
 			cat SPLIT_LARGE_GENOME_AA_*AA.hmmscan.out SPLIT_LARGE_GENOME_AA_*AA.hmmscan_replicate.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > LARGE_GENOME_COMBINED.AA.hmmscan.sort.out
@@ -296,7 +297,7 @@ fi
 cd ..
 
 
-CIRCLES_AND_ITRS=$( find * -maxdepth 0 -type f -regextype sed -regex "${run_title}[0-9]\{1,6\}.fasta" )
+CIRCLES_AND_ITRS=$( find . -maxdepth 1 -type f -regextype sed -regex "./${run_title}[0-9]\{1,6\}.fasta" | sed 's/\.\///g' )
 
 
 # 3 ORF calling
@@ -315,7 +316,7 @@ if [ ! -z "$CIRCLES_AND_ITRS" ] ; then
 		done > ${CIRC%.fasta}.AA.sorted.fasta
 	done	
 		### stopping point -insert hmmscan
-	cat $( find * -maxdepth 0 -type f -name "*.AA.sorted.fasta" ) > all_circular_genome_proteins.AA.fasta
+	cat $( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" ) > all_circular_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_circular_genome_proteins.AA.fasta | wc -l | bc )
 	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
 	if [ $AA_SEQS_PER_FILE = 0 ] ; then
@@ -324,7 +325,7 @@ if [ ! -z "$CIRCLES_AND_ITRS" ] ; then
 	awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_CIRCULAR_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_circular_genome_proteins.AA.fasta
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: running hmmscan on circular/DTR contigs on virus hallmark gene database: $virus_domain_db" $MDYT
-	SPLIT_AA_CIRC=$( find * -maxdepth 0 -type f -name "SPLIT_CIRCULAR_AA_*.fasta" )
+	SPLIT_AA_CIRC=$( find . -maxdepth 1 -type f -name "SPLIT_CIRCULAR_AA_*.fasta" | sed 's/\.\///g' )
 	if  [[ $virus_domain_db = "standard" ]] ; then
 		echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_specific_baits_plus_missed6a {}.fasta >/dev/null 2>&1
 		echo "$SPLIT_AA_CIRC" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan_replicate.out --cpu 1 -E 1e-15 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/virus_replication_clusters3 {}.fasta >/dev/null 2>&1
@@ -337,7 +338,7 @@ if [ ! -z "$CIRCLES_AND_ITRS" ] ; then
 		rm -f ./*{0..9}.fasta
 		break
 	fi
-	HMM_REP_NUMEBR=$( find * -maxdepth 0 -type f -name "SPLIT_CIRCULAR_AA_*AA.hmmscan_replicate.out" | wc -l )
+	HMM_REP_NUMEBR=$( find . -maxdepth 1 -type f -name "SPLIT_CIRCULAR_AA_*AA.hmmscan_replicate.out" | wc -l )
 	if [[ $FOR_PLASMIDS = "True" ]]; then
 		if [ $HMM_REP_NUMEBR -gt 0 ] ; then
 			cat SPLIT_CIRCULAR_AA_*AA.hmmscan.out SPLIT_CIRCULAR_AA_*AA.hmmscan_replicate.out | grep -v "^#\|plasmid_clust" | sed 's/ \+/	/g' | sort -u -k3,3 > CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out
@@ -383,7 +384,7 @@ fi
 cd ${base_directory}/${run_title}
 
 echo "ORIGINAL_NAME	CENOTE_NAME	END_FEATURE	LENGTH	NUM_HALLMARKS	HALLMARK_NAMES" > ${run_title}_CONTIG_SUMMARY.tsv
-CIRCULAR_HALLMARK_CONTIGS=$( find * -maxdepth 1 -type f -wholename "DTR_contigs_with_viral_domain/*fna" )
+CIRCULAR_HALLMARK_CONTIGS=$( find . -maxdepth 2 -type f -wholename "./DTR_contigs_with_viral_domain/*fna" | sed 's/\.\///g' )
 
 if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 	for LINEAR in $CIRCULAR_HALLMARK_CONTIGS ; do 
@@ -404,7 +405,7 @@ if [ -s CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out ] ; then
 	mv CIRCULAR_GENOME_COMBINED.AA.hmmscan.sort.out DTR_contigs_with_viral_domain/
 fi
 
-LIST_OF_VIRAL_DOMAIN_CONTIGS=$( find * -maxdepth 1 -type f -wholename "no_end_contigs_with_viral_domain/*fna" )
+LIST_OF_VIRAL_DOMAIN_CONTIGS=$( find . -maxdepth 2 -type f -wholename "./no_end_contigs_with_viral_domain/*fna" | sed 's/\.\///g' )
 
 if [ -n "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ; then
 	for LINEAR in $LIST_OF_VIRAL_DOMAIN_CONTIGS ; do 
@@ -436,7 +437,7 @@ if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 	done
 fi
 if [ "$PROPHAGE" == "True" ] ;then
-	LINEAR_HALLMARK_CONTIGS=$( find * -maxdepth 1 -type f -regextype sed -regex ".*_vs[0-9]\{1,2\}.fna" )
+	LINEAR_HALLMARK_CONTIGS=$( find . -maxdepth 2 -type f -regextype sed -regex ".*_vs[0-9]\{1,2\}.fna" | sed 's/\.\///g' )
 	if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 		for LIN in $LINEAR_HALLMARK_CONTIGS ; do
 			ORIGINAL_NAME=$( head -n1 ${LIN%_vs[0-9][0-9].fna}.fna | cut -d " " -f2 )
