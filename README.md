@@ -161,45 +161,49 @@ Or if you've put your conda environment in a custom location:
 If you just want to annotate your pre-selected virus sequences and make genome maps, run Cenote-Taker 2 using `-am True`.
 
 Example:
-`python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_VIRUSES.fasta -r viruses_am_ct -m 32 -t 32 -p False -am True`
+```python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_VIRUSES.fasta -r viruses_am_ct -m 32 -t 32 -p False -am True```
 
 For very divergent genomes, setting `-hh hhsearch` will marginally improve number of genes that are annotated. This setting drastically increasese the run time. On the other hand, setting `-hh none` will skip the time consuming hhblits step. With this, you'll still get pretty good genome maps, and might be most appropriate for very large metagenomes, or for runs where you just want to do a quick check.
 
 #### *Discovery*
 
 **Virus-like particle (VLP) prep assembly:**
+
 `-p False -db standard`
 
 You might apply a size cutoff for linear contigs as well, e.g. ` --minimum_length_linear 3000` OR `--minimum_length_linear 5000`. Changing length minima does not affect false positive rates, but short linear contigs may not be useful, depending on your goals.
 
 Example:
-`python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_VLP_ASSEMBLY.fasta -r my_VLP1_ct -m 32 -t 32 -p False -db standard --minimum_length_linear 3000`
+```python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_VLP_ASSEMBLY.fasta -r my_VLP1_ct -m 32 -t 32 -p False -db standard --minimum_length_linear 3000```
 
 **Whole genome shotgun (WGS) metagenomic assembly:**
+
 `-p True -db virion --minimum_length_linear 3000 --lin_minimum_hallmark_genes 2`
 
 While you should definitely ***definitely*** prune virus sequences from WGS datasets, [CheckV](https://bitbucket.org/berkeleylab/checkv/src/master/) also does a very good job (I'm still formally comparing these approaches) and you could use `--prune_prophage False` on a metagenome assembly and feed the unpruned contigs from Unlimited Breadsticks into `checkv end_to_end` if you prefer. (Or, prune with Cenote-Taker 2, then CheckV)
 
 Example with prune:
-`python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_WGS_ASSEMBLY.fasta -r my_WGS1_ct -m 32 -t 32 -p True -db virion --minimum_length_linear 3000 --lin_minimum_hallmark_genes 2`
+```python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_WGS_ASSEMBLY.fasta -r my_WGS1_ct -m 32 -t 32 -p True -db virion --minimum_length_linear 3000 --lin_minimum_hallmark_genes 2```
 
 
 **Bacterial reference genome**
+
 `-p True -db virion --minimum_length_linear 3000 --lin_minimum_hallmark_genes 2`
 
 Using `--lin_minimum_hallmark_genes 1 -db virion` with WGS or bacterial genome data will (in my experience) yield very few sequences that appear to be false positives, however, there are lots of "degraded" prophage sequences in these sequencing sets, i.e. some/most genes of the phage have been lost. That said, sequence with just 1 hallmark gene is neither a guarantee of a degraded phage (especially in the case of ssDNA viruses) nor is 2+ hallmark a guarantee of of a complete phage.
 
 Example:
-`python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_BACTERIAL_GENOME.fasta -r my_genome1_ct -m 32 -t 32 -p True -db virion --minimum_length_linear 3000 --lin_minimum_hallmark_genes 2`
+```python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_BACTERIAL_GENOME.fasta -r my_genome1_ct -m 32 -t 32 -p True -db virion --minimum_length_linear 3000 --lin_minimum_hallmark_genes 2```
 
 
 **RNAseq assembly of any kind (if you only want RNA viruses)**
+
 `-p False -db rna_virus`
 
 If you also want DNA virus transcripts, or if your data is mixed RNA/DNA sequencing, you might do a run with `-db rna_virus`, then, from this run, take the file "other_contigs/non_viral_domains_contigs.fna" and use it as input for another run with `-db virion`. Or else `-db standard` is a good option for DNA+RNA datasets.
 
 Example:
-`python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_METATRANSCRIPTOME.fasta -r my_metatrans1_ct -m 32 -t 32 -p False -db rna_virus`
+```python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_METATRANSCRIPTOME.fasta -r my_metatrans1_ct -m 32 -t 32 -p False -db rna_virus```
 
 All arguments:
 ```
