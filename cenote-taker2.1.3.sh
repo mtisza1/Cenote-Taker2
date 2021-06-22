@@ -1010,7 +1010,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 
 
 		### new blastn
-		echo "$ROTATED_DTR_CONTIGS" | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU blastn -query {}.rotate.fasta -db ${BLASTN_DB} -outfmt '6 std qlen slen' -max_target_seqs 100 -perc_identity 90 -num_threads 1 -out {}.blastn.out >/dev/null 2>&1
+		echo "$ROTATED_DTR_CONTIGS" | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU blastn -task megablast -query {}.rotate.fasta -db ${BLASTN_DB} -outfmt '6 std qlen slen' -max_target_seqs 100 -perc_identity 90 -num_threads 1 -word_size 26 -evalue 1e-20 -out {}.blastn.out >/dev/null 2>&1
 		for circle in $ROTATED_DTR_CONTIGS ; do
 			if [ -s "${circle%.rotate.fasta}.blastn.out" ]; then
 				python ${CENOTE_SCRIPT_DIR}/anicalc/anicalc.py -i ${circle%.rotate.fasta}.blastn.out -o ${circle%.rotate.fasta}.blastn_anicalc.out

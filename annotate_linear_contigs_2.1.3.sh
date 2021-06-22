@@ -262,7 +262,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; t
 		echo "time update: running BLASTN, linear contigs " $MDYT
 
 		### new blastn
-		echo "$LINEAR_HALLMARK_CONTIGS" | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU blastn -query {}.fna -db ${BLASTN_DB} -outfmt '6 std qlen slen' -max_target_seqs 100 -perc_identity 90 -num_threads 1 -out {}.blastn.out >/dev/null 2>&1
+		echo "$LINEAR_HALLMARK_CONTIGS" | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU blastn -task megablast -query {}.fna -db ${BLASTN_DB} -outfmt '6 std qlen slen' -max_target_seqs 100 -perc_identity 90 -num_threads 1 -word_size 26 -evalue 1e-20 -out {}.blastn.out >/dev/null 2>&1
 		for nucl_fa in $LINEAR_HALLMARK_CONTIGS ; do
 			if [ -s "${nucl_fa%.fna}.blastn.out" ]; then
 				python ${CENOTE_SCRIPT_DIR}/anicalc/anicalc.py -i ${nucl_fa%.fna}.blastn.out -o ${nucl_fa%.fna}.blastn_anicalc.out
