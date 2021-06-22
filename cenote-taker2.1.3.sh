@@ -2178,8 +2178,45 @@ if [ -d DTR_contigs_with_viral_domain ] ; then
 	cd ..
 fi
 rm -rf bt2_indices/
-rm -f other_contigs/*.AA.fasta other_contigs/*.AA.sorted.fasta other_contigs/*.out other_contigs/*.dat other_contigs/*called_hmmscan.txt other_contigs/SPLIT_LARGE_GENOME_AA_*fasta ITR_containing_contigs/SPLIT_ITR_AA*fasta SPLIT_CIRCULAR_AA* *called_hmmscan.txt circular_contigs_spades_names.txt
-rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta  no_end_contigs_with_viral_domain/SPLIT_LIN_HMM2_GENOME_AA*fasta no_end_contigs_with_viral_domain/SPLIT_LIN_sort_GENOME_AA* no_end_contigs_with_viral_domain/SPLIT_LIN_RPS_AA* no_end_contigs_with_viral_domain/*used_positions.txt no_end_contigs_with_viral_domain/*seq_chunk_coordinates.csv no_end_contigs_with_viral_domain/*blast_hypo.fasta no_end_contigs_with_viral_domain/*CDS.bed no_end_contigs_with_viral_domain/*tRNA.bed no_end_contigs_with_viral_domain/*ORFs_over_tRNAs.tsv no_end_contigs_with_viral_domain/*prodigal.fasta no_end_contigs_with_viral_domain/*all_called_hmmscans.txt no_end_contigs_with_viral_domain/*phan.fasta no_end_contigs_with_viral_domain/*phan.sort.fasta
+
+find other_contigs/ -type f -name "*.AA.fasta" -exec rm -f {} \;
+find other_contigs/ -type f -name "*.AA.sorted.fasta" -exec rm -f {} \;
+find other_contigs/ -type f -name "*.out" -exec rm -f {} \;
+find other_contigs/ -type f -name "*.dat" -exec rm -f {} \;
+find other_contigs/ -type f -name "*.called_hmmscan.txt" -exec rm -f {} \;
+find other_contigs/ -type f -name "SPLIT_LARGE_GENOME_AA_*fasta" -exec rm -f {} \;
+find ITR_containing_contigs/ -type f -name "SPLIT_ITR_AA*fasta" -exec rm -f {} \;
+find . -type f -name "SPLIT_CIRCULAR_AA*" -exec rm -f {} \;
+rm -f *called_hmmscan.txt circular_contigs_spades_names.txt
+find no_end_contigs_with_viral_domain/ -type f -name "*.called_hmmscan2.txt" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*.hmmscan2.out" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*all_hhpred_queries.AA.fasta" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*all_start_stop.txt" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*trnascan-se2.txt" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*for_hhpred.txt" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*for_blastp.txt" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*HH.tbl" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*hypo_start_stop.txt" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*remove_hypo.txt" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*rps_nohits.fasta" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*tax_guide.blastx.tab" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*trans.fasta" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*called_hmmscan*.txt" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*no_hmmscan*.fasta" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "SPLIT_LIN_HMM2_GENOME_AA*fasta" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "SPLIT_LIN_sort_GENOME_AA*" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "SPLIT_LIN_RPS_AA*" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*used_positions.txt" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*seq_chunk_coordinates.csv" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*blast_hypo.fasta" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*.bed" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*ORFs_over_tRNAs.tsv" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*prodigal.fasta" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*all_called_hmmscans.txt" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*phan.fasta" -exec rm -f {} \;
+find no_end_contigs_with_viral_domain/ -type f -name "*phan.sort.fasta" -exec rm -f {} \;
+
+#rm -f no_end_contigs_with_viral_domain/*.called_hmmscan2.txt no_end_contigs_with_viral_domain/*.hmmscan2.out no_end_contigs_with_viral_domain/*all_hhpred_queries.AA.fasta no_end_contigs_with_viral_domain/*.all_start_stop.txt no_end_contigs_with_viral_domain/*.trnascan-se2.txt no_end_contigs_with_viral_domain/*.for_hhpred.txt no_end_contigs_with_viral_domain/*.for_blastp.txt no_end_contigs_with_viral_domain/*.HH.tbl no_end_contigs_with_viral_domain/*.hypo_start_stop.txt  no_end_contigs_with_viral_domain/*.remove_hypo.txt no_end_contigs_with_viral_domain/*.rps_nohits.fasta no_end_contigs_with_viral_domain/*.tax_guide.blastx.tab no_end_contigs_with_viral_domain/*.tax_orf.fasta no_end_contigs_with_viral_domain/*.trans.fasta no_end_contigs_with_viral_domain/*.called_hmmscan*.txt no_end_contigs_with_viral_domain/*.no_hmmscan*.fasta  no_end_contigs_with_viral_domain/SPLIT_LIN_HMM2_GENOME_AA*fasta no_end_contigs_with_viral_domain/SPLIT_LIN_sort_GENOME_AA* no_end_contigs_with_viral_domain/SPLIT_LIN_RPS_AA* no_end_contigs_with_viral_domain/*used_positions.txt no_end_contigs_with_viral_domain/*seq_chunk_coordinates.csv no_end_contigs_with_viral_domain/*blast_hypo.fasta no_end_contigs_with_viral_domain/*CDS.bed no_end_contigs_with_viral_domain/*tRNA.bed no_end_contigs_with_viral_domain/*ORFs_over_tRNAs.tsv no_end_contigs_with_viral_domain/*prodigal.fasta no_end_contigs_with_viral_domain/*all_called_hmmscans.txt no_end_contigs_with_viral_domain/*phan.fasta no_end_contigs_with_viral_domain/*phan.sort.fasta
 
 echo "$(tput setaf 3)output directory: "$run_title" $(tput sgr 0)"
 echo "$(tput setaf 3) >>>>>>CENOTE-TAKER 2 HAS FINISHED TAKING CENOTES<<<<<< $(tput sgr 0)"
