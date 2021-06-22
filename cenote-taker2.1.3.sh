@@ -1628,6 +1628,8 @@ if [ -n "$COMB3_TBL" ] ; then
 			vir_name=Lipothrixviridae ;
 		elif grep -q "Rudivir" $tax_info ; then
 			vir_name=Rudiviridae ;
+		elif grep -q "Rhabdovir" $tax_info ; then
+			vir_name=Rhabdoviridae ;
 		elif grep -q "Ligamenvir" $tax_info ; then
 			vir_name=Ligamenvirales ;
 		elif grep -q "Marseillevir" $tax_info ; then
