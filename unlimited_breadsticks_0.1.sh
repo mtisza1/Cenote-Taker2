@@ -233,7 +233,11 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 	###instructions for large genomes
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: splitting running hmmscan for linear contigs against virus hallmark gene database: $virus_domain_db " $MDYT	
-	cat $( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" ) > all_large_genome_proteins.AA.fasta
+	#cat $( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" ) > all_large_genome_proteins.AA.fasta
+	SORT_AA=$( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" | sed 's/\.\///g' )
+	for SORTQ in $SORT_AA ; do 
+		cat $SORTQ
+	done > all_large_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_large_genome_proteins.AA.fasta | wc -l | bc )
 	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
 	if [ $AA_SEQS_PER_FILE = 0 ] ; then
@@ -316,7 +320,11 @@ if [ ! -z "$CIRCLES_AND_ITRS" ] ; then
 		done > ${CIRC%.fasta}.AA.sorted.fasta
 	done	
 		### stopping point -insert hmmscan
-	cat $( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" ) > all_circular_genome_proteins.AA.fasta
+	#cat $( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" ) > all_circular_genome_proteins.AA.fasta
+	CIRC_SORT_AAS=$( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" | sed 's/\.\///g' )
+	for CIRCQ in $CIRC_SORT_AAS ; do
+		cat $CIRCQ
+	done > all_circular_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_circular_genome_proteins.AA.fasta | wc -l | bc )
 	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
 	if [ $AA_SEQS_PER_FILE = 0 ] ; then
