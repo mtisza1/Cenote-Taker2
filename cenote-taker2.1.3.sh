@@ -429,7 +429,10 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 		if [ -n "$LIN_NO_ITR_AA" ] ; then
 			MDYT=$( date +"%m-%d-%y---%T" )
 			echo "time update: running linear contigs with hmmscan against virus hallmark gene database: $virus_domain_db " $MDYT	
-			cat $( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" ) > all_large_genome_proteins.AA.fasta
+			#cat $( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" ) > all_large_genome_proteins.AA.fasta
+			for LIN in $LIN_NO_ITR_AA ; do
+				cat $LIN
+			done > all_large_genome_proteins.AA.fasta
 			TOTAL_AA_SEQS=$( grep -F ">" all_large_genome_proteins.AA.fasta | wc -l | bc )
 			if [ $TOTAL_AA_SEQS -ge 1 ] ; then 
 				AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
@@ -534,7 +537,11 @@ if [ ! -z "$DTR_SEQS" ] ; then
 				echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ${INC5}${INC3} $ORIG_CONTIG  ; echo $AA_SEQ ; 
 			done > ${CIRC%.fasta}.AA.sorted.fasta
 		done	
-		cat $( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" ) > all_circular_genome_proteins.AA.fasta
+		#cat $( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" ) > all_circular_genome_proteins.AA.fasta
+		DTR_SEQS_SORT_AA=$( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" )
+		for DTRQ in $DTR_SEQS_SORT_AA ; do
+			cat $DTRQ
+		done > all_circular_genome_proteins.AA.fasta
 		TOTAL_AA_SEQS=$( grep -F ">" all_circular_genome_proteins.AA.fasta | wc -l | bc )
 		if [ $TOTAL_AA_SEQS -ge 1 ] ; then 
 			AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
@@ -630,7 +637,11 @@ if [ ! -z "$ITR_SEQS" ] ; then
 			echo ">"${ORF_NAME} "["$START_BASE" - "$END_BASE"]" ${INC5}${INC3} $ORIG_CONTIG  ; echo $AA_SEQ ; 
 		done > ${CIRC%.fasta}.AA.sorted.fasta
 	done
-	cat $( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" ) > all_ITR_genome_proteins.AA.fasta
+	#cat $( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" ) > all_ITR_genome_proteins.AA.fasta
+	ITR_SEQ_SORT_AA=$( find . -maxdepth 1 -type f -name "*.AA.sorted.fasta" )
+	for ITRQ in $ITR_SEQ_SORT_AA ; do
+		cat $ITRQ
+	done > all_ITR_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_ITR_genome_proteins.AA.fasta | wc -l | bc )
 	if [ $TOTAL_AA_SEQS -ge 1 ] ; then
 		AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
@@ -890,7 +901,10 @@ fi
 #-# 4 hhmscan circles/DTRs
 ROTATE_SORT_AAs=$( find . -maxdepth 1 -type f -name "${run_title}*rotate.AA.sorted.fasta" | sed 's/\.\///g' )
 if [ -n "$ROTATE_SORT_AAs" ] ; then
-	cat $( find . -maxdepth 1 -type f -name "${run_title}*rotate.AA.sorted.fasta" ) > all_DTR_sort_genome_proteins.AA.fasta
+	#cat $( find . -maxdepth 1 -type f -name "${run_title}*rotate.AA.sorted.fasta" ) > all_DTR_sort_genome_proteins.AA.fasta
+	for ROTQ in $ROTATE_SORT_AAs ; do
+		cat $ROTQ
+	done > all_DTR_sort_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_DTR_sort_genome_proteins.AA.fasta | wc -l | bc )
 	if [ $TOTAL_AA_SEQS -ge 1 ] ; then
 		AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
@@ -945,7 +959,10 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 	done	
 	DTR_AA_FOR_HMM2=$( find . -maxdepth 1 -type f -name "${run_title}*AA.no_hmmscan1.fasta" )
 	if [ -n "$DTR_AA_FOR_HMM2" ] ; then
-		cat $( find . -maxdepth 1 -type f -name "${run_title}*AA.no_hmmscan1.fasta" ) > all_DTR_HMM2_proteins.AA.fasta
+		#cat $( find . -maxdepth 1 -type f -name "${run_title}*AA.no_hmmscan1.fasta" ) > all_DTR_HMM2_proteins.AA.fasta
+		for DTRAQ in $DTR_AA_FOR_HMM2 ; do
+			cat $DTRAQ
+		done > all_DTR_HMM2_proteins.AA.fasta
 		TOTAL_AA_SEQS=$( grep -F ">" all_DTR_HMM2_proteins.AA.fasta | wc -l | bc )
 		if [ $TOTAL_AA_SEQS -ge 1 ] ; then
 			AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
@@ -979,6 +996,7 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 		CALL_ALL_HMM=$( find . -maxdepth 1 -type f -regextype sed -regex "./${ROT_AAs%.rotate.AA.sorted.fasta}\..*called_hmmscan.*txt" | sed 's/\.\///g' )
 		if [ -n "$CALL_ALL_HMM" ] ; then
 			cat $( find . -maxdepth 1 -type f -regextype sed -regex "./${ROT_AAs%.rotate.AA.sorted.fasta}\..*called_hmmscan.*txt" | sed 's/\.\///g' ) > ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt
+
 			if [ -s ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt ] ; then
 				cat ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt | sed 's/ $//g' | while read LINE ; do 
 					PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
@@ -1051,7 +1069,10 @@ PROTEIN_NO_HMMSCAN2=$( find . -maxdepth 1 -type f -name "*.rotate.AA.no_hmmscan2
 if [ -n "$PROTEIN_NO_HMMSCAN2" ]; then
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: running RPSBLAST, annotate DTR contigs" $MDYT
-	cat $( find . -maxdepth 1 -type f -name "*.rotate.AA.no_hmmscan2.fasta" ) > all_DTR_rps_proteins.AA.fasta
+	#cat $( find . -maxdepth 1 -type f -name "*.rotate.AA.no_hmmscan2.fasta" ) > all_DTR_rps_proteins.AA.fasta
+	for PROT_NOQ in $PROTEIN_NO_HMMSCAN2 ; do
+		cat $PROT_NOQ
+	done > all_DTR_rps_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_DTR_rps_proteins.AA.fasta | wc -l | bc )
 	if [ $TOTAL_AA_SEQS -ge 1 ] ; then
 	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )

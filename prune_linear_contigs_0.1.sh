@@ -41,7 +41,10 @@ if [ -n "$vd_fastas" ] ; then
 	if [ -n "$FOR_SCAN" ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: HMMSCAN of common viral domains beginning" $MDYT
-		cat $( find . -maxdepth 1 -type f -name "*.AA.sorted1.fasta" ) > all_prunable_seq_proteins.AA.fasta
+		#cat $( find . -maxdepth 1 -type f -name "*.AA.sorted1.fasta" ) > all_prunable_seq_proteins.AA.fasta
+		for SCANQ in $FOR_SCAN ; do
+			cat $SCANQ
+		done > all_prunable_seq_proteins.AA.fasta
 		TOTAL_AA_SEQS=$( grep -F ">" all_prunable_seq_proteins.AA.fasta | wc -l | bc )
 		AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
 		if [ $AA_SEQS_PER_FILE = 0 ] ; then
@@ -107,7 +110,10 @@ if [ -n "$vd_fastas" ] ; then
 		### redo RPS part
 		NO_HMMSCAN_AA=$( find . -maxdepth 1 -type f -name "*.AA.prune_no_hmmscan2.fasta" )
 		if [ -n "$NO_HMMSCAN_AA" ] ; then
-			cat $( find . -maxdepth 1 -type f -name "*.AA.prune_no_hmmscan2.fasta" ) > all_prunable_rps_proteins.AA.fasta
+			#cat $( find . -maxdepth 1 -type f -name "*.AA.prune_no_hmmscan2.fasta" ) > all_prunable_rps_proteins.AA.fasta
+			for NO_HMMQ in $NO_HMMSCAN_AA ; do
+				cat $NO_HMMQ
+			done > all_prunable_rps_proteins.AA.fasta
 			TOTAL_AA_SEQS=$( grep -F ">" all_prunable_rps_proteins.AA.fasta | wc -l | bc )
 			AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
 			if [ $AA_SEQS_PER_FILE = 0 ] ; then

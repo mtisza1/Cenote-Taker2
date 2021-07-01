@@ -134,7 +134,10 @@ fi
 #-# 4 hhmscan linear contigs
 LIN_SORT_AAs=$( find . -maxdepth 1 -type f -name "${run_title}*AA.sorted.fasta" | sed 's/\.\///g' )
 if [ -n "$LIN_SORT_AAs" ] ; then
-	cat $( find . -maxdepth 1 -type f -name "${run_title}*AA.sorted.fasta" ) > all_LIN_sort_genome_proteins.AA.fasta
+	#cat $( find . -maxdepth 1 -type f -name "${run_title}*AA.sorted.fasta" ) > all_LIN_sort_genome_proteins.AA.fasta
+	for LINQ in $LIN_SORT_AAs ; do 
+		cat $LINQ
+	done > all_LIN_sort_genome_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_LIN_sort_genome_proteins.AA.fasta | wc -l | bc )
 	AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
 	if [ $AA_SEQS_PER_FILE = 0 ] ; then
@@ -190,7 +193,10 @@ if [ -n "$LIN_SORT_AAs" ] ; then
 	done
 	DTR_AA_FOR_HMM2=$( find . -maxdepth 1 -type f -name "${run_title}*AA.no_hmmscan1.fasta" )
 	if [ -n "$DTR_AA_FOR_HMM2" ] ; then
-		cat $( find . -maxdepth 1 -type f -name "${run_title}*AA.no_hmmscan1.fasta" ) > all_LIN_HMM2_proteins.AA.fasta
+		#cat $( find . -maxdepth 1 -type f -name "${run_title}*AA.no_hmmscan1.fasta" ) > all_LIN_HMM2_proteins.AA.fasta
+		for DTRQ in $DTR_AA_FOR_HMM2 ; do
+			cat $DTRQ
+		done > all_LIN_HMM2_proteins.AA.fasta
 		TOTAL_AA_SEQS=$( grep -F ">" all_LIN_HMM2_proteins.AA.fasta | wc -l | bc )
 		if [ $TOTAL_AA_SEQS -ge 1 ] ; then 
 			AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
@@ -296,7 +302,10 @@ PROTEIN_NO_HMMSCAN2=$( find . -maxdepth 1 -type f -name "*.AA.no_hmmscan2.fasta"
 
 if [ -n "$PROTEIN_NO_HMMSCAN2" ]; then
 
-	cat $( find . -maxdepth 1 -type f -name "*.AA.no_hmmscan2.fasta" ) > all_LIN_rps_proteins.AA.fasta
+	#cat $( find . -maxdepth 1 -type f -name "*.AA.no_hmmscan2.fasta" ) > all_LIN_rps_proteins.AA.fasta
+	for PROT_NOQ in $PROTEIN_NO_HMMSCAN2 ; do
+		cat $PROT_NOQ
+	done > all_LIN_rps_proteins.AA.fasta
 	TOTAL_AA_SEQS=$( grep -F ">" all_LIN_rps_proteins.AA.fasta | wc -l | bc )
 	if [ $TOTAL_AA_SEQS -ge 1 ] ; then 
 		AA_SEQS_PER_FILE=$( echo "scale=0 ; $TOTAL_AA_SEQS / $CPU" | bc )
