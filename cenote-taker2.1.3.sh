@@ -489,8 +489,12 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 			fi
 			for REMAINDER in $CONTIGS_NON_CIRCULAR ; do
 				if [ -s $REMAINDER ] ; then
-					cat $REMAINDER >> non_viral_domains_contigs.fna
-					rm -f $REMAINDER
+					if [ "$ANNOTATION_MODE" == "True" ] ; then
+						mv $REMAINDER ../no_end_contigs_with_viral_domain/${REMAINDER%.fasta}.fna
+					else
+						cat $REMAINDER >> non_viral_domains_contigs.fna
+						rm -f $REMAINDER
+					fi
 				fi
 			done
 		else
@@ -600,8 +604,12 @@ if [ ! -z "$DTR_SEQS" ] ; then
 		fi
 		for REMAINDER in $DTR_SEQS ; do
 			if [ -s $REMAINDER ] ; then
-				sed 's/ /#/g' $REMAINDER | bioawk -c fastx '{print ">"$name"#DTRs" ; print $seq}' | sed 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
-				rm -f $REMAINDER
+				if [ "$ANNOTATION_MODE" == "True" ] ; then
+					mv $REMAINDER DTR_contigs_with_viral_domain/${REMAINDER%.fasta}.fna
+				else
+					sed 's/ /#/g' $REMAINDER | bioawk -c fastx '{print ">"$name"#DTRs" ; print $seq}' | sed 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
+					rm -f $REMAINDER
+				fi
 			fi
 		done
 	fi
@@ -699,8 +707,12 @@ if [ ! -z "$ITR_SEQS" ] ; then
 	fi
 	for REMAINDER in $ITR_SEQS ; do
 		if [ -s $REMAINDER ] ; then
-			sed 's/ /#/g' $REMAINDER | bioawk -c fastx '{print ">"$name"#ITRs" ; print $seq}' | sed 's/#/ /g' >> ../other_contigs/non_viral_domains_contigs.fna
-			rm -f $REMAINDER
+			if [ "$ANNOTATION_MODE" == "True" ] ; then
+				mv $REMAINDER ${REMAINDER%.fasta}.fna
+			else
+				sed 's/ /#/g' $REMAINDER | bioawk -c fastx '{print ">"$name"#ITRs" ; print $seq}' | sed 's/#/ /g' >> ../other_contigs/non_viral_domains_contigs.fna
+				rm -f $REMAINDER
+			fi
 		fi
 	done
 fi
