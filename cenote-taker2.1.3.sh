@@ -467,7 +467,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 						cat SPLIT_LARGE_GENOME_AA_*AA.hmmscan.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > LARGE_GENOME_COMBINED.AA.hmmscan.sort.out
 					fi
 				fi		
-				if [ -s LARGE_GENOME_COMBINED.AA.hmmscan.sort.out ] ; then
+				if [ -e LARGE_GENOME_COMBINED.AA.hmmscan.sort.out ] ; then
 					cut -f3 LARGE_GENOME_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
 						HALL_COUNT=$( grep "${HIT}_" LARGE_GENOME_COMBINED.AA.hmmscan.sort.out | wc -l | bc )
 						if [ $HALL_COUNT -ge $LIN_MINIMUM_DOMAINS ] ; then 
@@ -590,7 +590,7 @@ if [ ! -z "$DTR_SEQS" ] ; then
 						rm ${HIT}.AA.fasta
 
 					elif [ -s ${HIT}.fasta ] ; then
-						sed 's/ /#/g' ${HIT}.fasta | bioawk -c fastx '{print ">"$name"#DTRs" ; print $seq}' | 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
+						sed 's/ /#/g' ${HIT}.fasta | bioawk -c fastx '{print ">"$name"#DTRs" ; print $seq}' | sed 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
 						rm -f ${HIT}.fasta
 					fi
 				done
@@ -600,7 +600,7 @@ if [ ! -z "$DTR_SEQS" ] ; then
 		fi
 		for REMAINDER in $DTR_SEQS ; do
 			if [ -s $REMAINDER ] ; then
-				sed 's/ /#/g' $REMAINDER | bioawk -c fastx '{print ">"$name"#DTRs" ; print $seq}' | 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
+				sed 's/ /#/g' $REMAINDER | bioawk -c fastx '{print ">"$name"#DTRs" ; print $seq}' | sed 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
 				rm -f $REMAINDER
 			fi
 		done
@@ -678,7 +678,7 @@ if [ ! -z "$ITR_SEQS" ] ; then
 				cat SPLIT_ITR_AA_*AA.hmmscan.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > ITR_GENOME_COMBINED.AA.hmmscan.sort.out
 			fi
 		fi		
-		if [ -s ITR_GENOME_COMBINED.AA.hmmscan.sort.out ] ; then
+		if [ -e ITR_GENOME_COMBINED.AA.hmmscan.sort.out ] ; then
 			cut -f3 ITR_GENOME_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
 				HALL_COUNT=$( grep "${HIT}_" ITR_GENOME_COMBINED.AA.hmmscan.sort.out | wc -l | bc )
 				if [ $HALL_COUNT -ge $CIRC_MINIMUM_DOMAINS ] ; then 
@@ -689,7 +689,7 @@ if [ ! -z "$ITR_SEQS" ] ; then
 					rm ${HIT}.AA.fasta
 
 				elif [ -s ${HIT}.fasta ] ; then
-					sed 's/ /#/g' ${HIT}.fasta | bioawk -c fastx '{print ">"$name"#ITRs" ; print $seq}' | 's/#/ /g' >> ../other_contigs/non_viral_domains_contigs.fna
+					sed 's/ /#/g' ${HIT}.fasta | bioawk -c fastx '{print ">"$name"#ITRs" ; print $seq}' | sed 's/#/ /g' >> ../other_contigs/non_viral_domains_contigs.fna
 					rm -f ${HIT}.fasta
 				fi
 			done
@@ -699,7 +699,7 @@ if [ ! -z "$ITR_SEQS" ] ; then
 	fi
 	for REMAINDER in $ITR_SEQS ; do
 		if [ -s $REMAINDER ] ; then
-			sed 's/ /#/g' $REMAINDER | bioawk -c fastx '{print ">"$name"#ITRs" ; print $seq}' | 's/#/ /g' >> ../other_contigs/non_viral_domains_contigs.fna
+			sed 's/ /#/g' $REMAINDER | bioawk -c fastx '{print ">"$name"#ITRs" ; print $seq}' | sed 's/#/ /g' >> ../other_contigs/non_viral_domains_contigs.fna
 			rm -f $REMAINDER
 		fi
 	done
@@ -941,7 +941,7 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 				cat SPLIT_DTR_sort_GENOME_AA_*AA.hmmscan.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_DTR_COMBINED.AA.hmmscan.sort.out
 			fi
 		fi		
-		if [ -s SPLIT_DTR_COMBINED.AA.hmmscan.sort.out ] ; then
+		if [ -e SPLIT_DTR_COMBINED.AA.hmmscan.sort.out ] ; then
 			cut -f3 SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
 				grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out > ${HIT}.rotate.AA.hmmscan.sort.out
 				grep "${HIT}_" SPLIT_DTR_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.rotate.AA.called_hmmscan1.txt
