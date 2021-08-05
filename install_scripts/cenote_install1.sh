@@ -65,12 +65,14 @@ if [ "$1" == "default" ] ; then
 	fi
 	conda env create --file cenote-taker2_env.yml
 	conda activate cenote-taker2_env
+	conda install -y -n cenote-taker2_env -c bioconda bedtools
 elif [ -d "$1" ] ; then
 	conda info --envs | if grep -q "${1}\/cenote-taker2_env" ; then
 		conda env remove -p ${1}/cenote-taker2_env
 	fi
-	conda create -p ${1}/cenote-taker2_env -c defaults -c bioconda -c AgBiome python=3.6 prodigal=2.6.3 BWA=0.7.17 samtools=1.3 mummer=3.23 circlator=1.5.5 blast=2.9.0 bioawk=1.0 entrez-direct=13.3 krona=2.7.1 hmmer=3.3 bowtie2=2.3.5 trnascan-se=2.0.5 bbtools=37.62 tbl2asn=25.7 emboss=6.6.0 cmake=3.14.0 numpy=1.18.1 pandas=1.0.0 matplotlib=3.1.3
+	conda create -p ${1}/cenote-taker2_env -c defaults -c bioconda -c AgBiome python=3.6 prodigal=2.6.3 BWA=0.7.17 samtools=1.3 mummer=3.23 circlator=1.5.5 blast=2.9.0 bioawk=1.0 entrez-direct=13.3 krona=2.7.1 hmmer=3.3 bowtie2=2.3.5 trnascan-se=2.0.5 bbtools=37.62 tbl2asn=25.7 emboss=6.6.0 cmake=3.14.0 numpy=1.18.1 pandas=1.0.0 matplotlib=3.1.3 pysam==0.15.3 biopython
 	conda activate ${1}/cenote-taker2_env
+	conda install -y -p ${1}/cenote-taker2_env -c bioconda bedtools
 else
 	echo "no proper option given for conda environment directory. Exiting."
 	exit
