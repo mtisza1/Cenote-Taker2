@@ -170,7 +170,7 @@ else:
 if is_tool("bedtools") :
 	print ("bedtools found")
 else:
-	print ("bedtools is not found. Exiting.")
+	print ("bedtools is not found. Exiting. You may have to manually install bedtools using: conda install -y -n cenote-taker2_env -c bioconda bedtools")
 	quit()
 
 
