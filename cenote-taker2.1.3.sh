@@ -847,7 +847,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 			fi
 		done
 
-		PHANQ=$( find . -maxdepth 1 -type f -regextype sed -regex ".*phan.sort.fna" )
+		PHANQ=$( find . -maxdepth 1 -type f -regextype sed -regex ".*phan.sort.fasta" )
 		echo "$PHANQ" | sed 's/\.phan\.sort\.fasta//g' | xargs -n 1 -I {} -P $CPU transeq -frame 1 -table 11 -sequence {}.phan.sort.fasta -outseq {}.trans.fasta >/dev/null 2>&1
 		
 		for PHAN in *.phan.fasta ; do
