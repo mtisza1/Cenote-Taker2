@@ -990,24 +990,26 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 	done
 	for ROT_AAs in $ROTATE_SORT_AAs ; do
 		echo ">Feature "${ROT_AAs%.rotate.AA.sorted.fasta}" Table1" > ${ROT_AAs%.rotate.AA.sorted.fasta}.SCAN.tbl
-		CALL_ALL_HMM=$( find . -maxdepth 1 -type f -regextype sed -regex "./${ROT_AAs%.rotate.AA.sorted.fasta}\..*called_hmmscan.*txt" | sed 's/\.\///g' )
-		if [ -n "$CALL_ALL_HMM" ] ; then
-			cat $( find . -maxdepth 1 -type f -regextype sed -regex "./${ROT_AAs%.rotate.AA.sorted.fasta}\..*called_hmmscan.*txt" | sed 's/\.\///g' ) > ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt
+		if [ -s ${ROT_AAs%.AA.sorted.fasta}.AA.called_hmmscan1.txt ] || [ -s ${ROT_AAs%.AA.sorted.fasta}.AA.called_hmmscan2.txt ] ; then
+			CALL_ALL_HMM=$( find . -maxdepth 1 -type f -regextype sed -regex "./${ROT_AAs%.rotate.AA.sorted.fasta}\..*called_hmmscan.*txt" | sed 's/\.\///g' )
+			if [ -n "$CALL_ALL_HMM" ] ; then
+				cat $( find . -maxdepth 1 -type f -regextype sed -regex "./${ROT_AAs%.rotate.AA.sorted.fasta}\..*called_hmmscan.*txt" | sed 's/\.\///g' ) > ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt
 
-			if [ -s ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt ] ; then
-				cat ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt | sed 's/ $//g' | while read LINE ; do 
-					PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
-					START_BASEH=$( echo $PROTEIN_INFO | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
-					END_BASEH=$( echo $PROTEIN_INFO | sed 's/.*- \(.*\)\].*/\1/' ) ; 
-					if [ -s ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out ] && grep -q "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out ; then
-						HMM_INFO=$( grep "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out | head -n1 | cut -f1 | sed 's/-/ /g; s/.*[0-9]\+\///g' ) ; 
-					else
-						HMM_INFO=$( grep "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan2.sort.out | head -n1 | cut -f1 | sed 's/-/ /g; s/.*[0-9]\+\///g' )
-					fi
-					INFERENCEH=$( echo $HMM_INFO | cut -d " " -f1 ) ; 
-					PROTEIN_NAME=$( echo $HMM_INFO | cut -d " " -f2- ) ; 
-					echo -e "$START_BASEH\t""$END_BASEH\t""CDS\n""\t\t\tprotein_id\t""lcl|""$LINE\n""\t\t\tproduct\t""$PROTEIN_NAME\n""\t\t\tinference\t""protein motif:$INFERENCEH" >> ${ROT_AAs%.rotate.AA.sorted.fasta}.SCAN.tbl ;
-				done
+				if [ -s ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt ] ; then
+					cat ${ROT_AAs%.rotate.AA.sorted.fasta}.all_called_hmmscans.txt | sed 's/ $//g' | while read LINE ; do 
+						PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
+						START_BASEH=$( echo $PROTEIN_INFO | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
+						END_BASEH=$( echo $PROTEIN_INFO | sed 's/.*- \(.*\)\].*/\1/' ) ; 
+						if [ -s ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out ] && grep -q "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out ; then
+							HMM_INFO=$( grep "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out | head -n1 | cut -f1 | sed 's/-/ /g; s/.*[0-9]\+\///g' ) ; 
+						else
+							HMM_INFO=$( grep "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan2.sort.out | head -n1 | cut -f1 | sed 's/-/ /g; s/.*[0-9]\+\///g' )
+						fi
+						INFERENCEH=$( echo $HMM_INFO | cut -d " " -f1 ) ; 
+						PROTEIN_NAME=$( echo $HMM_INFO | cut -d " " -f2- ) ; 
+						echo -e "$START_BASEH\t""$END_BASEH\t""CDS\n""\t\t\tprotein_id\t""lcl|""$LINE\n""\t\t\tproduct\t""$PROTEIN_NAME\n""\t\t\tinference\t""protein motif:$INFERENCEH" >> ${ROT_AAs%.rotate.AA.sorted.fasta}.SCAN.tbl ;
+					done
+				fi
 			else
 				echo "${ROT_AAs%.rotate.AA.sorted.fasta} (DTR contig) has no hits in hmmscan1 or hmmscan2 databases"
 			fi
