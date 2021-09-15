@@ -845,29 +845,14 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 			else
 				sed 's/ /@/g' ${PHAN} | bioawk -c fastx '{ print }' | awk '{ print ">"$1 ; print $2 }' | sed 's/@/ /g' > ${PHAN%.fasta}.sort.fasta
 			fi
-			transeq -frame 1 -table 11 -sequence ${PHAN%.fasta}.sort.fasta -outseq ${PHAN%.phan.fasta}.trans.fasta >/dev/null 2>&1
-			# put emboss transeq in directory 
-			COUNTER=0 ;  
-			bioawk -c fastx '{print}' ${PHAN%.phan.fasta}.trans.fasta | while read LINE ; do 
-				START_BASE=$( echo $LINE | sed 's/.*START=\(.*\)\] \[.*/\1/' ) ; 
-				ORF_NAME=$( echo $LINE | cut -d " " -f1 | sed 's/\(.*\)\.[0-9].*_1/\1/' ) ; 
-				END_BASE=$( echo $LINE | cut -d " " -f1 | sed 's/.*\(\.[0-9].*_1\)/\1/' | sed 's/_1//g; s/\.//g' ) ; 
-				ORIG_CONTIG=$( grep ">" ${PHAN%.phan.fasta}.rotate.fasta | cut -d " " -f2 ) ; 
-				AA_SEQ=$( echo "$LINE" | cut -f2 ) ; 
-				if echo $AA_SEQ | grep -q "\*" ; then
-					INC3=""
-				else
-					INC3="3primeInc"
-				fi
-				FAA=${AA_SEQ:0:1}
-				if [ "$FAA" != "M" ] && [ $START_BASE -le 3 ] ; then
-					INC5="5primeInc"
-				else
-					INC5=""
-				fi
-				let COUNTER=COUNTER+1 ; 
-				echo ">"${ORF_NAME}"_"${COUNTER} "["$START_BASE" - "$END_BASE"]" ${INC5}${INC3} $ORIG_CONTIG  ; echo $AA_SEQ ; 
-			done > ${PHAN%.phan.fasta}.rotate.AA.fasta
+		done
+
+		PHANQ=$( find . -maxdepth 1 -type f -regextype sed -regex ".*phan.sort.fna" )
+		echo "$PHANQ" | sed 's/\.phan\.sort\.fasta//g' | xargs -n 1 -I {} -P $CPU transeq -frame 1 -table 11 -sequence {}.phan.sort.fasta -outseq {}.trans.fasta >/dev/null 2>&1
+		
+		for PHAN in *.phan.fasta ; do
+			ORIG_CONTIG=$( grep ">" ${PHAN%.phan.fasta}.fna | cut -d " " -f2 ) ;
+			sed 's/\[START=//g ; s/\]//g ; s/ \[SCORE=.*//g' ${PHAN%.phan.fasta}.trans.fasta | bioawk -v OC="$ORIG_CONTIG" -c fastx '{ split($1, start, "[. ]") ; split(start[2], sq, "[_]") ; if (substr($seq, 1, 1) == "M" || $4 > 3) {FIVE=""} else {FIVE="5primeInc"} ; if (substr($seq, length($seq), 1) == "*") {THREE=""} else {THREE="3primeInc"}; print ">" start[1]"_"NR " ["$4" - "sq[1]"] "FIVE THREE" "OC ; print $seq }' > ${PHAN%.phan.fasta}.AA.fasta
 		done			
 	fi
 	if [ -s DTR_seqs_for_prodigal.txt ] ; then
@@ -1014,9 +999,11 @@ if [ -n "$ROTATE_SORT_AAs" ] ; then
 					PROTEIN_INFO=$( grep "$LINE \[" ${ROT_AAs} ) ;  
 					START_BASEH=$( echo $PROTEIN_INFO | sed 's/.*\[\(.*\) -.*/\1/' ) ; 
 					END_BASEH=$( echo $PROTEIN_INFO | sed 's/.*- \(.*\)\].*/\1/' ) ; 
-					if grep -q "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out ; then
+					if [ -s ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out ] ; then
+						if grep -q "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out ; then
 
-						HMM_INFO=$( grep "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out | head -n1 | cut -f1 | sed 's/-/ /g; s/.*[0-9]\+\///g' ) ; 
+							HMM_INFO=$( grep "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan.sort.out | head -n1 | cut -f1 | sed 's/-/ /g; s/.*[0-9]\+\///g' ) ; 
+						fi
 					else
 						HMM_INFO=$( grep "$LINE	" ${ROT_AAs%.AA.sorted.fasta}.AA.hmmscan2.sort.out | head -n1 | cut -f1 | sed 's/-/ /g; s/.*[0-9]\+\///g' )
 					fi
