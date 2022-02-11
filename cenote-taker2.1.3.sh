@@ -62,6 +62,7 @@ if [ "$ANNOTATION_MODE" == "True" ] ; then
 	CIRC_MINIMUM_DOMAINS=0
 	circ_length_cutoff=1000
 	linear_length_cutoff=1
+	PROPHAGE="False"
 fi
 
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@"
@@ -838,7 +839,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 	if [ -s DTR_seqs_for_phanotate.txt ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running PHANOTATE, annotate DTR contigs " $MDYT
-		cat DTR_seqs_for_phanotate.txt | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU ${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o {}.phan.fasta {}.rotate.fasta
+		cat DTR_seqs_for_phanotate.txt | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU ${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o {}.rotate.phan.fasta {}.rotate.fasta
 		for PHAN in *.phan.fasta ; do 
 			if [ "$ENFORCE_START_CODON" == "True" ] ; then
 				sed 's/ /@/g' ${PHAN} | bioawk -c fastx '{ print }' | awk '{ if ($2 ~ /^[ATCG]TG/) { print ">"$1 ; print $2 }}' | sed 's/@/ /g' > ${PHAN%.fasta}.sort.fasta
