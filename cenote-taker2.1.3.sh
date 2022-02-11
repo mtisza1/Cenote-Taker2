@@ -852,7 +852,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 		echo "$PHANQ" | sed 's/\.phan\.sort\.fasta//g' | xargs -n 1 -I {} -P $CPU transeq -frame 1 -table 11 -sequence {}.phan.sort.fasta -outseq {}.trans.fasta >/dev/null 2>&1
 		
 		for PHAN in *.phan.fasta ; do
-			ORIG_CONTIG=$( grep ">" ${PHAN%.phan.fasta}.fna | cut -d " " -f2 ) ;
+			ORIG_CONTIG=$( grep ">" ${PHAN%.rotate.phan.fasta}.fna | cut -d " " -f2 ) ;
 			sed 's/\[START=//g ; s/\]//g ; s/ \[SCORE=.*//g' ${PHAN%.phan.fasta}.trans.fasta | bioawk -v OC="$ORIG_CONTIG" -c fastx '{ split($1, start, "[. ]") ; split(start[2], sq, "[_]") ; if (substr($seq, 1, 1) == "M" || $4 > 3) {FIVE=""} else {FIVE="5primeInc"} ; if (substr($seq, length($seq), 1) == "*") {THREE=""} else {THREE="3primeInc"}; print ">" start[1]"_"NR " ["$4" - "sq[1]"] "FIVE THREE" "OC ; print $seq }' > ${PHAN%.phan.fasta}.AA.fasta
 		done			
 	fi
