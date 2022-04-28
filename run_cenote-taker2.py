@@ -18,7 +18,7 @@ pathname = os.path.dirname(sys.argv[0])
 cenote_script_path = os.path.abspath(pathname)      
 print(cenote_script_path) 
 
-parser = argparse.ArgumentParser(description='Cenote-Taker 2 is a pipeline for virus discovery and thorough annotation of viral contigs and genomes. Visit https://github.com/mtisza1/Cenote-Taker2 and https://github.com/mtisza1/Cenote-Taker2/wiki to find answers and submit issues')
+parser = argparse.ArgumentParser(description='Cenote-Taker 2 is a pipeline for virus discovery and thorough annotation of viral contigs and genomes. Visit https://github.com/mtisza1/Cenote-Taker2 and https://github.com/mtisza1/Cenote-Taker2/wiki to find answers and submit issues. Version 2.1.5')
 
 required_args = parser.add_argument_group(' REQUIRED ARGUMENTS for Cenote-Taker2 ')
 
@@ -39,7 +39,7 @@ optional_args.add_argument("--reads1", dest="F_READS", type=os.path.abspath, def
 optional_args.add_argument("--reads2", dest="R_READS", type=os.path.abspath, default='no_reads', help='Default: no_reads -- ILLUMINA READS ONLY: Second Read file in paired read set. Disregard if not using paired reads. Used for coverage depth determination.')
 optional_args.add_argument("--minimum_length_circular", dest="circ_length_cutoff", type=int, default='1000', help='Default: 1000 -- Minimum length of contigs to be checked for circularity. Bare minimun is 1000 nts')
 optional_args.add_argument("--minimum_length_linear", dest="linear_length_cutoff", type=int, default='1000', help='Default: 1000 -- Minimum length of non-circualr contigs to be checked for viral hallmark genes.')
-optional_args.add_argument("-db", "--virus_domain_db", dest="virus_domain_db", type=str, default='standard', help='default: standard -- \'standard\' database: all virus (DNA and RNA) hallmark genes (i.e. genes with known function as virion structural, packaging, replication, or maturation proteins specifically encoded by virus genomes) with low false discovery rate. \'virion\' database: subset of \'standard\', hallmark genes encoding virion structural proteins, packaging proteins, or capsid maturation proteins (DNA and RNA genomes) with LOWEST false discovery rate. \'rna_virus\' database: For RNA virus hallmarks only. Includes RdRp and capsid genes of RNA viruses. Low false discovery rate.')
+optional_args.add_argument("-db", "--virus_domain_db", dest="virus_domain_db", type=str, default='virion', help='default: virion -- \'standard\' database: all virus (DNA and RNA) hallmark genes (i.e. genes with known function as virion structural, packaging, replication, or maturation proteins specifically encoded by virus genomes) with low false discovery rate. \'virion\' database: subset of \'standard\', hallmark genes encoding virion structural proteins, packaging proteins, or capsid maturation proteins (DNA and RNA genomes) with LOWEST false discovery rate. \'rna_virus\' database: For RNA virus hallmarks only. Includes RdRp and capsid genes of RNA viruses. Low false discovery rate.')
 optional_args.add_argument("--lin_minimum_hallmark_genes", dest="LIN_MINIMUM_DOMAINS", type=int, default='1', help='Default: 1 -- Number of detected viral hallmark genes on a non-circular contig to be considered viral and recieve full annotation. WARNING: Only choose \'0\' if you have prefiltered the contig file to only contain putative viral contigs (using another method such as VirSorter or DeepVirFinder), or you are very confident you have physically enriched for virus particles very well (you might check with ViromeQC). Otherwise, the duration of the run will be extended many many times over, largely annotating non-viral contigs, which is not what Cenote-Taker2 is meant for. For unenriched samples, \'2\' might be more suitable, yielding a false positive rate near 0. ')
 optional_args.add_argument("--circ_minimum_hallmark_genes", dest="CIRC_MINIMUM_DOMAINS", type=int, default='1', help='Default:1 -- Number of detected viral hallmark genes on a circular contig to be considered viral and recieve full annotation. For samples physically enriched for virus particles, \'0\' can be used, but please treat circular contigs without known viral domains cautiously. For unenriched samples, \'1\' might be more suitable. ')
 optional_args.add_argument("--known_strains", dest="handle_knowns", type=str, default='do_not_check_knowns', help='Default: do_not_check_knowns -- do not check if putatively viral contigs are highly related to known sequences (via MEGABLAST). \'blast_knowns\': REQUIRES \'--blastn_db\' option to function correctly. ')
@@ -62,6 +62,8 @@ optional_args.add_argument("--filter_out_plasmids", dest="FILTER_PLASMIDS", type
 optional_args.add_argument("--scratch_directory", dest="SCRATCH_DIR", type=str, default="none", help='Default: none -- When running many instances of Cenote-Taker2, it seems to run more quickly if you copy the hhsuite databases to a scratch space temporarily. Use this argument to set a scratch directory that the databases will be copied to (at least 100GB of scratch space are required for copying the databases)')
 optional_args.add_argument("--blastp", dest="BLASTP", type=str, default="no_blastp", help='Do not use this argument as of now. ')
 optional_args.add_argument("--orf-within-orf", dest="ORF_WITHIN", type=str2bool, default="False", help='Default: False -- Remove called ORFs without HMMSCAN or RPS-BLAST hits that begin and end within other ORFs? True or False')
+optional_args.add_argument("--cenote-dbs", dest="CENOTE_DBS", type=str, default=cenote_script_path, help='Default: cenote_script_path -- If you downloaded and setup the databases in a non-standard location, specify path')
+optional_args.add_argument("--wrap", dest="WRAP", type=str2bool, default="True", help='Default: True -- Wrap/rotate DTR/circular contigs so the start codon of an ORF is the first nucleotide in the contig/genome')
 
 
 
@@ -86,16 +88,6 @@ if is_tool("samtools") :
 	print ("samtools found")
 else:
 	print ("samtools is not found. Exiting.")
-	quit()
-if is_tool("mummer") :
-	print ("mummer found")
-else:
-	print ("mummer is not found. Exiting.")
-	quit()
-if is_tool("circlator") :
-	print ("circlator found")
-else:
-	print ("circlator is not found. Exiting.")
 	quit()
 if is_tool("blastp") :
 	print ("blastp found")
@@ -157,15 +149,15 @@ if is_tool("tbl2asn") :
 else:
 	print ("tbl2asn is not found. Exiting.")
 	quit()
-if is_tool("getorf") :
-	print ("getorf found")
+if is_tool("seqkit") :
+	print ("seqkit found")
 else:
-	print ("getorf is not found. Exiting.")
+	print ("seqkit is not found. Exiting.  You may have to manually install seqkit using: conda install -y -n cenote-taker2_env -c bioconda seqkit")
 	quit()
-if is_tool("transeq") :
-	print ("transeq found")
+if is_tool("hhblits") :
+	print ("hhblits found")
 else:
-	print ("transeq is not found. Exiting.")
+	print ("hhblits is not found. Exiting. You may have to manually install hhsuite using: conda install -y -n cenote-taker2_env -c bioconda hhsuite")
 	quit()
 if is_tool("bedtools") :
 	print ("bedtools found")
@@ -174,5 +166,5 @@ else:
 	quit()
 
 
-subprocess.call(['bash', str(cenote_script_path) + '/cenote-taker2.1.3.sh', str(args.original_contigs), str(args.F_READS), str(args.R_READS), str(args.run_title), str(args.isolation_source), str(args.collection_date), str(args.metagenome_type), str(args.srr_number), str(args.srx_number), str(args.biosample), str(args.bioproject),  str(args.template_file), str(args.circ_length_cutoff), str(args.linear_length_cutoff), str(args.virus_domain_db), str(args.LIN_MINIMUM_DOMAINS), str(args.handle_knowns), str(args.ASSEMBLER), str(args.MOLECULE_TYPE), str(args.HHSUITE_TOOL), str(args.DATA_SOURCE), str(args.BLASTP), str(args.PROPHAGE), str(args.FILTER_PLASMIDS), str(args.BLASTN_DB), str(cenote_script_path), str(args.CIRC_MINIMUM_DOMAINS), str(args.SCRATCH_DIR), str(args.MEM), str(args.CPU), str(args.ENFORCE_START_CODON), str(args.ORF_WITHIN), str(args.ANNOTATION_MODE), str(args.CRISPR_FILE)])
+subprocess.call(['bash', str(cenote_script_path) + '/cenote-taker2.1.5.sh', str(args.original_contigs), str(args.F_READS), str(args.R_READS), str(args.run_title), str(args.isolation_source), str(args.collection_date), str(args.metagenome_type), str(args.srr_number), str(args.srx_number), str(args.biosample), str(args.bioproject),  str(args.template_file), str(args.circ_length_cutoff), str(args.linear_length_cutoff), str(args.virus_domain_db), str(args.LIN_MINIMUM_DOMAINS), str(args.handle_knowns), str(args.ASSEMBLER), str(args.MOLECULE_TYPE), str(args.HHSUITE_TOOL), str(args.DATA_SOURCE), str(args.BLASTP), str(args.PROPHAGE), str(args.FILTER_PLASMIDS), str(args.BLASTN_DB), str(cenote_script_path), str(args.CIRC_MINIMUM_DOMAINS), str(args.SCRATCH_DIR), str(args.MEM), str(args.CPU), str(args.ENFORCE_START_CODON), str(args.ORF_WITHIN), str(args.ANNOTATION_MODE), str(args.CRISPR_FILE), str(args.CENOTE_DBS), str(args.WRAP)])
 

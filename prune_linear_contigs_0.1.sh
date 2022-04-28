@@ -52,7 +52,7 @@ if [ -n "$vd_fastas" ] ; then
 		fi
 		awk -v seq_per_file="$AA_SEQS_PER_FILE" 'BEGIN {n_seq=0;} /^>/ {if(n_seq%seq_per_file==0){file=sprintf("SPLIT_PRUNE_SEQ_AA_%d.fasta",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < all_prunable_seq_proteins.AA.fasta
 		SPLIT_AA_PRUNE=$( find . -maxdepth 1 -type f -name "SPLIT_PRUNE_SEQ_AA_*.fasta" )
-		echo "$SPLIT_AA_PRUNE" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan2.out --cpu 1 -E 1e-8 --noali ${CENOTE_SCRIPT_DIR}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.fasta >/dev/null 2>&1
+		echo "$SPLIT_AA_PRUNE" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t hmmscan --tblout {}.AA.hmmscan2.out --cpu 1 -E 1e-8 --noali ${CENOTE_DBS}/hmmscan_DBs/useful_hmms_baits_and_not2a {}.fasta >/dev/null 2>&1
 		cat SPLIT_PRUNE_SEQ_AA_*AA.hmmscan2.out | grep -v "^#" | sed 's/ \+/	/g' | sort -u -k3,3 > SPLIT_PRUNE_SEQ_COMBINED.AA.hmmscan2.sort.out
 		if [ -s SPLIT_PRUNE_SEQ_COMBINED.AA.hmmscan2.sort.out ] ; then
 			cut -f3 SPLIT_PRUNE_SEQ_COMBINED.AA.hmmscan2.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
@@ -123,7 +123,7 @@ if [ -n "$vd_fastas" ] ; then
 			SPLIT_AA_RPS=$( find . -maxdepth 1 -type f -name "SPLIT_PRUNE_RPS_AA_*.fasta" )
 			MDYT=$( date +"%m-%d-%y---%T" )
 			echo "time update: running RPSBLAST on each sequence " $MDYT
-			echo "$SPLIT_AA_RPS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_SCRIPT_DIR}/cdd_rps_db/Cdd -seg yes -query {}.fasta -line_length 200 -out {}.rpsb.out >/dev/null 2>&1
+			echo "$SPLIT_AA_RPS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t rpsblast -evalue 1e-4 -num_descriptions 5 -num_alignments 1 -db ${CENOTE_DBS}/cdd_rps_db/Cdd -seg yes -query {}.fasta -line_length 200 -out {}.rpsb.out >/dev/null 2>&1
 			cat *rpsb.out > COMBINED_RESULTS_PRUNE.AA.rpsblast.out
 			perl ${CENOTE_SCRIPT_DIR}/rpsblastreport_to_table2.pl
 			cut -f1 COMBINED_RESULTS_PRUNE.RPS_TABLE.txt | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read CONTIG ; do
