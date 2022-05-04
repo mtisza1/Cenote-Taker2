@@ -1607,7 +1607,7 @@ if [ -n "$COMB3_TBL" ] ; then
 		#-#-#
 		TAX_EVALUE=$( head -n1 $tax_info | cut -f4 )
 		TAX_PERCID=$( head -n1 $tax_info | cut -f3 )
-		TAX_CUTOFF=$( echo -e "${TAX_EVALUE}\t${TAX_PERCID}" | awk '{if ($1<1e-50 && $2>50) {print "family"} else if ($1<1e-10 && $2>25) {print "order"} else {print "unclassified"}}' )
+		TAX_CUTOFF=$( echo -e "${TAX_EVALUE}\t${TAX_PERCID}" | awk '{if ($1<1e-50 && $2>50) {print "family"} else if ($1<1e-4 && $2>25) {print "order"} else {print "unclassified"}}' )
 		if [ $TAX_CUTOFF == "family" ] ; then
 			if grep -q "	family$" $tax_info ; then
 				vir_name=$( grep "	family$" $tax_info | cut -f2 )
@@ -1623,10 +1623,6 @@ if [ -n "$COMB3_TBL" ] ; then
 				fi
 			elif grep -q "Circular genetic element" $tax_info ; then
 				vir_name="Circular genetic element" ;
-			elif grep -q "Podovir" $tax_info ; then
-				vir_name=Podoviridae ;
-			elif grep -q "Caudovir" $tax_info ; then
-				vir_name=Caudovirales ;
 			elif grep -q "dsRNA virus" $tax_info ; then
 				vir_name="dsRNA virus" ;
 			elif grep -q "ssRNA virus" $tax_info ; then
@@ -1635,7 +1631,7 @@ if [ -n "$COMB3_TBL" ] ; then
 				vir_name="unclassified RNA virus" ;
 			elif grep -q "unclassified ssDNA bacterial virus" $tax_info ; then
 				vir_name="unclassified ssDNA bacterial virus" ;
-			elif grep -q "phage" $tax_info ; then
+			elif grep -q -i "phage" $tax_info ; then
 				vir_name="Phage" ;
 			elif grep -q "plasmid" $tax_info ; then
 				vir_name="metagenomic plasmid" ;
@@ -1643,8 +1639,8 @@ if [ -n "$COMB3_TBL" ] ; then
 				vir_name="Phage" ;
 			elif grep -q "unclassified virus" $tax_info ; then
 				vir_name="virus" ;		
-			elif grep -q "virus" $tax_info ; then
-				vir_name="Virus" ;
+			elif grep -q -i "virus\|viridae" $tax_info ; then
+				vir_name="virus" ;
 			else
 				if  [ -s ITR_containing_contigs/${JUST_TBL2_FILE%.comb3.tbl}.fna ] ; then
 					vir_name="unclassified element" ;
@@ -1665,10 +1661,6 @@ if [ -n "$COMB3_TBL" ] ; then
 				fi
 			elif grep -q "Circular genetic element" $tax_info ; then
 				vir_name="Circular genetic element" ;
-			elif grep -q "Podovir" $tax_info ; then
-				vir_name=Podoviridae ;
-			elif grep -q "Caudovir" $tax_info ; then
-				vir_name=Caudovirales ;
 			elif grep -q "dsRNA virus" $tax_info ; then
 				vir_name="dsRNA virus" ;
 			elif grep -q "ssRNA virus" $tax_info ; then
@@ -1677,7 +1669,7 @@ if [ -n "$COMB3_TBL" ] ; then
 				vir_name="unclassified RNA virus" ;
 			elif grep -q "unclassified ssDNA bacterial virus" $tax_info ; then
 				vir_name="unclassified ssDNA bacterial virus" ;
-			elif grep -q "phage" $tax_info ; then
+			elif grep -q -i "phage" $tax_info ; then
 				vir_name="Phage" ;
 			elif grep -q "plasmid" $tax_info ; then
 				vir_name="metagenomic plasmid" ;
@@ -1685,8 +1677,8 @@ if [ -n "$COMB3_TBL" ] ; then
 				vir_name="Phage" ;
 			elif grep -q "unclassified virus" $tax_info ; then
 				vir_name="virus" ;		
-			elif grep -q "virus" $tax_info ; then
-				vir_name="Virus" ;
+			elif grep -q -i "virus\|viridae" $tax_info ; then
+				vir_name="virus" ;
 			else
 				if  [ -s ITR_containing_contigs/${JUST_TBL2_FILE%.comb3.tbl}.fna ] ; then
 					vir_name="unclassified element" ;
@@ -1705,10 +1697,6 @@ if [ -n "$COMB3_TBL" ] ; then
 				fi
 			elif grep -q "Circular genetic element" $tax_info ; then
 				vir_name="Circular genetic element" ;
-			elif grep -q "Podovir" $tax_info ; then
-				vir_name=Podoviridae ;
-			elif grep -q "Caudovir" $tax_info ; then
-				vir_name=Caudovirales ;
 			elif grep -q "dsRNA virus" $tax_info ; then
 				vir_name="dsRNA virus" ;
 			elif grep -q "ssRNA virus" $tax_info ; then
@@ -1717,7 +1705,7 @@ if [ -n "$COMB3_TBL" ] ; then
 				vir_name="unclassified RNA virus" ;
 			elif grep -q "unclassified ssDNA bacterial virus" $tax_info ; then
 				vir_name="unclassified ssDNA bacterial virus" ;
-			elif grep -q "phage" $tax_info ; then
+			elif grep -q -i "phage" $tax_info ; then
 				vir_name="Phage" ;
 			elif grep -q "plasmid" $tax_info ; then
 				vir_name="metagenomic plasmid" ;
@@ -1725,8 +1713,8 @@ if [ -n "$COMB3_TBL" ] ; then
 				vir_name="Phage" ;
 			elif grep -q "unclassified virus" $tax_info ; then
 				vir_name="virus" ;		
-			elif grep -q "virus" $tax_info ; then
-				vir_name="Virus" ;
+			elif grep -q -i "virus\|viridae" $tax_info ; then
+				vir_name="virus" ;
 			else
 				if  [ -s ITR_containing_contigs/${JUST_TBL2_FILE%.comb3.tbl}.fna ] ; then
 					vir_name="unclassified element" ;
