@@ -16,7 +16,7 @@ echo "00000000000000000000000000$(tput sgr 0)"
 echo " "
 echo "Version 2.1.5"
 echo " "
-echo "Fun fact: As of this version, the$(tput setaf 4) virion $(tput setaf 2)database is used by default. Wow!"
+echo "Fun fact: As of this version, the$(tput setaf 4) virion $(tput sgr 0)database is used by default. Wow!"
 sleep 2s
 
 
@@ -243,6 +243,7 @@ if [ -n "$LASTDBQ" ] && [ -n "$LASTALQ" ] ; then
 		echo "cenote_shortcut" > ${run_title}_CONTIG_SUMMARY.tsv
 		perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $LASTDBQ -d $LASTALQ ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta >/dev/null 2>&1
 		find . -maxdepth 1 -name "apc_aln*" -print0 | xargs -0 rm
+		find . -type f -name "apc_aln*" -exec rm -f {} \;
 		APC_CIRCS=$( find . -maxdepth 1 -type f -name "${run_title}*.fa" )
 		if [ -n "$APC_CIRCS" ] ;then
 			for fa1 in $APC_CIRCS ; do
@@ -810,6 +811,7 @@ if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 		for nucl_fa in $CIRCULAR_HALLMARK_CONTIGS ; do
 			cp $nucl_fa ${nucl_fa%.fna}.rotate.fasta
 		done
+	fi
 fi
 
 #-# blastx for translation decision
@@ -1546,7 +1548,7 @@ fi
 LIST_OF_VIRAL_DOMAIN_CONTIGS=$( find * -maxdepth 1 -type f -wholename "no_end_contigs_with_viral_domain/*fna" )
 
 if [ -n "$LIST_OF_VIRAL_DOMAIN_CONTIGS" ] ; then
-	. ${CENOTE_SCRIPT_DIR}/annotate_linear_contigs_2.1.3.sh
+	. ${CENOTE_SCRIPT_DIR}/annotate_linear_contigs_2.1.5.sh
 else
 	echo "No linear contigs with minimum hallmark genes found."
 fi

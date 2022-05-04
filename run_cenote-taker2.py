@@ -119,11 +119,6 @@ if is_tool("efetch") :
 else:
 	print ("efetch is not found. Exiting.")
 	quit()
-if is_tool("ktClassifyBLAST") :
-	print ("ktClassifyBLAST found")
-else:
-	print ("ktClassifyBLAST is not found. Exiting.")
-	quit()
 if is_tool("hmmscan") :
 	print ("hmmscan found")
 else:
