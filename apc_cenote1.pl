@@ -24,11 +24,12 @@ my $usage = "\nusage: $0 [options] <fasta>\n\n".
             "\n".
             "-b <text>\tbasename for output files (alphanumeric and underscore characters)\n".
             "-r <fastq>\thigh accuracy long reads to use for validation\n".
-            "-c <text>\tdirectory with lastal and lastdb\n".
+            "-c <text>\tlastdb command\n".
+            "-d <text>\tlastal command\n".
 
             "\n";
-our($opt_b,$opt_r,$opt_c);
-getopts('r:b:c:') or die $usage;
+our($opt_b,$opt_r,$opt_c,$opt_d);
+getopts('r:b:c:d:') or die $usage;
 if (!(defined($opt_b)) or !($opt_b=~m/^\w+$/)) {$opt_b="permuted"} 
 $fname = $opt_b;  # works better in interpreted quotes
 my $assemblyfile = shift or die $usage;
@@ -61,10 +62,10 @@ while (@contigs) {
     print SEQ $block;
     close SEQ;
     print "formatting LAST db ... ";
-    $command = "$opt_c/last-1047/src/lastdb temp.apc temp.apc.fa";  # format lastdb for current contig
+    $command = "$opt_c temp.apc temp.apc.fa";  # format lastdb for current contig
     system($command);
     print "running LAST self-alignment ... ";
-    $command = "$opt_c/last-1047/src/lastal -s 1 -x 300 -f 0 -T 1 temp.apc temp.apc.fa > temp.apc.lastal";  # self align current contig
+    $command = "$opt_d -s 1 -x 300 -f 0 -T 1 temp.apc temp.apc.fa > temp.apc.lastal";  # self align current contig
     system($command);
     print "done\n";
     # pull in output of current contig's LAST self-alignment

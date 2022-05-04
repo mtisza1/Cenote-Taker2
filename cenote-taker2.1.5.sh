@@ -242,7 +242,6 @@ if [ -n "$LASTDBQ" ] && [ -n "$LASTALQ" ] ; then
 		cd $run_title
 		echo "cenote_shortcut" > ${run_title}_CONTIG_SUMMARY.tsv
 		perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $LASTDBQ -d $LASTALQ ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta >/dev/null 2>&1
-		find . -maxdepth 1 -name "apc_aln*" -print0 | xargs -0 rm
 		find . -type f -name "apc_aln*" -exec rm -f {} \;
 		APC_CIRCS=$( find . -maxdepth 1 -type f -name "${run_title}*.fa" )
 		if [ -n "$APC_CIRCS" ] ;then
@@ -833,8 +832,8 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 			echo "Polinton-like virus	Unclassified Taxon" >> ${nucl_fa%.fasta}.tax_guide.blastx.out
 		else
 			ORGANISM_H=$( head -n1 ${nucl_fa%.fasta}.tax_guide.blastx.out | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
-			if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp ; then
-				taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp | head -n1 | cut -f1 )
+			if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp ; then
+				taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp | head -n1 | cut -f1 )
 				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${nucl_fa%.fasta}.tax_guide.blastx.out
 				sleep 0.4s
 			fi
@@ -1051,8 +1050,8 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 				if [ "$INTRA_LINES" -ge 2 ] ; then
 					#-#-#
 					ORGANISM_H=$( head -n2 ${circle%.rotate.fasta}.blastn_intraspecific.out | tail -n1 | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
-					if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp ; then
-						taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp | head -n1 | cut -f1 )
+					if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp ; then
+						taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp | head -n1 | cut -f1 )
 						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${circle%.rotate.fasta}.tax_guide.blastn.out
 						sleep 0.4s
 						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -tab "\n" -element ScientificName >> ${circle%.rotate.fasta}.tax_guide.blastn.out
@@ -1508,8 +1507,8 @@ if [ -n "$COMB3_TBL" ] ; then
 				else
 					#-#-#
 					ORGANISM_H=$( head -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
-					if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp ; then
-						taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp | head -n1 | cut -f1 )
+					if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp ; then
+						taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp | head -n1 | cut -f1 )
 						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 						sleep 0.4s
 					fi

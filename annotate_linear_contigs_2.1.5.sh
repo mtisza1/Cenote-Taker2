@@ -31,8 +31,8 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 			echo "Polinton-like virus	Unclassified Taxon" >> ${nucl_fa%.fna}.tax_guide.blastx.out
 		else
 			ORGANISM_H=$( head -n1 ${nucl_fa%.fna}.tax_guide.blastx.out | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
-			if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp ; then
-				taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp | head -n1 | cut -f1 )
+			if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp ; then
+				taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp | head -n1 | cut -f1 )
 				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${nucl_fa%.fna}.tax_guide.blastx.out
 				sleep 0.4s
 			fi
@@ -256,8 +256,8 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; t
 				INTRA_LINES=$( cat ${nucl_fa%.fna}.blastn_intraspecific.out | wc -l | bc )	
 				if [ "$INTRA_LINES" -ge 2 ] ; then
 					ORGANISM_H=$( head -n2 ${nucl_fa%.fna}.blastn_intraspecific.out | tail -n1 | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
-					if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp ; then
-						taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp | head -n1 | cut -f1 )
+					if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp ; then
+						taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp | head -n1 | cut -f1 )
 						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${nucl_fa%.fna}.blastn_intraspecific.out
 						sleep 0.4s
 						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -tab "\n" -element ScientificName >> ${nucl_fa%.fna}.blastn_intraspecific.out
@@ -713,8 +713,8 @@ if [ -n "$COMB3_TBL" ] ; then
 					echo "Polinton-like virus" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out				
 				else
 					ORGANISM_H=$( head -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
-					if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp ; then
-						taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp | head -n1 | cut -f1 )
+					if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp ; then
+						taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp | head -n1 | cut -f1 )
 						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 						sleep 0.4s
 					fi
