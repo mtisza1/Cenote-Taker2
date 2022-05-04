@@ -262,6 +262,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; t
 						sleep 0.4s
 						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -tab "\n" -element ScientificName >> ${nucl_fa%.fna}.blastn_intraspecific.out
 						sleep 0.4s
+					fi
 					if [ !  -z "${nucl_fa%.fna}.tax_guide.blastn.out" ] ; then
 
 						if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid\|phage" ${nucl_fa%.fna}.tax_guide.blastn.out ; then
