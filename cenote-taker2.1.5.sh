@@ -242,7 +242,7 @@ if [ -n "$LASTDBQ" ] && [ -n "$LASTALQ" ] ; then
 		cd $run_title
 		echo "cenote_shortcut" > ${run_title}_CONTIG_SUMMARY.tsv
 		perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $LASTDBQ -d $LASTALQ ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta >/dev/null 2>&1
-		rm -f apc_aln*
+		find . -maxdepth 1 -name "apc_aln*" -print0 | xargs -0 rm
 		APC_CIRCS=$( find . -maxdepth 1 -type f -name "${run_title}*.fa" )
 		if [ -n "$APC_CIRCS" ] ;then
 			for fa1 in $APC_CIRCS ; do
@@ -820,31 +820,22 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 	echo "time update: running BLASTX, DTR contigs " $MDYT
 	echo "$ROTATED_DTR_CONTIGS" | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU -t blastx -evalue 1e-4 -outfmt "6 qseqid stitle pident evalue length" -threshold 21 -word_size 5 -num_threads 1 -num_alignments 1 -db ${CENOTE_DBS}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query {}.rotate.fasta -out {}.tax_guide.blastx.out >/dev/null 2>&1
 	echo "$ROTATED_DTR_CONTIGS" | sed 's/.rotate.fasta/.fasta/g' | while read nucl_fa ; do
+		#-#-# Reworking taxonomy
 		if [ ! -s "${nucl_fa%.fasta}.tax_guide.blastx.out" ]; then
 			echo "No homologues found" > ${nucl_fa%.fasta}.tax_guide.blastx.out ;
-		elif grep -i -q "circovir\|genomovir\|geminivir\|nanovir\|redondovir\|bacilladnavir\|smacovir" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then 
-			EVALUE=$( head -n1 "${nucl_fa%.fasta}.tax_guide.blastx.out" | cut -f4 ) ; 
-			NEW_TAX=$( head -n1 ${nucl_fa%.fasta}.tax_guide.blastx.out | awk -v VALUE="$EVALUE" '{if (VALUE>1e-50) { print $0 ; print "CRESS virus" } else { print $0}}' )
-			echo "$NEW_TAX" > ${nucl_fa%.fasta}.tax_guide.blastx.out ;
-			if grep -q "CRESS virus" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
-				echo ${nucl_fa%.fasta} "is a CRESS virus"
-			else
-				ktClassifyBLAST -o ${nucl_fa%.fasta}.tax_guide.blastx.tab ${nucl_fa%.fasta}.tax_guide.blastx.out >/dev/null 2>&1
-				taxid=$( tail -n1 ${nucl_fa%.fasta}.tax_guide.blastx.tab | cut -f2 )
-				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fasta}.tax_guide.blastx.out
+		elif grep -q "virophage" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
+			echo "Virophage	Unclassified Taxon" >> ${nucl_fa%.fasta}.tax_guide.blastx.out
+		elif grep -q "adinto" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
+			echo "Adintovirus	Unclassified Taxon" >> ${nucl_fa%.fasta}.tax_guide.blastx.out
+		elif grep -i -q "polinton" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
+			echo "Polinton-like virus	Unclassified Taxon" >> ${nucl_fa%.fasta}.tax_guide.blastx.out
+		else
+			ORGANISM_H=$( head -n1 ${nucl_fa%.fasta}.tax_guide.blastx.out | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
+			if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp ; then
+				taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp | head -n1 | cut -f1 )
+				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${nucl_fa%.fasta}.tax_guide.blastx.out
 				sleep 0.4s
 			fi
-		elif grep -q "virophage" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
-			echo "Virophage" >> ${nucl_fa%.fasta}.tax_guide.blastx.out
-		elif grep -q "adinto" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
-			echo "Adintovirus" >> ${nucl_fa%.fasta}.tax_guide.blastx.out
-		elif grep -i -q "polinton" ${nucl_fa%.fasta}.tax_guide.blastx.out ; then
-			echo "Polinton-like virus" >> ${nucl_fa%.fasta}.tax_guide.blastx.out
-		else
-			ktClassifyBLAST -o ${nucl_fa%.fasta}.tax_guide.blastx.tab ${nucl_fa%.fasta}.tax_guide.blastx.out >/dev/null 2>&1
-			taxid=$( tail -n1 ${nucl_fa%.fasta}.tax_guide.blastx.tab | cut -f2 )
-			efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fasta}.tax_guide.blastx.out
-			sleep 0.4s
 		fi
 		if [ ! -s ${nucl_fa%.fasta}.tax_guide.blastx.out ] ; then
 			echo "No homologues found" > ${nucl_fa%.fasta}.tax_guide.blastx.out
@@ -1056,12 +1047,17 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 			if [ -s "${circle%.rotate.fasta}.blastn_intraspecific.out" ]; then
 				INTRA_LINES=$( cat ${circle%.rotate.fasta}.blastn_intraspecific.out | wc -l | bc )	
 				if [ "$INTRA_LINES" -ge 2 ] ; then
-					ktClassifyBLAST -o ${circle%.rotate.fasta}.tax_guide.blastn.tab ${circle%.rotate.fasta}.blastn_intraspecific.out >/dev/null 2>&1
-					taxid=$( grep -v "qname" ${circle%.rotate.fasta}.tax_guide.blastn.tab | tail -n+2 | head -n1 | cut -f2 )
-					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -tab "\n" -element Lineage ScientificName > ${circle%.rotate.fasta}.tax_guide.blastn.out
-					sleep 1s
-					if [ !  -z "${circle%.rotate.fasta}.tax_guide.blastn.out" ] ; then
+					#-#-#
+					ORGANISM_H=$( head -n2 ${circle%.rotate.fasta}.blastn_intraspecific.out | tail -n1 | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
+					if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp ; then
+						taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp | head -n1 | cut -f1 )
+						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${circle%.rotate.fasta}.tax_guide.blastn.out
+						sleep 0.4s
+						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -tab "\n" -element ScientificName >> ${circle%.rotate.fasta}.tax_guide.blastn.out
+						sleep 0.4s
+					fi
 
+					if [ !  -z "${circle%.rotate.fasta}.tax_guide.blastn.out" ] ; then
 						if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid\|phage" ${circle%.rotate.fasta}.tax_guide.blastn.out ; then
 							#echo $circle " is closely related to a virus that has already been deposited in GenBank nt. "
 							#cat ${circle%.rotate.fasta}.tax_guide.blastn.out
@@ -1502,17 +1498,20 @@ if [ -n "$COMB3_TBL" ] ; then
 				if [ ! -s "${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out" ]; then
 					echo "unclassified virus" > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
 				elif grep -q "virophage" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
-					echo "Virophage" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+					echo "Virophage	Unclassified Taxon" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 				elif grep -q "adinto" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
-					echo "Adintovirus" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+					echo "Adintovirus	Unclassified Taxon" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 				elif grep -i -q "polinton" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
-					echo "Polinton-like virus" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out				
+					echo "Polinton-like virus	Unclassified Taxon" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out				
 				else
+					#-#-#
+					ORGANISM_H=$( head -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
+					if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp ; then
+						taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp | head -n1 | cut -f1 )
+						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+						sleep 0.4s
+					fi
 
-					ktClassifyBLAST -o ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out >/dev/null 2>&1
-					taxid=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab | cut -f2 )
-					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
-					sleep 0.4s
 				fi
 			fi
 		fi
@@ -1604,320 +1603,141 @@ if [ -n "$COMB3_TBL" ] ; then
 		#echo $file_numbers
 		tax_info=${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 		#echo $tax_info
-		if grep -q "Anellovir" $tax_info ; then
-			vir_name=Anelloviridae ;
-		elif grep -q "Circovirus-like" $tax_info ; then
-			vir_name="CRESS virus" ;
-		elif grep -q "CRESS virus" $tax_info ; then
-			vir_name="CRESS virus" ;
-		elif grep -q "Adenovir" $tax_info ; then
-			vir_name=Adenoviridae ;
-		elif grep -q "Alphasatellit" $tax_info ; then
-			vir_name=Alphasatellitidae ;
-		elif grep -q "Ampullavir" $tax_info ; then
-			vir_name=Ampullaviridae ;
-		elif grep -q "Ascovir" $tax_info ; then
-			vir_name=Ascoviridae ;
-		elif grep -q "Asfarvir" $tax_info ; then
-			vir_name=Asfarviridae ;
-		elif grep -q "Bacilladnavir" $tax_info ; then
-			vir_name=Bacilladnaviridae ;
-		elif grep -q "Baculovir" $tax_info ; then
-			vir_name=Baculoviridae ;
-		elif grep -q "Bicaudavir" $tax_info ; then
-			vir_name=Bicaudaviridae ;
-		elif grep -q "Bidnavir" $tax_info ; then
-			vir_name=Bidnaviridae ;
-		elif grep -q "Ackermannvir" $tax_info ; then
-			vir_name=Ackermannviridae ;
-		elif grep -q "Herellevir" $tax_info ; then
-			vir_name=Herelleviridae ;
-		elif grep -q "Clavavir" $tax_info ; then
-			vir_name=Clavaviridae ;
-		elif grep -q "Adomavir" $tax_info ; then
-			vir_name=Adomaviridae ;
-		elif grep -q "Corticovir" $tax_info ; then
-			vir_name=Corticoviridae ;
-		elif grep -q "Dinodnavir" $tax_info ; then
-			vir_name=Dinodnavirus ;
-		elif grep -q "Autolykivir" $tax_info ; then
-			vir_name=Autolykiviridae ;
-		elif grep -q "Globulovir" $tax_info ; then
-			vir_name=Globuloviridae ;
-		elif grep -q "Pithovir" $tax_info ; then
-			vir_name=Pithoviridae ;
-		elif grep -q "Pandoravir" $tax_info ; then
-			vir_name=Pandoravirus ;
-		elif grep -q "Fusellovir" $tax_info ; then
-			vir_name=Fuselloviridae ;
-		elif grep -q "Guttavir" $tax_info ; then
-			vir_name=Guttaviridae ;
-		elif grep -q "Hepadnavir" $tax_info ; then
-			vir_name=Hepadnaviridae ;
-		elif grep -q "Herpesvir" $tax_info ; then
-			vir_name=Herpesvirales ;
-		elif grep -q "Hytrosavir" $tax_info ; then
-			vir_name=Hytrosaviridae ;
-		elif grep -q "Iridovir" $tax_info ; then
-			vir_name=Iridoviridae ;
-		elif grep -q "Lavidavir" $tax_info ; then
-			vir_name=Lavidaviridae ;
-		elif grep -q "Adintovir" $tax_info ; then
-			vir_name=Adintovirus ;
-		elif grep -q "Lipothrixvir" $tax_info ; then
-			vir_name=Lipothrixviridae ;
-		elif grep -q "Rudivir" $tax_info ; then
-			vir_name=Rudiviridae ;
-		elif grep -q "Rhabdovir" $tax_info ; then
-			vir_name=Rhabdoviridae ;
-		elif grep -q "Ligamenvir" $tax_info ; then
-			vir_name=Ligamenvirales ;
-		elif grep -q "Marseillevir" $tax_info ; then
-			vir_name=Marseilleviridae ;
-		elif grep -q "Mimivir" $tax_info ; then
-			vir_name=Mimiviridae ;
-		elif grep -q "Nanovir" $tax_info ; then
-			vir_name=Nanoviridae ;
-		elif grep -q "Nimavir" $tax_info ; then
-			vir_name=Nimaviridae ;
-		elif grep -q "Nudivir" $tax_info ; then
-			vir_name=Nudiviridae ;
-		elif grep -q "Caulimovir" $tax_info ; then
-			vir_name=Caulimoviridae ;
-		elif grep -q "Metavir" $tax_info ; then
-			vir_name=Metaviridae ;
-		elif grep -q "Pseudovir" $tax_info ; then
-			vir_name=Pseudoviridae ;
-		elif grep -q "Retrovir" $tax_info ; then
-			vir_name=Retroviridae ;
-		elif grep -q "Ovalivir" $tax_info ; then
-			vir_name=Ovaliviridae ;
-		elif grep -q "Parvovir" $tax_info ; then
-			vir_name=Parvoviridae ;
-		elif grep -q "Phycodnavir" $tax_info ; then
-			vir_name=Phycodnaviridae ;
-		elif grep -q "Plasmavir" $tax_info ; then
-			vir_name=Plasmaviridae ;
-		elif grep -q "Pleolipovir" $tax_info ; then
-			vir_name=Pleolipoviridae ;
-		elif grep -q "Polydnavir" $tax_info ; then
-			vir_name=Polydnaviridae ;
-		elif grep -q "Portoglobovir" $tax_info ; then
-			vir_name=Portogloboviridae ;
-		elif grep -q "Poxvir" $tax_info ; then
-			vir_name=Poxviridae ;
-		elif grep -q "Albetovir" $tax_info ; then
-			vir_name=Albetoviridae ;
-		elif grep -q "Alphatetravir" $tax_info ; then
-			vir_name=Alphatetraviridae ;
-		elif grep -q "Alvernavir" $tax_info ; then
-			vir_name=Alvernaviridae ;
-		elif grep -q "Amalgavir" $tax_info ; then
-			vir_name=Amalgaviridae ;
-		elif grep -q "Astrovir" $tax_info ; then
-			vir_name=Astroviridae ;
-		elif grep -q "Aumaivir" $tax_info ; then
-			vir_name=Aumaivirus ;
-		elif grep -q "Avsunviroid" $tax_info ; then
-			vir_name=Avsunviroidae ;
-		elif grep -q "Barnavir" $tax_info ; then
-			vir_name=Barnaviridae ;
-		elif grep -q "Benyvir" $tax_info ; then
-			vir_name=Benyviridae ;
-		elif grep -q "Birnavir" $tax_info ; then
-			vir_name=Birnaviridae ;
-		elif grep -q "Botourmiavir" $tax_info ; then
-			vir_name=Botourmiaviridae ;
-		elif grep -q "Botybirnavir" $tax_info ; then
-			vir_name=Botybirnavirus ;
-		elif grep -q "Bromovir" $tax_info ; then
-			vir_name=Bromoviridae ;
-		elif grep -q "Calicivir" $tax_info ; then
-			vir_name=Caliciviridae ;
-		elif grep -q "Carmotetravir" $tax_info ; then
-			vir_name=Carmotetraviridae ;
-		elif grep -q "Chrysovir" $tax_info ; then
-			vir_name=Chrysoviridae ;
-		elif grep -q "Closterovir" $tax_info ; then
-			vir_name=Closteroviridae ;
-		elif grep -q "Cystovir" $tax_info ; then
-			vir_name=Cystoviridae ;
-		elif grep -q "Deltavir" $tax_info ; then
-			vir_name=Deltavirus ;
-		elif grep -q "Endornavir" $tax_info ; then
-			vir_name=Endornaviridae ;
-		elif grep -q "Flavivir" $tax_info ; then
-			vir_name=Flaviviridae ;
-		elif grep -q "Hepevir" $tax_info ; then
-			vir_name=Hepeviridae ;
-		elif grep -q "Hypovir" $tax_info ; then
-			vir_name=Hypoviridae ;
-		elif grep -q "Idaeovir" $tax_info ; then
-			vir_name=Idaeovirus ;
-		elif grep -q "Kitavir" $tax_info ; then
-			vir_name=Kitaviridae ;
-		elif grep -q "Levivir" $tax_info ; then
-			vir_name=Leviviridae ;
-		elif grep -q "Luteovir" $tax_info ; then
-			vir_name=Luteoviridae ;
-		elif grep -q "Matonavir" $tax_info ; then
-			vir_name=Matonaviridae ;
-		elif grep -q "Megabirnavir" $tax_info ; then
-			vir_name=Megabirnaviridae ;
-		elif grep -q "Narnavir" $tax_info ; then
-			vir_name=Narnaviridae ;
-		elif grep -q "Nidovir" $tax_info ; then
-			vir_name=Nidovirales ;
-		elif grep -q "Nodavir" $tax_info ; then
-			vir_name=Nodaviridae ;
-		elif grep -q "Papanivir" $tax_info ; then
-			vir_name=Papanivirus ;
-		elif grep -q "Partitivir" $tax_info ; then
-			vir_name=Partitiviridae ;
-		elif grep -q "Permutotetravir" $tax_info ; then
-			vir_name=Permutotetraviridae ;
-		elif grep -q "Picobirnavir" $tax_info ; then
-			vir_name=Picobirnaviridae ;
-		elif grep -q "Dicistrovir" $tax_info ; then
-			vir_name=Dicistroviridae ;
-		elif grep -q "Iflavir" $tax_info ; then
-			vir_name=Iflaviridae ;
-		elif grep -q "Marnavir" $tax_info ; then
-			vir_name=Marnaviridae ;
-		elif grep -q "Picornavir" $tax_info ; then
-			vir_name=Picornaviridae ;
-		elif grep -q "Polycipivir" $tax_info ; then
-			vir_name=Polycipiviridae ;
-		elif grep -q "Secovir" $tax_info ; then
-			vir_name=Secoviridae ;
-		elif grep -q "Picornavir" $tax_info ; then
-			vir_name=Picornavirales ;
-		elif grep -q "Pospiviroid" $tax_info ; then
-			vir_name=Pospiviroidae ;
-		elif grep -q "Polinton-like virus" $tax_info ; then
-			vir_name="Polinton-like virus" ;
-		elif grep -q "Potyvir" $tax_info ; then
-			vir_name=Potyviridae ;
-		elif grep -q "Quadrivir" $tax_info ; then
-			vir_name=Quadriviridae ;
-		elif grep -q "Reovir" $tax_info ; then
-			vir_name=Reoviridae ;
-		elif grep -q "Sarthrovir" $tax_info ; then
-			vir_name=Sarthroviridae ;
-		elif grep -q "Sinaivir" $tax_info ; then
-			vir_name=Sinaivirus ;
-		elif grep -q "Solemovir" $tax_info ; then
-			vir_name=Solemoviridae ;
-		elif grep -q "Solinvivir" $tax_info ; then
-			vir_name=Solinviviridae ;
-		elif grep -q "Togavir" $tax_info ; then
-			vir_name=Togaviridae ;
-		elif grep -q "Tombusvir" $tax_info ; then
-			vir_name=Tombusviridae ;
-		elif grep -q "Totivir" $tax_info ; then
-			vir_name=Totiviridae ;
-		elif grep -q "Tymovir" $tax_info ; then
-			vir_name=Tymovirales ;
-		elif grep -q "Virgavir" $tax_info ; then
-			vir_name=Virgaviridae ;
-		elif grep -q "Virtovir" $tax_info ; then
-			vir_name=Virtovirus ;
-		elif grep -q "Salterprovir" $tax_info ; then
-			vir_name=Salterprovirus ;
-		elif grep -q "Smacovir" $tax_info ; then
-			vir_name=Smacoviridae ;
-		elif grep -q "Sphaerolipovir" $tax_info ; then
-			vir_name=Sphaerolipoviridae ;
-		elif grep -q "Spiravir" $tax_info ; then
-			vir_name=Spiraviridae ;
-		elif grep -q "Crucivir" $tax_info ; then
-			vir_name=Cruciviridae ;
-		elif grep -q "Tectivir" $tax_info ; then
-			vir_name=Tectiviridae ;
-		elif grep -q "Tolecusatellit" $tax_info ; then
-			vir_name=Tolecusatellitidae ;
-		elif grep -q "Tristromavir" $tax_info ; then
-			vir_name=Tristromaviridae ;
-		elif grep -q "Turrivir" $tax_info ; then
-			vir_name=Turriviridae ;
-		elif grep -q "crAss-like virus\|CrAssphage" $tax_info ; then
-			vir_name="CrAss-like virus" ;
-		elif grep -q "Mavir\|virophage" $tax_info ; then
-			vir_name=Virophage ;
-		elif grep -q "Microvir" $tax_info ; then
-			vir_name=Microviridae ;
-		elif grep -q "microphage" $tax_info ; then
-			vir_name=Microviridae ;
-		elif grep -q "uncultured marine virus" $tax_info ; then
-			vir_name="Virus" ;
-		elif grep -q "Inovir" $tax_info ; then
-			vir_name=Inoviridae ;
-		elif grep -q "Siphovir" $tax_info ; then
-			vir_name=Siphoviridae ;
-		elif grep -q "Myovir" $tax_info ; then
-			vir_name=Myoviridae ;		
-		elif grep -q "unclassified dsDNA phage" $tax_info ; then
-			vir_name="Phage" ;
-		elif grep -q "unclassified ssDNA virus" $tax_info ; then
-			vir_name="CRESS virus" ;
-		elif grep -q "Lake Sarah" $tax_info ; then
-			vir_name="CRESS virus" ;
-		elif grep -q "Avon-Heathcote" $tax_info ; then
-			vir_name="CRESS virus" ;
-		elif grep -q "Circovir" $tax_info ; then
-			vir_name=Circoviridae ;
-		elif grep -q "Genomovir" $tax_info ; then
-			vir_name=Genomoviridae ;
-		elif grep -q "Geminivir" $tax_info ; then
-			vir_name=Geminiviridae ;
-		elif grep -q "Polyoma" $tax_info ; then
-			vir_name=Polyomaviridae ;
-		elif grep -q "Papillomavir" $tax_info ; then
-			vir_name=Papillomaviridae ;
-		elif grep -q "Halovir" $tax_info ; then
-			vir_name=Halovirus ;
-		elif grep -q "Conjugative Transposon" $tax_info ; then
-			vir_name="Conjugative Transposon" ;
-		elif grep -q "No homologues found" $tax_info ; then
-			if  [ -s ITR_containing_contigs/${JUST_TBL2_FILE%.comb3.tbl}.fna ] ; then
-				vir_name="genetic element" ;
-			else
-				vir_name="circular genetic element" ;
-			fi
-		elif grep -q "Circular genetic element" $tax_info ; then
-			vir_name="Circular genetic element" ;
-		elif grep -q "Podovir" $tax_info ; then
-			vir_name=Podoviridae ;
-		elif grep -q "Caudovir" $tax_info ; then
-			vir_name=Caudovirales ;
-		elif grep -q "dsRNA virus" $tax_info ; then
-			vir_name="dsRNA virus" ;
-		elif grep -q "ssRNA virus" $tax_info ; then
-			vir_name="ssRNA virus" ;
-		elif grep -q "unclassified RNA virus" $tax_info ; then
-			vir_name="unclassified RNA virus" ;
-		elif grep -q "unclassified ssDNA bacterial virus" $tax_info ; then
-			vir_name="unclassified ssDNA bacterial virus" ;
-		elif grep -q "phage" $tax_info ; then
-			vir_name="Phage" ;
-		elif grep -q "plasmid" $tax_info ; then
-			vir_name="metagenomic plasmid" ;
-		elif grep -q "Bacteria" $tax_info ; then
-			vir_name="Phage" ;
-		elif grep -q "unclassified virus" $tax_info ; then
-			vir_name="virus" ;		
-		elif grep -q "virus" $tax_info ; then
-			vir_name="Virus" ;
-		else
-			if  [ -s ITR_containing_contigs/${JUST_TBL2_FILE%.comb3.tbl}.fna ] ; then
-				vir_name="unclassified element" ;
-			else
+		#-#-#
+		TAX_EVALUE=$( head -n1 $tax_info | cut -f4 )
+		TAX_PERCID=$( head -n1 $tax_info | cut -f3 )
+		TAX_CUTOFF=$( echo -e "${TAX_EVALUE}\t${TAX_PERCID}" | awk '{if ($1<1e-50 && $2>50) {print "family"} else if ($1<1e-10 && $2>25) {print "order"} else {print "unclassified"}}' )
+		if [ $TAX_CUTOFF == "family" ] ; then
+			if grep -q "	family$" $tax_info ; then
+				vir_name=$( grep "	family$" $tax_info | cut -f2 )
+			elif grep -q "	order$" $tax_info ; then
+				vir_name=$( grep "	order$" $tax_info | cut -f2 )
+			elif grep -q "Conjugative Transposon" $tax_info ; then
+				vir_name="Conjugative Transposon" ;
+			elif grep -q "No homologues found" $tax_info ; then
+				if  [ -s ITR_containing_contigs/${JUST_TBL2_FILE%.comb3.tbl}.fna ] ; then
+					vir_name="genetic element" ;
+				else
+					vir_name="circular genetic element" ;
+				fi
+			elif grep -q "Circular genetic element" $tax_info ; then
 				vir_name="Circular genetic element" ;
+			elif grep -q "Podovir" $tax_info ; then
+				vir_name=Podoviridae ;
+			elif grep -q "Caudovir" $tax_info ; then
+				vir_name=Caudovirales ;
+			elif grep -q "dsRNA virus" $tax_info ; then
+				vir_name="dsRNA virus" ;
+			elif grep -q "ssRNA virus" $tax_info ; then
+				vir_name="ssRNA virus" ;
+			elif grep -q "unclassified RNA virus" $tax_info ; then
+				vir_name="unclassified RNA virus" ;
+			elif grep -q "unclassified ssDNA bacterial virus" $tax_info ; then
+				vir_name="unclassified ssDNA bacterial virus" ;
+			elif grep -q "phage" $tax_info ; then
+				vir_name="Phage" ;
+			elif grep -q "plasmid" $tax_info ; then
+				vir_name="metagenomic plasmid" ;
+			elif grep -q "Bacteria" $tax_info ; then
+				vir_name="Phage" ;
+			elif grep -q "unclassified virus" $tax_info ; then
+				vir_name="virus" ;		
+			elif grep -q "virus" $tax_info ; then
+				vir_name="Virus" ;
+			else
+				if  [ -s ITR_containing_contigs/${JUST_TBL2_FILE%.comb3.tbl}.fna ] ; then
+					vir_name="unclassified element" ;
+				else
+					vir_name="Circular genetic element" ;
+				fi
+			fi
+		elif [ $TAX_CUTOFF == "order" ] ; then
+			if grep -q "	order$" $tax_info ; then
+				vir_name=$( grep "	order$" $tax_info | cut -f2 )
+			elif grep -q "Conjugative Transposon" $tax_info ; then
+				vir_name="Conjugative Transposon" ;
+			elif grep -q "No homologues found" $tax_info ; then
+				if  [ -s ITR_containing_contigs/${JUST_TBL2_FILE%.comb3.tbl}.fna ] ; then
+					vir_name="genetic element" ;
+				else
+					vir_name="circular genetic element" ;
+				fi
+			elif grep -q "Circular genetic element" $tax_info ; then
+				vir_name="Circular genetic element" ;
+			elif grep -q "Podovir" $tax_info ; then
+				vir_name=Podoviridae ;
+			elif grep -q "Caudovir" $tax_info ; then
+				vir_name=Caudovirales ;
+			elif grep -q "dsRNA virus" $tax_info ; then
+				vir_name="dsRNA virus" ;
+			elif grep -q "ssRNA virus" $tax_info ; then
+				vir_name="ssRNA virus" ;
+			elif grep -q "unclassified RNA virus" $tax_info ; then
+				vir_name="unclassified RNA virus" ;
+			elif grep -q "unclassified ssDNA bacterial virus" $tax_info ; then
+				vir_name="unclassified ssDNA bacterial virus" ;
+			elif grep -q "phage" $tax_info ; then
+				vir_name="Phage" ;
+			elif grep -q "plasmid" $tax_info ; then
+				vir_name="metagenomic plasmid" ;
+			elif grep -q "Bacteria" $tax_info ; then
+				vir_name="Phage" ;
+			elif grep -q "unclassified virus" $tax_info ; then
+				vir_name="virus" ;		
+			elif grep -q "virus" $tax_info ; then
+				vir_name="Virus" ;
+			else
+				if  [ -s ITR_containing_contigs/${JUST_TBL2_FILE%.comb3.tbl}.fna ] ; then
+					vir_name="unclassified element" ;
+				else
+					vir_name="Circular genetic element" ;
+				fi
+			fi
+		else
+			if grep -q "Conjugative Transposon" $tax_info ; then
+				vir_name="Conjugative Transposon" ;
+			elif grep -q "No homologues found" $tax_info ; then
+				if  [ -s ITR_containing_contigs/${JUST_TBL2_FILE%.comb3.tbl}.fna ] ; then
+					vir_name="genetic element" ;
+				else
+					vir_name="circular genetic element" ;
+				fi
+			elif grep -q "Circular genetic element" $tax_info ; then
+				vir_name="Circular genetic element" ;
+			elif grep -q "Podovir" $tax_info ; then
+				vir_name=Podoviridae ;
+			elif grep -q "Caudovir" $tax_info ; then
+				vir_name=Caudovirales ;
+			elif grep -q "dsRNA virus" $tax_info ; then
+				vir_name="dsRNA virus" ;
+			elif grep -q "ssRNA virus" $tax_info ; then
+				vir_name="ssRNA virus" ;
+			elif grep -q "unclassified RNA virus" $tax_info ; then
+				vir_name="unclassified RNA virus" ;
+			elif grep -q "unclassified ssDNA bacterial virus" $tax_info ; then
+				vir_name="unclassified ssDNA bacterial virus" ;
+			elif grep -q "phage" $tax_info ; then
+				vir_name="Phage" ;
+			elif grep -q "plasmid" $tax_info ; then
+				vir_name="metagenomic plasmid" ;
+			elif grep -q "Bacteria" $tax_info ; then
+				vir_name="Phage" ;
+			elif grep -q "unclassified virus" $tax_info ; then
+				vir_name="virus" ;		
+			elif grep -q "virus" $tax_info ; then
+				vir_name="Virus" ;
+			else
+				if  [ -s ITR_containing_contigs/${JUST_TBL2_FILE%.comb3.tbl}.fna ] ; then
+					vir_name="unclassified element" ;
+				else
+					vir_name="Circular genetic element" ;
+				fi
 			fi
 		fi
+
 		#echo $vir_name ;
 		fsa_head=$( echo $vir_name " sp." )
-		tax_guess=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ) ; 
+		tax_guess=$( tail -n+2 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | grep "^[0-9]" | cut -f2 | tr '\n' ';' ) ; 
 		perc_id=$( head -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | sed 's/ /-/g' | awk '{FS="\t"; OFS="\t"} {print $2" "$3}' | sed 's/-/ /g' ) ;
 		rand_id=$( head /dev/urandom | tr -dc A-Za-z0-9 | head -c 3 ; echo '' )
 

@@ -20,31 +20,22 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 	echo "time update: running BLASTX, annotate linear contigs " $MDYT
 	echo "$LINEAR_HALLMARK_CONTIGS" | sed 's/.fna//g' | xargs -n 1 -I {} -P $CPU -t blastx -evalue 1e-4 -outfmt "6 qseqid stitle pident evalue length" -threshold 21 -word_size 5 -num_threads 1 -num_alignments 1 -db ${CENOTE_DBS}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query {}.fna -out {}.tax_guide.blastx.out >/dev/null 2>&1
 	echo "$LINEAR_HALLMARK_CONTIGS" | while read nucl_fa ; do
+		#-#-# Reworking taxonomy
 		if [ ! -s "${nucl_fa%.fna}.tax_guide.blastx.out" ]; then
 			echo "No homologues found" > ${nucl_fa%.fna}.tax_guide.blastx.out ;
-		elif grep -i -q "circovir\|genomovir\|geminivir\|nanovir\|redondovir\|bacilladnavir\|smacovir" ${nucl_fa%.fna}.tax_guide.blastx.out ; then 
-			EVALUE=$( head -n1 "${nucl_fa%.fna}.tax_guide.blastx.out" | cut -f4 ) ; 
-			NEW_TAX=$( head -n1 ${nucl_fa%.fna}.tax_guide.blastx.out | awk -v VALUE="$EVALUE" '{if (VALUE>1e-50) { print $0 ; print "CRESS virus" } else { print $0}}' )
-			echo "$NEW_TAX" > ${nucl_fa%.fna}.tax_guide.blastx.out ;
-			if grep -q "CRESS virus" ${nucl_fa%.fna}.tax_guide.blastx.out ; then
-				echo ${nucl_fa%.fna} "is a CRESS virus"
-			else
-				ktClassifyBLAST -o ${nucl_fa%.fna}.tax_guide.blastx.tab ${nucl_fa%.fna}.tax_guide.blastx.out >/dev/null 2>&1
-				taxid=$( tail -n1 ${nucl_fa%.fna}.tax_guide.blastx.tab | cut -f2 )
-				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fna}.tax_guide.blastx.out	
+		elif grep -q "virophage" ${nucl_fa%.fna}.tax_guide.blastx.out ; then
+			echo "Virophage	Unclassified Taxon" >> ${nucl_fa%.fna}.tax_guide.blastx.out
+		elif grep -q "adinto" ${nucl_fa%.fna}.tax_guide.blastx.out ; then
+			echo "Adintovirus	Unclassified Taxon" >> ${nucl_fa%.fna}.tax_guide.blastx.out
+		elif grep -i -q "polinton" ${nucl_fa%.fna}.tax_guide.blastx.out ; then
+			echo "Polinton-like virus	Unclassified Taxon" >> ${nucl_fa%.fna}.tax_guide.blastx.out
+		else
+			ORGANISM_H=$( head -n1 ${nucl_fa%.fna}.tax_guide.blastx.out | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
+			if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp ; then
+				taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp | head -n1 | cut -f1 )
+				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${nucl_fa%.fna}.tax_guide.blastx.out
 				sleep 0.4s
 			fi
-		elif grep -q "virophage" ${nucl_fa%.fna}.tax_guide.blastx.out ; then
-			echo "Virophage" >> ${nucl_fa%.fna}.tax_guide.blastx.out
-		elif grep -q "adinto" ${nucl_fa%.fna}.tax_guide.blastx.out ; then
-			echo "Adintovirus" >> ${nucl_fa%.fna}.tax_guide.blastx.out
-		elif grep -i -q "polinton" ${nucl_fa%.fna}.tax_guide.blastx.out ; then
-			echo "Polinton-like virus" >> ${nucl_fa%.fna}.tax_guide.blastx.out
-		else
-			ktClassifyBLAST -o ${nucl_fa%.fna}.tax_guide.blastx.tab ${nucl_fa%.fna}.tax_guide.blastx.out >/dev/null 2>&1
-			taxid=$( tail -n1 ${nucl_fa%.fna}.tax_guide.blastx.tab | cut -f2 )
-			efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${nucl_fa%.fna}.tax_guide.blastx.out
-			sleep 0.4s
 		fi
 		if [ ! -s ${nucl_fa%.fna}.tax_guide.blastx.out ] ; then
 			echo "No homologues found" > ${nucl_fa%.fna}.tax_guide.blastx.out
@@ -264,10 +255,13 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; t
 			if [ -s "${nucl_fa%.fna}.blastn_intraspecific.out" ]; then
 				INTRA_LINES=$( cat ${nucl_fa%.fna}.blastn_intraspecific.out | wc -l | bc )	
 				if [ "$INTRA_LINES" -ge 2 ] ; then
-					ktClassifyBLAST -o ${nucl_fa%.fna}.tax_guide.blastn.tab ${nucl_fa%.fna}.blastn_intraspecific.out >/dev/null 2>&1
-					taxid=$( grep -v "qname" ${nucl_fa%.fna}.tax_guide.blastn.tab | tail -n+2 | head -n1 | cut -f2 )
-					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -tab "\n" -element Lineage ScientificName > ${nucl_fa%.fna}.tax_guide.blastn.out
-					sleep 1s
+					ORGANISM_H=$( head -n2 ${nucl_fa%.fna}.blastn_intraspecific.out | tail -n1 | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
+					if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp ; then
+						taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp | head -n1 | cut -f1 )
+						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${nucl_fa%.fna}.blastn_intraspecific.out
+						sleep 0.4s
+						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -tab "\n" -element ScientificName >> ${nucl_fa%.fna}.blastn_intraspecific.out
+						sleep 0.4s
 					if [ !  -z "${nucl_fa%.fna}.tax_guide.blastn.out" ] ; then
 
 						if grep -i -q "virus\|viridae\|virales\|Circular-genetic-element\|Circular genetic element\|plasmid\|phage" ${nucl_fa%.fna}.tax_guide.blastn.out ; then
@@ -718,11 +712,12 @@ if [ -n "$COMB3_TBL" ] ; then
 				elif grep -i -q "polinton" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
 					echo "Polinton-like virus" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out				
 				else
-
-					ktClassifyBLAST -o ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out >/dev/null 2>&1
-					taxid=$( tail -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.tab | cut -f2 )
-					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -element Lineage >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
-					sleep 0.4s
+					ORGANISM_H=$( head -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
+					if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp ; then
+						taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdmp/names.dmp | head -n1 | cut -f1 )
+						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+						sleep 0.4s
+					fi
 				fi
 			fi
 		fi
