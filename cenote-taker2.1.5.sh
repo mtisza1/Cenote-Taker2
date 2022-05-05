@@ -116,27 +116,41 @@ fi
 
 if [ "${SCRATCH_DIR}" == "none" ] ; then
 	echo "scratch space will not be used in this run"
-	CD_HHSUITE="${CENOTE_DBS}/NCBI_CD/NCBI_CD"
-	PFAM_HHSUITE="${CENOTE_DBS}/pfam_32_db/pfam"
-	PDB_HHSUITE="${CENOTE_DBS}/pdb70/pdb70"
+	if [ -s ${CENOTE_DBS}/NCBI_CD/NCBI_CD_a3m.ffdata ] ; then
+		CD_HHSUITE="${CENOTE_DBS}/NCBI_CD/NCBI_CD"
+	else
+		CD_HHSUITE=""
+	fi
+	if [ -s ${CENOTE_DBS}/pfam_32_db/pfam_a3m.ffdata ] ; then
+		PFAM_HHSUITE="${CENOTE_DBS}/pfam_32_db/pfam"
+	else
+		PFAM_HHSUITE=""
+	fi
+	if [ -s ${CENOTE_DBS}/pdb70/pdb70_a3m.ffdata ] ; then
+		PDB_HHSUITE="${CENOTE_DBS}/pdb70/pdb70"
+	else
+		PDB_HHSUITE=""
+	fi
+
 	echo "HHsuite database locations:"
 	echo $CD_HHSUITE
 	echo $PFAM_HHSUITE
 	echo $PDB_HHSUITE
+
 elif [ -d ${SCRATCH_DIR}/ ] ; then
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: setting up lscratch databases: " $MDYT
 	if [ ! -s ${SCRATCH_DIR}/NCBI_CD/NCBI_CD_a3m.ffdata ] ; then
 		mkdir ${SCRATCH_DIR}/NCBI_CD
-		cp ${CENOTE_SCRIPT_DIR}/NCBI_CD/NCBI_CD* ${SCRATCH_DIR}/NCBI_CD/
+		cp ${CENOTE_DBS}/NCBI_CD/NCBI_CD* ${SCRATCH_DIR}/NCBI_CD/
 	fi
 	if [ ! -s ${SCRATCH_DIR}/pfam_32_db/pfam_a3m.ffdata ] ; then	
 		mkdir ${SCRATCH_DIR}/pfam_32_db
-		cp ${CENOTE_SCRIPT_DIR}/pfam_32_db/pfam* ${SCRATCH_DIR}/pfam_32_db/
+		cp ${CENOTE_DBS}/pfam_32_db/pfam* ${SCRATCH_DIR}/pfam_32_db/
 	fi
 	if [ ! -s ${SCRATCH_DIR}/pdb70/pdb70_a3m.ffdata ] ; then		
 		mkdir ${SCRATCH_DIR}/pdb70
-		cp ${CENOTE_SCRIPT_DIR}/pdb70/pdb70* ${SCRATCH_DIR}/pdb70/
+		cp ${CENOTE_DBS}/pdb70/pdb70* ${SCRATCH_DIR}/pdb70/
 	fi
 	CD_HHSUITE="${SCRATCH_DIR}/NCBI_CD/NCBI_CD"
 	PFAM_HHSUITE="${SCRATCH_DIR}/pfam_32_db/pfam"
@@ -148,11 +162,22 @@ else
 	exit
 fi
 
-if [[ ":$PATH:" == *":${CENOTE_SCRIPT_DIR}/hh-suite/build/scripts:"* ]] && [[ ":$PATH:" == *":${CENOTE_SCRIPT_DIR}/hh-suite/build/bin:"* ]] ; then 
-	echo "hhsuite is in path" 
-else 
-	export PATH="${CENOTE_SCRIPT_DIR}/hh-suite/build/bin:${CENOTE_SCRIPT_DIR}/hh-suite/build/scripts:$PATH" 
+HHSUITE_DB_STR=""
+if [ -n "$CD_HHSUITE" ] ; then
+	HHSUITE_DB_STR="${HHSUITE_DB_STR}-d ${CD_HHSUITE} "
 fi
+if [ -n "$PFAM_HHSUITE" ] ; then
+	HHSUITE_DB_STR="${HHSUITE_DB_STR}-d ${PFAM_HHSUITE} "
+fi
+if [ -n "$PDB_HHSUITE" ] ; then
+	HHSUITE_DB_STR="${HHSUITE_DB_STR}-d ${PDB_HHSUITE}"
+fi
+if [ ! -n "$HHSUITE_DB_STR" ] ; then
+	echo "HHsuite databases not found at ${CENOTE_DBS}"
+	echo "$HHSUITE_TOOL will not be run"
+	HHSUITE_TOOL="none"
+fi
+
 
 # looking for template file and contigs in working directory, or else copying them there
 if [ -s ${base_directory}/${template_file} ] ; then 
@@ -1327,13 +1352,13 @@ dark_orf_list=$( find . -maxdepth 1 -type f -name "*.for_hhpred.fasta" )
 #-#- can this be parallelized?
 if [ -n "$dark_orf_list" ] ; then
 	if  [[ $HHSUITE_TOOL = "hhsearch" ]] ; then
-		echo "$dark_orf_list" | sed 's/.for_hhpred.fasta//g' | xargs -n 1 -I {} -P $CPU hhsearch -i {}.for_hhpred.fasta -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o {}.out.hhr -cpu 1 -maxmem 1 -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1 >/dev/null 2>&1
+		echo "$dark_orf_list" | sed 's/.for_hhpred.fasta//g' | xargs -n 1 -I {} -P $CPU hhsearch -i {}.for_hhpred.fasta "${HHSUITE_DB_STR}" -o {}.out.hhr -cpu 1 -maxmem 1 -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1 >/dev/null 2>&1
 		for dark_orf in $dark_orf_list ; do	
 			cat $dark_orf >> ${dark_orf%.rotate*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
 			rm -f $dark_orf
 		done
 	elif [[ $HHSUITE_TOOL = "hhblits" ]] ; then
-		echo "$dark_orf_list" | sed 's/.for_hhpred.fasta//g' | xargs -n 1 -I {} -P $CPU hhblits -i {}.for_hhpred.fasta -d $PDB_HHSUITE -d $PFAM_HHSUITE -d $CD_HHSUITE -o {}.out.hhr -cpu 1 -maxmem 1 -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1 >/dev/null 2>&1
+		echo "$dark_orf_list" | sed 's/.for_hhpred.fasta//g' | xargs -n 1 -I {} -P $CPU hhblits -i {}.for_hhpred.fasta "${HHSUITE_DB_STR}" -o {}.out.hhr -cpu 1 -maxmem 1 -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1 >/dev/null 2>&1
 		for dark_orf in $dark_orf_list ; do	
 			cat $dark_orf >> ${dark_orf%.rotate*.for_hhpred.fasta}.all_hhpred_queries.AA.fasta
 			rm -f $dark_orf
@@ -1731,7 +1756,7 @@ if [ -n "$COMB3_TBL" ] ; then
 				vir_name="crAss-like phage"
 			elif grep -q -i "inovir" $tax_info ; then
 				vir_name="Inoviridae";
-			if grep -q "Conjugative Transposon" $tax_info ; then
+			elif grep -q "Conjugative Transposon" $tax_info ; then
 				vir_name="Conjugative Transposon" ;
 			elif grep -q "No homologues found" $tax_info ; then
 				if  [ -s ITR_containing_contigs/${JUST_TBL2_FILE%.comb3.tbl}.fna ] ; then
