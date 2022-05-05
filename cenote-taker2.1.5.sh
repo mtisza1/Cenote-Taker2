@@ -868,6 +868,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 			ORGANISM_H=$( head -n1 ${nucl_fa%.fasta}.tax_guide.blastx.out | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
 			if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp ; then
 				taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp | head -n1 | cut -f1 )
+				echo "taxid: "$taxid >> ${nucl_fa%.fasta}.tax_guide.blastx.out
 				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${nucl_fa%.fasta}.tax_guide.blastx.out
 				sleep 0.4s
 			fi
@@ -1086,6 +1087,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; then
 					ORGANISM_H=$( head -n2 ${circle%.rotate.fasta}.blastn_intraspecific.out | tail -n1 | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
 					if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp ; then
 						taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp | head -n1 | cut -f1 )
+						echo "taxid: "$taxid >> ${circle%.rotate.fasta}.tax_guide.blastn.out
 						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${circle%.rotate.fasta}.tax_guide.blastn.out
 						sleep 0.4s
 						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -tab "\n" -element ScientificName >> ${circle%.rotate.fasta}.tax_guide.blastn.out
@@ -1548,6 +1550,7 @@ if [ -n "$COMB3_TBL" ] ; then
 					ORGANISM_H=$( head -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
 					if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp ; then
 						taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp | head -n1 | cut -f1 )
+						echo "taxid: "$taxid >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 						sleep 0.4s
 					fi
@@ -1561,7 +1564,7 @@ fi
 # module for taxonomy of all hallmark genes
 
 if [ "$HALLMARK_TAX" == "True" ] ;then
-	HALLMARK_FILES=$( find . -maxdepth 1 -type f -name ".*rotate.AA.hmmscan.sort.out" | sed 's/\.\///g' )
+	HALLMARK_FILES=$( find DTR_contigs_with_viral_domain/ -maxdepth 1 -type f -name ".*rotate.AA.hmmscan.sort.out" | sed 's/\.\///g' )
 	if [ -n "${HALLMARK_FILES}" ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: reporting taxonomy for each hallmark gene, circular contigs " $MDYT
@@ -1570,7 +1573,7 @@ if [ "$HALLMARK_TAX" == "True" ] ;then
 				seqkit grep -p "$HALLMARK" ${SCAN%.hmmscan.sort.out}.sorted.fasta ; 
 			done > ${SCAN%.hmmscan.sort.out}.hallmarks.fasta
 
-			blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_DBS}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query ${SCAN%.hmmscan.sort.out}.hallmarks.fasta -out ${SCAN%.hmmscan.sort.out}.hallmarks.blastp.out
+			blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_DBS}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query ${SCAN%.hmmscan.sort.out}.hallmarks.fasta -out ${SCAN%.hmmscan.sort.out}.hallmarks.blastp.out >/dev/null 2>&1
 
 			sort -k1,1 ${SCAN%.hmmscan.sort.out}.hallmarks.blastp.out | while read LINE ; do 
 				ORGANISM_H=$( echo "$LINE" | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
@@ -1823,7 +1826,7 @@ if [ -n "$COMB3_TBL" ] ; then
 
 		#echo $vir_name ;
 		fsa_head=$( echo $vir_name " sp." )
-		tax_guess=$( tail -n+2 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | grep "^[0-9]" | cut -f2 | tr '\n' ';' ) ; 
+		tax_guess=$( tail -n+3 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | grep "^[0-9]" | cut -f2 | tr '\n' ';' ) ; 
 		perc_id=$( head -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | sed 's/ /-/g' | awk '{FS="\t"; OFS="\t"} {print $2" "$3}' | sed 's/-/ /g' ) ;
 		rand_id=$( head /dev/urandom | tr -dc A-Za-z0-9 | head -c 3 ; echo '' )
 

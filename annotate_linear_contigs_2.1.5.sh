@@ -33,6 +33,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 			ORGANISM_H=$( head -n1 ${nucl_fa%.fna}.tax_guide.blastx.out | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
 			if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp ; then
 				taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp | head -n1 | cut -f1 )
+				echo "taxid: "$taxid >> ${nucl_fa%.fna}.tax_guide.blastx.out
 				efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${nucl_fa%.fna}.tax_guide.blastx.out
 				sleep 0.4s
 			fi
@@ -258,6 +259,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] && [ $handle_knowns == "blast_knowns" ] ; t
 					ORGANISM_H=$( head -n2 ${nucl_fa%.fna}.blastn_intraspecific.out | tail -n1 | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
 					if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp ; then
 						taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp | head -n1 | cut -f1 )
+						echo "taxid: "$taxid >> ${nucl_fa%.fna}.blastn_intraspecific.out
 						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${nucl_fa%.fna}.blastn_intraspecific.out
 						sleep 0.4s
 						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -tab "\n" -element ScientificName >> ${nucl_fa%.fna}.blastn_intraspecific.out
@@ -737,7 +739,7 @@ if [ "$HALLMARK_TAX" == "True" ] ;then
 				seqkit grep -p "$HALLMARK" ${SCAN%.hmmscan.sort.out}.sorted.fasta ; 
 			done > ${SCAN%.hmmscan.sort.out}.hallmarks.fasta
 
-			blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_DBS}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query ${SCAN%.hmmscan.sort.out}.hallmarks.fasta -out ${SCAN%.hmmscan.sort.out}.hallmarks.blastp.out
+			blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_DBS}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query ${SCAN%.hmmscan.sort.out}.hallmarks.fasta -out ${SCAN%.hmmscan.sort.out}.hallmarks.blastp.out >/dev/null 2>&1
 
 			sort -k1,1 ${SCAN%.hmmscan.sort.out}.hallmarks.blastp.out | while read LINE ; do 
 				ORGANISM_H=$( echo "$LINE" | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
