@@ -58,6 +58,7 @@ CRISPR_FILE=${34}
 base_directory=$PWD
 CENOTE_DBS=${35}
 WRAP=${36}
+HALLMARK_TAX=${37}
 
 if [ "$ANNOTATION_MODE" == "True" ] ; then
 	LIN_MINIMUM_DOMAINS=0
