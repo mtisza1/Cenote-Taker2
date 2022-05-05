@@ -551,8 +551,9 @@ if [ ! -z "$DTR_SEQS" ] ; then
 	else
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: Calling ORFs for circular/DTR sequences with prodigal " $MDYT
-		echo "$DTR_SEQS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t prodigal -c -a {}.AA.fasta -i {}.fasta -p meta -q >/dev/null 2>&1
+		echo "$DTR_SEQS" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t prodigal -a {}.AA.fasta -i {}.fasta -p meta -q >/dev/null 2>&1
 		for CIRC in $DTR_SEQS ; do 
+			mv ${CIRC%.fasta}.DTR.tbl DTR_contigs_with_viral_domain/
 			sed 's/ /@/g' ${CIRC%.fasta}.AA.fasta | bioawk -c fastx '{print}' | while read LINE ; do 
 				START_BASE=$( echo "$LINE" | cut -d "#" -f 2 | sed 's/@//g' ) ; 
 				END_BASE=$( echo "$LINE" | cut -d "#" -f 3 | sed 's/@//g' ) ; 
@@ -642,7 +643,7 @@ if [ ! -z "$DTR_SEQS" ] ; then
 					mv $REMAINDER DTR_contigs_with_viral_domain/${REMAINDER%.fasta}.fna
 				else
 					sed 's/ /#/g' $REMAINDER | bioawk -c fastx '{print ">"$name"#DTRs" ; print $seq}' | sed 's/#/ /g' >> other_contigs/non_viral_domains_contigs.fna
-					rm -f $REMAINDER
+					rm -f ${REMAINDER%fasta}*fasta
 				fi
 			fi
 		done
@@ -788,33 +789,27 @@ if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 		echo "rotating DTR contigs"
 		rm *DTR.tbl
 		for nucl_fa in $CIRCULAR_HALLMARK_CONTIGS ; do
-
-			if [ -s ${nucl_fa%.fna}.AA.fasta ] ; then
-				FWD_GENES=$( grep "^>" ${nucl_fa%.fna}.AA.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == 1) {print $4}}' | wc -l )
-				REV_GENES=$( grep "^>" ${nucl_fa%.fna}.AA.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == -1) {print $4}}' | wc -l )
-				if [ $FWD_GENES -ge $REV_GENES ] && [ $FWD_GENES -ge 1 ]; then
-					START_BASE=$( grep "^>" ${nucl_fa%.fna}.AA.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == 1) {print $2}}' | head -n1 )
-					cat $nucl_fa | seqkit restart -i ${START_BASE} > ${nucl_fa%.fna}.rotate.fasta
-				elif [ $REV_GENES -ge 1 ]; then
-					seqkit seq $nucl_fa --quiet -t DNA -r -p > ${nucl_fa%.fna}.rc.fna
-					prodigal -a ${nucl_fa%.fna}.AA.rc.fasta -i ${nucl_fa%.fna}.rc.fna -p meta -q >/dev/null 2>&1
-					RC_FWD_GENES=$( grep "^>" ${nucl_fa%.fna}.AA.rc.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == 1) {print $4}}' | wc -l )
-					if [ $RC_FWD_GENES -ge 1 ] ; then 
-						START_BASE=$( grep "^>" ${nucl_fa%.fna}.AA.rc.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == 1) {print $2}}' | head -n1 )
-						cat ${nucl_fa%.fna}.rc.fna | seqkit restart -i ${START_BASE} > ${nucl_fa%.fna}.rotate.fasta
-					else
-						echo "Can't find suitable ORF to set rotation of $nucl_fa and will remain unrotated"
-						cp $nucl_fa ${nucl_fa%.fna}.rotate.fasta
-					fi
+			prodigal -a ${nucl_fa%.fna}.AA.fasta -i $nucl_fa -c -p meta -q >/dev/null 2>&1
+			FWD_GENES=$( grep "^>" ${nucl_fa%.fna}.AA.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == 1) {print $4}}' | wc -l )
+			REV_GENES=$( grep "^>" ${nucl_fa%.fna}.AA.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == -1) {print $4}}' | wc -l )
+			if [ $FWD_GENES -ge $REV_GENES ] && [ $FWD_GENES -ge 1 ]; then
+				START_BASE=$( grep "^>" ${nucl_fa%.fna}.AA.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == 1) {print $2}}' | head -n1 )
+				cat $nucl_fa | seqkit restart -i ${START_BASE} > ${nucl_fa%.fna}.rotate.fasta
+			elif [ $REV_GENES -ge 1 ]; then
+				seqkit seq $nucl_fa --quiet -t DNA -r -p > ${nucl_fa%.fna}.rc.fna
+				prodigal -a ${nucl_fa%.fna}.AA.rc.fasta -i ${nucl_fa%.fna}.rc.fna -p meta -q >/dev/null 2>&1
+				RC_FWD_GENES=$( grep "^>" ${nucl_fa%.fna}.AA.rc.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == 1) {print $4}}' | wc -l )
+				if [ $RC_FWD_GENES -ge 1 ] ; then 
+					START_BASE=$( grep "^>" ${nucl_fa%.fna}.AA.rc.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == 1) {print $2}}' | head -n1 )
+					cat ${nucl_fa%.fna}.rc.fna | seqkit restart -i ${START_BASE} > ${nucl_fa%.fna}.rotate.fasta
 				else
 					echo "Can't find suitable ORF to set rotation of $nucl_fa and will remain unrotated"
 					cp $nucl_fa ${nucl_fa%.fna}.rotate.fasta
 				fi
-
 			else
-				echo "Can't find prodigal AA file for $nucl_fa"
+				echo "Can't find suitable ORF to set rotation of $nucl_fa and will remain unrotated"
+				cp $nucl_fa ${nucl_fa%.fna}.rotate.fasta
 			fi
-
 		done
 	else
 		echo "Annotating DTR contigs"
