@@ -110,6 +110,13 @@ while (@contigs) {
 	    print OUT $header."|join_near_$mid\n";
 	    print OUT $newSeq."\n";
 	    close OUT;
+	    open OUT2, ">$overlap5prime[1].DTR.tbl";
+	    print OUT2 ">Feature $overlap5prime[1] Table1";
+	    print OUT2 "\n"$start5prime"\t"$end5prime"\trepeat_region";
+	    print OUT2 "\n\t\t\trpt_type\tDTR";
+	    print OUT2 "\n"$start3prime"\t"$end3prime"\trepeat_region";
+	    print OUT2 "\n\t\t\trpt_type\tDTR";
+	    close OUT2
 	    if (defined($opt_r)) {
 		# use bwa mem to align reads to permuted sequence
 		$command = "bwa index $fname.$n.fa 2> $fname.$n.aln.log";

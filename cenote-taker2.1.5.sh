@@ -246,9 +246,15 @@ if [ -n "$LASTDBQ" ] && [ -n "$LASTALQ" ] ; then
 		APC_CIRCS=$( find . -maxdepth 1 -type f -name "${run_title}*.fa" )
 		if [ -n "$APC_CIRCS" ] ;then
 			for fa1 in $APC_CIRCS ; do
-				CIRC_SEQ_NAME=$( head -n1 $fa1 | sed 's/|.*//g' ) ; 
-				CIRC_NEW_NAME=$( echo "$CIRC_SEQ_NAME" | sed 's/>//g ; s/ .*//g' )
-				grep -A1 "^$CIRC_SEQ_NAME" ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta | sed '/--/d' > ${CIRC_NEW_NAME}.fasta
+				#-#-# adding wrap option to clip DTRs or not
+				if [ "$WRAP" == "True" ] ; then
+					CIRC_NEW_NAME=$( head -n1 $fa1 | sed 's/|.*//g ; s/>//g ; s/ .*//g' ) ; 
+					sed 's/|.*//g ; /^$/d' $fa1 > ${CIRC_NEW_NAME}.fasta
+				else
+					CIRC_SEQ_NAME=$( head -n1 $fa1 | sed 's/|.*//g' ) ; 
+					CIRC_NEW_NAME=$( echo "$CIRC_SEQ_NAME" | sed 's/>//g ; s/ .*//g' )
+					grep -A1 "^$CIRC_SEQ_NAME" ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta | sed '/--/d' > ${CIRC_NEW_NAME}.fasta
+				fi
 				echo "${CIRC_NEW_NAME}.fasta has DTRs/circularity"
 				rm -f $fa1
 			done 
@@ -263,11 +269,16 @@ if [ -n "$LASTDBQ" ] && [ -n "$LASTALQ" ] ; then
 		rm -f apc_aln*
 		APC_CIRCS=$( find . -maxdepth 1 * -type f -name "${run_title}*.fa" )
 		if [ -n "$APC_CIRCS" ] ;then
-			for fa1 in $APC_CIRCS ; do 
-				CIRC_SEQ_NAME=$( head -n1 $fa1 | sed 's/|.*//g' ) ; 
-				CIRC_NEW_NAME=$( echo "$CIRC_SEQ_NAME" | sed 's/>//g ; s/ .*//g' )
-				grep -A1 "^$CIRC_SEQ_NAME" ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta | sed '/--/d' > ${CIRC_NEW_NAME}.fasta
-				echo "${CIRC_NEW_NAME}.fasta is circular"
+			for fa1 in $APC_CIRCS ; do
+				if [ "$WRAP" == "True" ] ; then
+					CIRC_NEW_NAME=$( head -n1 $fa1 | sed 's/|.*//g ; s/>//g ; s/ .*//g' ) ; 
+					sed 's/|.*//g ; /^$/d' $fa1 > ${CIRC_NEW_NAME}.fasta
+				else
+					CIRC_SEQ_NAME=$( head -n1 $fa1 | sed 's/|.*//g' ) ; 
+					CIRC_NEW_NAME=$( echo "$CIRC_SEQ_NAME" | sed 's/>//g ; s/ .*//g' )
+					grep -A1 "^$CIRC_SEQ_NAME" ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta | sed '/--/d' > ${CIRC_NEW_NAME}.fasta
+				fi
+				echo "${CIRC_NEW_NAME}.fasta has DTRs/circularity"
 				rm -f $fa1
 			done 
 		else
