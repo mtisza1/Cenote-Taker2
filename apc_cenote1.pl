@@ -112,9 +112,9 @@ while (@contigs) {
 	    close OUT;
 	    open OUT2, ">$overlap5prime[1].DTR.tbl";
 	    print OUT2 ">Feature $overlap5prime[1] Table1";
-	    print OUT2 "\n"$start5prime"\t"$end5prime"\trepeat_region";
+	    print OUT2 "\n".$start5prime."\t".$end5prime."\trepeat_region";
 	    print OUT2 "\n\t\t\trpt_type\tDTR";
-	    print OUT2 "\n"$start3prime"\t"$end3prime"\trepeat_region";
+	    print OUT2 "\n".$start3prime."\t".$end3prime."\trepeat_region";
 	    print OUT2 "\n\t\t\trpt_type\tDTR";
 	    close OUT2
 	    if (defined($opt_r)) {
