@@ -858,7 +858,7 @@ if [ -n "$ROTATED_DTR_CONTIGS" ] ; then
 	if [ -s DTR_seqs_for_phanotate.txt ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running PHANOTATE, annotate DTR contigs " $MDYT
-		cat DTR_seqs_for_phanotate.txt | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU ${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o {}.rotate.phan.fasta {}.rotate.fasta
+		cat DTR_seqs_for_phanotate.txt | sed 's/.rotate.fasta//g' | xargs -n 1 -I {} -P $CPU phanotate.py -f fasta -o {}.rotate.phan.fasta {}.rotate.fasta
 		for PHAN in *.phan.fasta ; do 
 			if [ "$ENFORCE_START_CODON" == "True" ] ; then
 				sed 's/ /@/g' ${PHAN} | bioawk -c fastx '{ print }' | awk '{ if ($2 ~ /^[ATCG]TG/) { print ">"$1 ; print $2 }}' | sed 's/@/ /g' > ${PHAN%.fasta}.sort.fasta
@@ -1623,7 +1623,17 @@ if [ -n "$COMB3_TBL" ] ; then
 		TAX_PERCID=$( head -n1 $tax_info | cut -f3 )
 		TAX_CUTOFF=$( echo -e "${TAX_EVALUE}\t${TAX_PERCID}" | awk '{if ($1<1e-50 && $2>50) {print "family"} else if ($1<1e-4 && $2>25) {print "order"} else {print "unclassified"}}' )
 		if [ $TAX_CUTOFF == "family" ] ; then
-			if grep -q "	family$" $tax_info ; then
+			if grep -q "Virophage	Unclassified Taxon" $tax_info ; then
+				vir_name="Virophage" ;
+			elif grep -q "Adintovirus	Unclassified Taxon" $tax_info ; then
+				vir_name="Adintovirus" ;
+			elif grep -q "Polinton-like virus	Unclassified Taxon" $tax_info ; then
+				vir_name="Polinton-like virus" ;
+			elif grep -q -i "crAss-like\|CrAssphage" $tax_info ; then
+				vir_name="crAss-like phage";
+			elif grep -q -i "inovir" $tax_info ; then
+				vir_name="Inoviridae";
+			elif grep -q "	family$" $tax_info ; then
 				vir_name=$( grep "	family$" $tax_info | cut -f2 )
 			elif grep -q "	order$" $tax_info ; then
 				vir_name=$( grep "	order$" $tax_info | cut -f2 )
@@ -1663,7 +1673,17 @@ if [ -n "$COMB3_TBL" ] ; then
 				fi
 			fi
 		elif [ $TAX_CUTOFF == "order" ] ; then
-			if grep -q "	order$" $tax_info ; then
+			if grep -q "Virophage	Unclassified Taxon" $tax_info ; then
+				vir_name="Virophage" ;
+			elif grep -q "Adintovirus	Unclassified Taxon" $tax_info ; then
+				vir_name="Adintovirus" ;
+			elif grep -q "Polinton-like virus	Unclassified Taxon" $tax_info ; then
+				vir_name="Polinton-like virus" ;
+			elif grep -q -i "crAss-like\|CrAssphage" $tax_info ; then
+				vir_name="crAss-like phage"
+			elif grep -q -i "inovir" $tax_info ; then
+				vir_name="Inoviridae";
+			elif grep -q "	order$" $tax_info ; then
 				vir_name=$( grep "	order$" $tax_info | cut -f2 )
 			elif grep -q "Conjugative Transposon" $tax_info ; then
 				vir_name="Conjugative Transposon" ;
@@ -1701,6 +1721,16 @@ if [ -n "$COMB3_TBL" ] ; then
 				fi
 			fi
 		else
+			if grep -q "Virophage	Unclassified Taxon" $tax_info ; then
+				vir_name="Virophage" ;
+			elif grep -q "Adintovirus	Unclassified Taxon" $tax_info ; then
+				vir_name="Adintovirus" ;
+			elif grep -q "Polinton-like virus	Unclassified Taxon" $tax_info ; then
+				vir_name="Polinton-like virus" ;
+			elif grep -q -i "crAss-like\|CrAssphage" $tax_info ; then
+				vir_name="crAss-like phage"
+			elif grep -q -i "inovir" $tax_info ; then
+				vir_name="Inoviridae";
 			if grep -q "Conjugative Transposon" $tax_info ; then
 				vir_name="Conjugative Transposon" ;
 			elif grep -q "No homologues found" $tax_info ; then

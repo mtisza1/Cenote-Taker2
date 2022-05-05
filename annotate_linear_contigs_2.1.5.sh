@@ -49,7 +49,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 	if [ -s LIN_seqs_for_phanotate.txt ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running PHANOTATE, annotate linear contigs " $MDYT
-		cat LIN_seqs_for_phanotate.txt | sed 's/.fna//g ; s/\.\///g' | xargs -n 1 -I {} -P $CPU ${CENOTE_SCRIPT_DIR}/PHANOTATE/phanotate.py -f fasta -o {}.phan.fasta {}.fna
+		cat LIN_seqs_for_phanotate.txt | sed 's/.fna//g ; s/\.\///g' | xargs -n 1 -I {} -P $CPU phanotate.py -f fasta -o {}.phan.fasta {}.fna
 		for PHAN in *.phan.fasta ; do 
 			if [ "$ENFORCE_START_CODON" == "True" ] ; then
 				sed 's/ /@/g' ${PHAN} | bioawk -c fastx '{ print }' | awk '{ if ($2 ~ /^[ATCG]TG/) { print ">"$1 ; print $2 }}' | sed 's/@/ /g' > ${PHAN%.fasta}.sort.fasta
