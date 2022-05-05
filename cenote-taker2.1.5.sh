@@ -543,8 +543,10 @@ DTR_SEQS=$( find . -maxdepth 1 -type f -regextype sed -regex "./${run_title}[0-9
 if [ ! -z "$DTR_SEQS" ] ; then
 	mkdir DTR_contigs_with_viral_domain
 	if [ $CIRC_MINIMUM_DOMAINS -le 0 ] ; then
+
 		for CIRC in $DTR_SEQS ; do
 			mv ${CIRC} DTR_contigs_with_viral_domain/${CIRC%.fasta}.fna
+			mv ${CIRC%.fasta}.DTR.tbl DTR_contigs_with_viral_domain/
 		done
 	else
 		MDYT=$( date +"%m-%d-%y---%T" )
@@ -784,7 +786,7 @@ if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "Annotating DTR contigs " $MDYT
 		echo "rotating DTR contigs"
-		#echo $PWD
+		rm *DTR.tbl
 		for nucl_fa in $CIRCULAR_HALLMARK_CONTIGS ; do
 
 			if [ -s ${nucl_fa%.fna}.AA.fasta ] ; then
@@ -1378,11 +1380,17 @@ if [ -n "$INT2_TBL" ] ; then
 			if [ -s "${feat_tbl4%.int2.tbl}.ITR.tbl" ] ; then
 				cat ${feat_tbl4%.int2.tbl}.ITR.tbl >> ${feat_tbl4%.int2.tbl}.comb3.tbl
 			fi
+			if [ -s "${feat_tbl4%.int2.tbl}.DTR.tbl" ] ; then
+				cat ${feat_tbl4%.int2.tbl}.DTR.tbl >> ${feat_tbl4%.int2.tbl}.comb3.tbl
+			fi 
 		else
 			cat $feat_tbl4 | sed '/--/d; s/TPA_asm: //g; s/TPA://g' > ${feat_tbl4%.int2.tbl}.comb3.tbl
 			if [ -s "${feat_tbl4%.int2.tbl}.ITR.tbl" ] ; then
 				cat ${feat_tbl4%.int2.tbl}.ITR.tbl >> ${feat_tbl4%.int2.tbl}.comb3.tbl
 			fi
+			if [ -s "${feat_tbl4%.int2.tbl}.DTR.tbl" ] ; then
+				cat ${feat_tbl4%.int2.tbl}.DTR.tbl >> ${feat_tbl4%.int2.tbl}.comb3.tbl
+			fi 
 		fi
 		GENOME_LENGTH=$( bioawk -c fastx '{print length($seq)}' ${feat_tbl4%.int2.tbl}.rotate.fasta )
 		grep "^[0-9]" ${feat_tbl4%.int2.tbl}.comb3.tbl | cut -f1,2 | while read LINE ; do 

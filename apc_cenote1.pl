@@ -115,7 +115,7 @@ while (@contigs) {
 	    print OUT2 "\n".$start5prime."\t".$end5prime."\trepeat_region";
 	    print OUT2 "\n\t\t\trpt_type\tDTR";
 	    print OUT2 "\n".$start3prime."\t".$end3prime."\trepeat_region";
-	    print OUT2 "\n\t\t\trpt_type\tDTR";
+	    print OUT2 "\n\t\t\trpt_type\tDTR\n";
 	    close OUT2;
 	    if (defined($opt_r)) {
 		# use bwa mem to align reads to permuted sequence
