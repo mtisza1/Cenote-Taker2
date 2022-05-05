@@ -104,6 +104,8 @@ echo "GB of memory:                      $MEM"
 echo "number of CPUs available for run:  $CPU"
 echo "Annotation mode?                   $ANNOTATION_MODE"
 echo "Cenote-Taker 2 DBs directory:      $CENOTE_DBS"
+echo "Wrap circular contigs?:            $WRAP"
+echo "Taxonomy for each hallmark?:       $HALLMARK_TAX"
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@"
 
 #checking validity of run_title
@@ -163,6 +165,7 @@ else
 	exit
 fi
 
+# setting HHSUITE database argument string
 HHSUITE_DB_STR=""
 if [ -n "$CD_HHSUITE" ] ; then
 	HHSUITE_DB_STR="${HHSUITE_DB_STR}-d ${CD_HHSUITE} "
@@ -179,6 +182,16 @@ if [ ! -n "$HHSUITE_DB_STR" ] ; then
 	HHSUITE_TOOL="none"
 fi
 
+if [ ! -s ${CENOTE_DBS}/taxdump/names.dmp ] ; then
+	echo "the required taxdump file (new requirement as of Cenote-Taker 2.1.5) wasn't found. It will be downloaded and upacked at ${CENOTE_DBS}/taxdump/"
+	if [ ! -d ${CENOTE_DBS}/taxdump ] ; then
+		mkdir ${CENOTE_DBS}/taxdump
+	fi
+	cd ${CENOTE_DBS}/taxdump
+	wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz
+	tar -xf taxdump.tar.gz
+	cd $base_directory
+fi
 
 # looking for template file and contigs in working directory, or else copying them there
 if [ -s ${base_directory}/${template_file} ] ; then 
@@ -1562,6 +1575,7 @@ if [ -n "$COMB3_TBL" ] ; then
 fi
 
 # module for taxonomy of all hallmark genes
+cd ${base_directory}/${run_title}
 
 if [ "$HALLMARK_TAX" == "True" ] ;then
 	HALLMARK_FILES=$( find DTR_contigs_with_viral_domain/ -maxdepth 1 -type f -name ".*rotate.AA.hmmscan.sort.out" | sed 's/\.\///g' )
@@ -1590,7 +1604,6 @@ if [ "$HALLMARK_TAX" == "True" ] ;then
 	fi
 fi
 
-cd ${base_directory}/${run_title}
 
 LIST_OF_ITR_DOMAIN_CONTIGS=$( find * -maxdepth 1 -type f -wholename "ITR_containing_contigs/*fna" )
 
