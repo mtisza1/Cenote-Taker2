@@ -1515,9 +1515,8 @@ if [ -n "$COMB3_TBL" ] ; then
 				TAX_ORF=$( grep -i -B1 "baseplate\|base-plate\|base plate" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
 			elif grep -i -q "tail" $feat_tbl2 ; then
 				TAX_ORF=$( grep -i -B1 "tail" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
-			else TAX_ORF="No_suitable_orf"
-
-
+			else 
+				TAX_ORF="No_suitable_orf"
 			fi
 			if [ "$TAX_ORF" == "Conjugative Transposon" ] ; then
 				#echo "${feat_tbl2%.comb3.tbl} looks like a conjugative transposon"
@@ -1558,6 +1557,34 @@ if [ -n "$COMB3_TBL" ] ; then
 	done
 fi
 
+# module for taxonomy of all hallmark genes
+
+if [ "$HALLMARK_TAX" == "True" ] ;then
+	HALLMARK_FILES=$( find . -maxdepth 1 -type f -name ".*rotate.AA.hmmscan.sort.out" | sed 's/\.\///g' )
+	if [ -n "${HALLMARK_FILES}" ] ; then
+		MDYT=$( date +"%m-%d-%y---%T" )
+		echo "time update: reporting taxonomy for each hallmark gene, circular contigs " $MDYT
+		echo "$HALLMARK_FILES" | while read SCAN ; do
+			cut -f3 $SCAN | while read HALLMARK ; do 
+				seqkit grep -p "$HALLMARK" ${SCAN%.hmmscan.sort.out}.sorted.fasta ; 
+			done > ${SCAN%.hmmscan.sort.out}.hallmarks.fasta
+
+			blastp -evalue 1e-2 -outfmt "6 qseqid stitle pident evalue length" -num_threads $CPU -num_alignments 1 -db ${CENOTE_DBS}/blast_DBs/virus_refseq_adinto_polinto_clean_plasmid_prot_190925 -query ${SCAN%.hmmscan.sort.out}.hallmarks.fasta -out ${SCAN%.hmmscan.sort.out}.hallmarks.blastp.out
+
+			sort -k1,1 ${SCAN%.hmmscan.sort.out}.hallmarks.blastp.out | while read LINE ; do 
+				ORGANISM_H=$( echo "$LINE" | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
+				if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp ; then
+					echo $LINE 
+					echo "taxid: "$taxid
+					taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp | head -n1 | cut -f1 )
+					efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank 
+					echo "@@@@@@"
+					sleep 0.4s
+				fi
+			done > ${SCAN%.hmmscan.sort.out}.hallmarks.taxonomy.out
+		done
+	fi
+fi
 
 cd ${base_directory}/${run_title}
 
