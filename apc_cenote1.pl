@@ -116,7 +116,7 @@ while (@contigs) {
 	    print OUT2 "\n\t\t\trpt_type\tDTR";
 	    print OUT2 "\n".$start3prime."\t".$end3prime."\trepeat_region";
 	    print OUT2 "\n\t\t\trpt_type\tDTR";
-	    close OUT2
+	    close OUT2;
 	    if (defined($opt_r)) {
 		# use bwa mem to align reads to permuted sequence
 		$command = "bwa index $fname.$n.fa 2> $fname.$n.aln.log";
