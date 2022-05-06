@@ -18,7 +18,7 @@ pathname = os.path.dirname(sys.argv[0])
 cenote_script_path = os.path.abspath(pathname)      
 print(cenote_script_path) 
 
-parser = argparse.ArgumentParser(description='Cenote-Taker 2 is a pipeline for virus discovery and thorough annotation of viral contigs and genomes. Visit https://github.com/mtisza1/Cenote-Taker2 and https://github.com/mtisza1/Cenote-Taker2/wiki to find answers and submit issues. Version 2.1.5')
+parser = argparse.ArgumentParser(description='Cenote-Taker 2 is a pipeline for virus discovery and thorough annotation of viral contigs and genomes. Visit https://github.com/mtisza1/Cenote-Taker2#use-case-suggestionssettings for suggestions about how to run different data types and https://github.com/mtisza1/Cenote-Taker2/wiki to read more. Version 2.1.5')
 
 required_args = parser.add_argument_group(' REQUIRED ARGUMENTS for Cenote-Taker2 ')
 
