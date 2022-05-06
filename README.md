@@ -3,7 +3,9 @@ Cenote-Taker 2 is a dual function bioinformatics tool. On the one hand, Cenote-T
 ```diff
 + The code is currently functional. Feel free to use Cenote-Taker 2 at will.
 + Major update on May 6th 2022: Version 2.1.5
-+ Cenote-Taker 2.1.5 has an easier, more reliable installation and database downloads. Some packages that have given many users issues have been replaced. Taxonomy is more flexible. See release notes.
++ Cenote-Taker 2.1.5 has an easier, more reliable installation and database downloads. 
++ Some packages that have given many users issues have been replaced. Taxonomy is more flexible. See release notes.
++ "virion" is now default database
 ```
 
 If you just want to discover/predict virus sequences and get a report on those sequences, use [Cenote Unlimited Breadsticks](https://github.com/mtisza1/Cenote_Unlimited_Breadsticks), also provided in the Cenote-Taker 2 repo.
@@ -83,10 +85,10 @@ cd Cenote-Taker2
 
 **choose one of the following**
 
-# with all the options (75GB)
+# with all the options (75GB). The PDB database (--hhPDB) takes about 2 hours to download.
 python update_ct2_databases.py --hmm True --protein True --rps True --taxdump True --hhCDD True --hhPFAM True --hhPDB True
 
-# substantially smaller but with some hhsuite DBs (20GB)
+# substantially smaller but with some hhsuite DBs (20GB). I recommend this if you are unsure which you want.
 python update_ct2_databases.py --hmm True --protein True --rps True --taxdump True --hhCDD True --hhPFAM True
 
 # only the required DBs, No hhsuite (8GB)

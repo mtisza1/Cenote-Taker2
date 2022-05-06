@@ -22,6 +22,5 @@ dependencies:
   - pysam=0.15.3
   - biopython
   - tbb=2020.2
-  - phanotate=1.5.0
   - seqkit=2.2.0
-  - hhsuite=3.3.0
+  - bedtools

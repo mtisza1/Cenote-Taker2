@@ -80,10 +80,7 @@ if is_tool("prodigal") :
 else:
 	print ("prodigal is not found. Exiting.")
 	quit()
-if is_tool("bwa") :
-	print ("BWA found")
-else:
-	print ("BWA is not found. Exiting.")
+
 	quit()
 if is_tool("samtools") :
 	print ("samtools found")
@@ -163,8 +160,12 @@ else:
 if is_tool("phanotate.py") :
 	print ("phanotate found")
 else:
-	print ("phanotate is not found. Exiting. You may have to manually install bedtools using: conda install -y -n cenote-taker2_env -c bioconda phanotate")
+	print ("phanotate is not found. Exiting. You may have to manually install phanotate using: conda install -y -n cenote-taker2_env -c bioconda phanotate")
 	quit()
-
+if is_tool("lastal") and is_tool("lastdb"):
+	print ("lastal/lastdb found")
+else:
+	print ("lastal/lastdb is not found. Exiting. You may have to manually install last using: conda install -y -n cenote-taker2_env -c conda-forge -c bioconda last=1282")
+	quit()
 subprocess.call(['bash', str(cenote_script_path) + '/cenote-taker2.1.5.sh', str(args.original_contigs), str(args.F_READS), str(args.R_READS), str(args.run_title), str(args.isolation_source), str(args.collection_date), str(args.metagenome_type), str(args.srr_number), str(args.srx_number), str(args.biosample), str(args.bioproject),  str(args.template_file), str(args.circ_length_cutoff), str(args.linear_length_cutoff), str(args.virus_domain_db), str(args.LIN_MINIMUM_DOMAINS), str(args.handle_knowns), str(args.ASSEMBLER), str(args.MOLECULE_TYPE), str(args.HHSUITE_TOOL), str(args.DATA_SOURCE), str(args.BLASTP), str(args.PROPHAGE), str(args.FILTER_PLASMIDS), str(args.BLASTN_DB), str(cenote_script_path), str(args.CIRC_MINIMUM_DOMAINS), str(args.SCRATCH_DIR), str(args.MEM), str(args.CPU), str(args.ENFORCE_START_CODON), str(args.ORF_WITHIN), str(args.ANNOTATION_MODE), str(args.CRISPR_FILE), str(args.CENOTE_DBS), str(args.WRAP), str(args.HALLMARK_TAX)])
 

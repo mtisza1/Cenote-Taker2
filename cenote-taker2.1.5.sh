@@ -272,64 +272,61 @@ else
 
 fi
 
-LASTDBQ=$( find $CENOTE_SCRIPT_DIR -type f -wholename "$CENOTE_SCRIPT_DIR/last-*/lastdb" )
-LASTALQ=$( find $CENOTE_SCRIPT_DIR -type f -wholename "$CENOTE_SCRIPT_DIR/last-*/lastal" )
-if [ -n "$LASTDBQ" ] && [ -n "$LASTALQ" ] ; then 
-	if [ ${original_contigs: -6} == ".fasta" ]; then
-		echo "$(tput setaf 5)File with .fasta extension detected, attempting to keep contigs over $LENGTH_MINIMUM nt and find circular sequences with apc.pl$(tput sgr 0)"
-		bioawk -v run_var="$run_title" -v contig_cutoff="$LENGTH_MINIMUM" -c fastx '{ if(length($seq) > contig_cutoff) { print ">"run_var NR" "$name; print $seq }}' $original_contigs > ${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta ;
-		cd $run_title
-		echo "cenote_shortcut" > ${run_title}_CONTIG_SUMMARY.tsv
-		perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $LASTDBQ -d $LASTALQ ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta >/dev/null 2>&1
-		find . -type f -name "apc_aln*" -exec rm -f {} \;
-		APC_CIRCS=$( find . -maxdepth 1 -type f -name "${run_title}*.fa" )
-		if [ -n "$APC_CIRCS" ] ;then
-			for fa1 in $APC_CIRCS ; do
-				#-#-# adding wrap option to clip DTRs or not
-				if [ "$WRAP" == "True" ] ; then
-					CIRC_NEW_NAME=$( head -n1 $fa1 | sed 's/|.*//g ; s/>//g ; s/ .*//g' ) ; 
-					sed 's/|.*//g ; /^$/d' $fa1 > ${CIRC_NEW_NAME}.fasta
-				else
-					CIRC_SEQ_NAME=$( head -n1 $fa1 | sed 's/|.*//g' ) ; 
-					CIRC_NEW_NAME=$( echo "$CIRC_SEQ_NAME" | sed 's/>//g ; s/ .*//g' )
-					grep -A1 "^$CIRC_SEQ_NAME" ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta | sed '/--/d' > ${CIRC_NEW_NAME}.fasta
-				fi
-				echo "${CIRC_NEW_NAME}.fasta has DTRs/circularity"
-				rm -f $fa1
-			done 
-		else
-			echo "No circular contigs detected."
-		fi		
-	elif [ ${original_contigs: -6} == ".fastg" ]; then
-		bioawk -v contig_cutoff="$LENGTH_MINIMUM" -c fastx '{ if(length($seq) > contig_cutoff) {print }}' $original_contigs | grep "[a-zA-Z0-9]:\|[a-zA-Z0-9];" | grep -v "':" | awk '{ print ">"$1 ; print $2 }' | sed 's/:.*//g; s/;.*//g' | bioawk -v run_var="$run_title" -c fastx '{ print ">"run_var NR" "$name; print $seq }' > ${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta
-		cd $run_title
-		echo "cenote_shortcut" > ${run_title}_CONTIG_SUMMARY.tsv
-		perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $LASTDBQ -d $LASTALQ ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta >/dev/null 2>&1
-		rm -f apc_aln*
-		APC_CIRCS=$( find . -maxdepth 1 * -type f -name "${run_title}*.fa" )
-		if [ -n "$APC_CIRCS" ] ;then
-			for fa1 in $APC_CIRCS ; do
-				if [ "$WRAP" == "True" ] ; then
-					CIRC_NEW_NAME=$( head -n1 $fa1 | sed 's/|.*//g ; s/>//g ; s/ .*//g' ) ; 
-					sed 's/|.*//g ; /^$/d' $fa1 > ${CIRC_NEW_NAME}.fasta
-				else
-					CIRC_SEQ_NAME=$( head -n1 $fa1 | sed 's/|.*//g' ) ; 
-					CIRC_NEW_NAME=$( echo "$CIRC_SEQ_NAME" | sed 's/>//g ; s/ .*//g' )
-					grep -A1 "^$CIRC_SEQ_NAME" ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta | sed '/--/d' > ${CIRC_NEW_NAME}.fasta
-				fi
-				echo "${CIRC_NEW_NAME}.fasta has DTRs/circularity"
-				rm -f $fa1
-			done 
-		else
-			echo "No circular contigs detected."
-		fi	
+#LASTDBQ=$( find $CENOTE_SCRIPT_DIR -type f -wholename "$CENOTE_SCRIPT_DIR/last-*/lastdb" )
+#LASTALQ=$( find $CENOTE_SCRIPT_DIR -type f -wholename "$CENOTE_SCRIPT_DIR/last-*/lastal" )
+if [ ${original_contigs: -6} == ".fasta" ]; then
+	echo "$(tput setaf 5)File with .fasta extension detected, attempting to keep contigs over $LENGTH_MINIMUM nt and find circular sequences with apc.pl$(tput sgr 0)"
+	bioawk -v run_var="$run_title" -v contig_cutoff="$LENGTH_MINIMUM" -c fastx '{ if(length($seq) > contig_cutoff) { print ">"run_var NR" "$name; print $seq }}' $original_contigs > ${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta ;
+	cd $run_title
+	echo "cenote_shortcut" > ${run_title}_CONTIG_SUMMARY.tsv
+	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c lastdb -d lastal ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta >/dev/null 2>&1
+	find . -type f -name "apc_aln*" -exec rm -f {} \;
+	APC_CIRCS=$( find . -maxdepth 1 -type f -name "${run_title}*.fa" )
+	if [ -n "$APC_CIRCS" ] ;then
+		for fa1 in $APC_CIRCS ; do
+			#-#-# adding wrap option to clip DTRs or not
+			if [ "$WRAP" == "True" ] ; then
+				CIRC_NEW_NAME=$( head -n1 $fa1 | sed 's/|.*//g ; s/>//g ; s/ .*//g' ) ; 
+				sed 's/|.*//g ; /^$/d' $fa1 > ${CIRC_NEW_NAME}.fasta
+			else
+				CIRC_SEQ_NAME=$( head -n1 $fa1 | sed 's/|.*//g' ) ; 
+				CIRC_NEW_NAME=$( echo "$CIRC_SEQ_NAME" | sed 's/>//g ; s/ .*//g' )
+				grep -A1 "^$CIRC_SEQ_NAME" ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta | sed '/--/d' > ${CIRC_NEW_NAME}.fasta
+			fi
+			echo "${CIRC_NEW_NAME}.fasta has DTRs/circularity"
+			rm -f $fa1
+		done 
 	else
-		echo "$(tput setaf 4)File with .fasta of .fastg extension not detected as first input. Exiting.$(tput sgr 0)" ;
-		exit
-	fi
+		echo "No circular contigs detected."
+	fi		
+elif [ ${original_contigs: -6} == ".fastg" ]; then
+	bioawk -v contig_cutoff="$LENGTH_MINIMUM" -c fastx '{ if(length($seq) > contig_cutoff) {print }}' $original_contigs | grep "[a-zA-Z0-9]:\|[a-zA-Z0-9];" | grep -v "':" | awk '{ print ">"$1 ; print $2 }' | sed 's/:.*//g; s/;.*//g' | bioawk -v run_var="$run_title" -c fastx '{ print ">"run_var NR" "$name; print $seq }' > ${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta
+	cd $run_title
+	echo "cenote_shortcut" > ${run_title}_CONTIG_SUMMARY.tsv
+	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $LASTDBQ -d $LASTALQ ../${original_contigs%.fastg}.over_${LENGTH_MINIMUM}nt.fasta >/dev/null 2>&1
+	rm -f apc_aln*
+	APC_CIRCS=$( find . -maxdepth 1 * -type f -name "${run_title}*.fa" )
+	if [ -n "$APC_CIRCS" ] ;then
+		for fa1 in $APC_CIRCS ; do
+			if [ "$WRAP" == "True" ] ; then
+				CIRC_NEW_NAME=$( head -n1 $fa1 | sed 's/|.*//g ; s/>//g ; s/ .*//g' ) ; 
+				sed 's/|.*//g ; /^$/d' $fa1 > ${CIRC_NEW_NAME}.fasta
+			else
+				CIRC_SEQ_NAME=$( head -n1 $fa1 | sed 's/|.*//g' ) ; 
+				CIRC_NEW_NAME=$( echo "$CIRC_SEQ_NAME" | sed 's/>//g ; s/ .*//g' )
+				grep -A1 "^$CIRC_SEQ_NAME" ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta | sed '/--/d' > ${CIRC_NEW_NAME}.fasta
+			fi
+			echo "${CIRC_NEW_NAME}.fasta has DTRs/circularity"
+			rm -f $fa1
+		done 
+	else
+		echo "No circular contigs detected."
+	fi	
 else
-	echo "lastal commands not found, skipping circularity check"
+	echo "$(tput setaf 4)File with .fasta of .fastg extension not detected as first input. Exiting.$(tput sgr 0)" ;
+	exit
 fi
+
 # Removing cirles that are smaller than user specified cutoff
 CIRC_CONTIGS=$( find . -maxdepth 1 -type f -name "*.fasta" )
 if [ ! -z "$CIRC_CONTIGS" ] ;then
@@ -540,12 +537,12 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 					cut -f3 LARGE_GENOME_COMBINED.AA.hmmscan.sort.out | sed 's/[^_]*$//' | sed 's/\(.*\)_/\1/' | sort -u | while read HIT ; do
 						HALL_COUNT=$( grep "${HIT}_" LARGE_GENOME_COMBINED.AA.hmmscan.sort.out | wc -l | bc )
 						if [ $HALL_COUNT -ge $LIN_MINIMUM_DOMAINS ] ; then 
-							mv ${HIT}.fasta ../no_end_contigs_with_viral_domain/${HIT}.fna
+							mv "${HIT}.fasta" "../no_end_contigs_with_viral_domain/${HIT}.fna"
 							grep "${HIT}_" LARGE_GENOME_COMBINED.AA.hmmscan.sort.out > ../no_end_contigs_with_viral_domain/${HIT}.AA.hmmscan.sort.out
 							# ../no_end_contigs_with_viral_domain/${NO_END%.fasta}.no_hmmscan1.fasta
 							grep "${HIT}_" LARGE_GENOME_COMBINED.AA.hmmscan.sort.out | sort -u -k3,3 | cut -f3 | sed 's/\(.*\)/\1 /' > ${HIT}.AA.called_hmmscan.txt
 							grep -v -f ${HIT}.AA.called_hmmscan.txt ${HIT}.AA.sorted.fasta | grep -A1 ">" | sed '/--/d' > ../no_end_contigs_with_viral_domain/${HIT}.AA.no_hmmscan1.fasta
-							mv ${HIT}.AA.sorted.fasta ../no_end_contigs_with_viral_domain/
+							mv "${HIT}.AA.sorted.fasta" ../no_end_contigs_with_viral_domain/
 
 						else
 							cat ${HIT}.fasta >> non_viral_domains_contigs.fna
@@ -573,7 +570,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 fi
 
 
-cd ..
+cd ${base_directory}/${run_title}
 
 
 DTR_SEQS=$( find . -maxdepth 1 -type f -regextype sed -regex "./${run_title}[0-9]\{1,6\}.fasta" | sed 's/\.\///g' )
@@ -1690,7 +1687,7 @@ if [ -n "$COMB3_TBL" ] ; then
 		#-#-#
 		TAX_EVALUE=$( head -n1 $tax_info | cut -f4 )
 		TAX_PERCID=$( head -n1 $tax_info | cut -f3 )
-		TAX_CUTOFF=$( echo -e "${TAX_EVALUE}\t${TAX_PERCID}" | awk '{if ($1<1e-50 && $2>50) {print "family"} else if ($1<1e-4 && $2>25) {print "order"} else {print "unclassified"}}' )
+		TAX_CUTOFF=$( echo -e "${TAX_EVALUE}\t${TAX_PERCID}" | awk '{if ($1<1e-20 && $2>40) {print "family"} else if ($1<1e-4 && $2>25) {print "order"} else {print "unclassified"}}' )
 		if [ $TAX_CUTOFF == "family" ] ; then
 			if grep -q "Virophage	Unclassified Taxon" $tax_info ; then
 				vir_name="Virophage" ;
@@ -1975,7 +1972,7 @@ if [ -d sequin_and_genome_maps ] ; then
 			done
 		done
 	fi
-	cd ..
+	cd ${base_directory}/${run_title}
 fi
 ### conjugative machinery table
 if [ -d sequin_and_genome_maps ] ; then
@@ -1994,7 +1991,7 @@ if [ -d sequin_and_genome_maps ] ; then
 			fi
 		done
 	fi
-	cd ..
+	cd ${base_directory}/${run_title}
 fi
 ###
 
@@ -2139,7 +2136,7 @@ echo "removing ancillary files"
 if [ -d DTR_contigs_with_viral_domain ] ; then
 	cd DTR_contigs_with_viral_domain
 	rm -f *.all_start_stop.txt *.bad_starts.txt *.comb.tbl *.comb2.tbl *.good_start_orfs.txt *.hypo_start_stop.txt *.nucl_orfs.fa *.remove_hypo.txt *.log *.promer.contigs_with_ends.fa *.promer.promer *.out.hhr *.starting_orf.txt *.out.hhr *.nucl_orfs.txt *.called_hmmscan.txt *.hmmscan_replicate.out *.hmmscan.out *.rotate.no_hmmscan.fasta *.starting_orf.1.fa *.phan.*fasta *used_positions.txt *.prodigal.for_prodigal.fa *.prodigal.gff *.trnascan-se2.txt *.for_blastp.txt *.for_hhpred.txt circular_contigs_spades_names.txt SPLIT_CIRCULAR_AA*fasta all_circular_contigs_${run_title}.fna SPLIT_DTR_* *called_hmmscan*txt *HH.tbl *CDS.bed *tRNA.bed *ORFs_over_tRNAs.tsv *prodigal.fasta *blast_hypo.fasta *no_hmmscan2.fasta *no_hmmscan1.fasta *all_hhpred_queries.AA.fasta
-	cd ..
+	cd ${base_directory}/${run_title}
 fi
 rm -rf bt2_indices/
 
