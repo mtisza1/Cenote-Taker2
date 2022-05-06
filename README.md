@@ -18,7 +18,8 @@ Using a HPC with at least 16 CPUs and 16g of dedicated memory is recommended for
 To update from `v2.1.3`  (note that biopython and bedtools are now required): 
 ```
 conda activate cenote-taker2_env
-conda install -c phanotate=1.5.0 seqkit=2.2.0 hhsuite=3.3.0
+pip install phanotate
+conda install -c conda-forge -c bioconda hhsuite last=1282 seqkit
 cd Cenote-Taker2
 git pull
 #Then update the BLAST database (see instructions below).
@@ -61,7 +62,7 @@ conda -V
 ```
 git clone https://github.com/mtisza1/Cenote-Taker2.git
 ```
-4. Install the conda environment (phanotate and hhsuite don't play nice with the .yml file, so they need special commands)
+4. Install the conda environment (phanotate, last, and hhsuite don't play nice with the .yml file, so they need special commands)
 
 ```
 conda env create --file cenote-taker2_env.yml
@@ -79,6 +80,8 @@ conda install -c conda-forge -c bioconda hhsuite last=1282
 ```
 conda activate cenote-taker2_env
 cd Cenote-Taker2
+
+**choose one of the following**
 
 # with all the options (75GB)
 python update_ct2_databases.py --hmm True --protein True --rps True --taxdump True --hhCDD True --hhPFAM True --hhPDB True
@@ -122,15 +125,20 @@ Discussion:
 ## Updating databases
 
 As of now, the HMM database has been updated from the original (update on June 16th, 2021), and the BLAST database has been updated (May 6th, 2022). This update should only take a minute or two. Here's how you update (modify if your conda environment is different than below example):
-update Cenote-Taker 2 (change to main repo directory):
-`git pull`
 
-load your conda environment:
-`conda activate cenote-taker2_env`
+```
+# update Cenote-Taker 2 (change to main repo directory):
+git pull
 
-run the update script:
+# load your conda environment:
+conda activate cenote-taker2_env
+
+#change to Cenote-Taker2 directory
+cd Cenote-Taker2
+
+# run the update script:
 `python update_ct2_databases.py --hmm True --protein True`
-
+```
 
 ## Schematic
 ![alt text](../master/CT2_schematic_redo1.png)
@@ -182,7 +190,7 @@ Example:
 python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_VIRUSES.fasta -r viruses_am_ct -m 32 -t 32 -p False -am True
 
 # do not wrap circular sequences, but label DTR regions
-python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_VIRUSES.fasta -r viruses_am_ct -m 32 -t 32 -p False -am True --wrap True
+python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_VIRUSES.fasta -r viruses_am_ct -m 32 -t 32 -p False -am True --wrap False
 ```
 
 For very divergent genomes, setting `-hh hhsearch` will marginally improve number of genes that are annotated. This setting increasese the run time quite a bit. On the other hand, setting `-hh none` will skip the time consuming hhblits step. With this, you'll still get pretty good genome maps, and might be most appropriate for very large virus genome databases, or for runs where you just want to do a quick check.
