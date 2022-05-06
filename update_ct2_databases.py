@@ -15,7 +15,7 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
         
 pathname = os.path.dirname(sys.argv[0])  
-cenote_script_path = os.path.abspath(pathname)      
+cenote_script_path = os.getcwd()   
 print(cenote_script_path) 
 
 parser = argparse.ArgumentParser(description='Update databases associated with Cenote-Taker2. HMM (hmmer) databases: updated June 16th, 2021. CDD (hhsuite) database: not updated from original. PFAM (hhsuite) database: not updated from original. PDB (hhsuite) database: updated periodically by PDB. CDD (rpsblast) database: not updated from original. Taxonomy BLAST (protein) databases: updated May 6th, 2022. Taxdump database is updated by NCBI periodically.')
@@ -38,9 +38,9 @@ if str(args.PROTEIN) == "True":
     isExist = os.path.exists(str(cenote_script_path) + '/blast_DBs')
     if not isExist:
         os.makedirs(str(cenote_script_path) + '/blast_DBs/', exist_ok=True)
-    subprocess.call(['wget', '--directory-prefix=' + str(cenote_script_path), 'https://zenodo.org/record/3660538/files/blast_DBs.tgz'])
-    subprocess.call(['tar', '-xvf', 'blast_DBs.tgz'])
-    subprocess.call(['rm', '-f', 'blast_DBs.tgz'])
+    subprocess.call(['wget', '--directory-prefix=' + str(cenote_script_path), 'https://zenodo.org/record/6525617/files/blast_DBs.tar.gz'])
+    subprocess.call(['tar', '-xvf', 'blast_DBs.tar.gz'])
+    subprocess.call(['rm', '-f', 'blast_DBs.tar.gz'])
 
 if str(args.HMM_DB) == "True":
     print ("running HMM database update/install")

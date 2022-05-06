@@ -42,7 +42,7 @@ If you cannot or do not want to install and run this on the command line, `Cenot
 
 ** Databases will require between 8GB (most basic) and 75GB (all the optional databases) of storage.
 ** Don't install without checking conda version first.
-** Install on machine running on Linux (with a reasonably new OS), or a Mac (see instructions).
+** Install on machine running on Linux (with a reasonably new OS). Support for MacOS is forthcoming.
 ```
 
 If you just want a lightweight (7GB), faster, **NON-ANNOTATING** virus discovery tool, use [Cenote Unlimited Breadsticks](https://github.com/mtisza1/Cenote_Unlimited_Breadsticks). The `Unlimited Breadsticks` module is included in the Cenote-Taker 2 repo, so no need to install it if you already have `Cenote-Taker 2` (you may need to update from older versions `Cenote-Taker2`) 
