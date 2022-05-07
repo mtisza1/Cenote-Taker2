@@ -20,7 +20,7 @@ echo "Fun fact: As of this version, the$(tput setaf 4) virion $(tput sgr 0)datab
 sleep 2s
 
 
-# Setting input parameters
+# Setting input parameters  
 original_contigs=$1
 F_READS=$2
 R_READS=$3
