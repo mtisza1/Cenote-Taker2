@@ -1600,7 +1600,7 @@ fi
 # module for taxonomy of all hallmark genes
 cd ${base_directory}/${run_title}
 
-if [ "$HALLMARK_TAX" == "True" ] ;then
+if [ "$HALLMARK_TAX" == "True" ] && [ -d DTR_contigs_with_viral_domain/ ] ;then
 	HALLMARK_FILES=$( find DTR_contigs_with_viral_domain/ -maxdepth 1 -type f -name ".*rotate.AA.hmmscan.sort.out" | sed 's/\.\///g' )
 	if [ -n "${HALLMARK_FILES}" ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
@@ -1766,7 +1766,7 @@ if [ -n "$COMB3_TBL" ] ; then
 					vir_name="Circular genetic element" ;
 				fi
 			fi		
-		if [ $TAX_CUTOFF == "family" ] ; then
+		elif [ $TAX_CUTOFF == "family" ] ; then
 			if grep -q "Virophage	Unclassified Taxon" $tax_info ; then
 				vir_name="Virophage" ;
 			elif grep -q "Adintovirus	Unclassified Taxon" $tax_info ; then
