@@ -140,6 +140,41 @@ if [ "${SCRATCH_DIR}" == "none" ] ; then
 	echo $PFAM_HHSUITE
 	echo $PDB_HHSUITE
 
+# downloading taxdump database if it doesn't exist
+if [ ! -s ${CENOTE_DBS}/taxdump/names.dmp ] ; then
+	echo "the required taxdump file (new requirement as of Cenote-Taker 2.1.5) wasn't found. It will be downloaded and upacked at ${CENOTE_DBS}/taxdump/"
+	if [ ! -d ${CENOTE_DBS}/taxdump ] ; then
+		mkdir ${CENOTE_DBS}/taxdump
+	fi
+	cd ${CENOTE_DBS}/taxdump
+	wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz
+	tar -xf taxdump.tar.gz
+	cd $base_directory
+fi
+
+# make sure all required database directories exist
+if [ ! -d ${CENOTE_DBS}/blast_DBs/ ] ; then
+	echo "Can not find blast databases at ${CENOTE_DBS}/blast_DBs/"
+	echo "Exiting"
+	exit
+fi
+if [ ! -d ${CENOTE_DBS}/hmmscan_DBs/ ] ; then
+	echo "Can not find HMM databases at ${CENOTE_DBS}/hmmscan_DBs/"
+	echo "Exiting"
+	exit
+fi
+if [ ! -d ${CENOTE_DBS}/cdd_rps_db/ ] ; then
+	echo "Can not find RPSBLAST databases at ${CENOTE_DBS}/hmmscan_DBs/"
+	echo "Exiting"
+	exit
+fi
+if [ ! -d ${CENOTE_DBS}/taxdump/ ] ; then
+	echo "Can not find Taxonomy databases at ${CENOTE_DBS}/hmmscan_DBs/"
+	echo "Exiting"
+	exit
+fi
+
+
 elif [ -d ${SCRATCH_DIR}/ ] ; then
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: setting up lscratch databases: " $MDYT
@@ -180,17 +215,6 @@ if [ ! -n "$HHSUITE_DB_STR" ] ; then
 	echo "HHsuite databases not found at ${CENOTE_DBS}"
 	echo "$HHSUITE_TOOL will not be run"
 	HHSUITE_TOOL="none"
-fi
-
-if [ ! -s ${CENOTE_DBS}/taxdump/names.dmp ] ; then
-	echo "the required taxdump file (new requirement as of Cenote-Taker 2.1.5) wasn't found. It will be downloaded and upacked at ${CENOTE_DBS}/taxdump/"
-	if [ ! -d ${CENOTE_DBS}/taxdump ] ; then
-		mkdir ${CENOTE_DBS}/taxdump
-	fi
-	cd ${CENOTE_DBS}/taxdump
-	wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz
-	tar -xf taxdump.tar.gz
-	cd $base_directory
 fi
 
 # looking for template file and contigs in working directory, or else copying them there
@@ -1689,7 +1713,59 @@ if [ -n "$COMB3_TBL" ] ; then
 		#-#-#
 		TAX_EVALUE=$( head -n1 $tax_info | cut -f4 )
 		TAX_PERCID=$( head -n1 $tax_info | cut -f3 )
-		TAX_CUTOFF=$( echo -e "${TAX_EVALUE}\t${TAX_PERCID}" | awk '{if ($1<1e-20 && $2>40) {print "family"} else if ($1<1e-4 && $2>25) {print "order"} else {print "unclassified"}}' )
+		TAX_CUTOFF=$( echo -e "${TAX_EVALUE}\t${TAX_PERCID}" | awk '{if ($1<1e-100 && $2>90) {print "genus"} else if ($1<1e-20 && $2>40) {print "family"} else if ($1<1e-4 && $2>25) {print "order"} else {print "unclassified"}}' )
+		if [ $TAX_CUTOFF == "genus" ] ; then
+			if grep -q "Virophage	Unclassified Taxon" $tax_info ; then
+				vir_name="Virophage" ;
+			elif grep -q "Adintovirus	Unclassified Taxon" $tax_info ; then
+				vir_name="Adintovirus" ;
+			elif grep -q "Polinton-like virus	Unclassified Taxon" $tax_info ; then
+				vir_name="Polinton-like virus" ;
+			elif grep -q -i "crAss-like\|CrAssphage" $tax_info ; then
+				vir_name="crAss-like phage";
+			elif grep -q -i "inovir" $tax_info ; then
+				vir_name="Inoviridae";
+			elif grep -q "	genus$" $tax_info ; then
+				vir_name=$( grep "	genus$" $tax_info | cut -f2 )
+			elif grep -q "	family$" $tax_info ; then
+				vir_name=$( grep "	family$" $tax_info | cut -f2 )
+			elif grep -q "	order$" $tax_info ; then
+				vir_name=$( grep "	order$" $tax_info | cut -f2 )
+			elif grep -q "Conjugative Transposon" $tax_info ; then
+				vir_name="Conjugative Transposon" ;
+			elif grep -q "No homologues found" $tax_info ; then
+				if  [ -s ITR_containing_contigs/${JUST_TBL2_FILE%.comb3.tbl}.fna ] ; then
+					vir_name="genetic element" ;
+				else
+					vir_name="circular genetic element" ;
+				fi
+			elif grep -q "Circular genetic element" $tax_info ; then
+				vir_name="Circular genetic element" ;
+			elif grep -q "dsRNA virus" $tax_info ; then
+				vir_name="dsRNA virus" ;
+			elif grep -q "ssRNA virus" $tax_info ; then
+				vir_name="ssRNA virus" ;
+			elif grep -q "unclassified RNA virus" $tax_info ; then
+				vir_name="unclassified RNA virus" ;
+			elif grep -q "unclassified ssDNA bacterial virus" $tax_info ; then
+				vir_name="unclassified ssDNA bacterial virus" ;
+			elif grep -q -i "phage" $tax_info ; then
+				vir_name="Phage" ;
+			elif grep -q "plasmid" $tax_info ; then
+				vir_name="metagenomic plasmid" ;
+			elif grep -q "Bacteria" $tax_info ; then
+				vir_name="Phage" ;
+			elif grep -q "unclassified virus" $tax_info ; then
+				vir_name="virus" ;		
+			elif grep -q -i "virus\|viridae" $tax_info ; then
+				vir_name="virus" ;
+			else
+				if  [ -s ITR_containing_contigs/${JUST_TBL2_FILE%.comb3.tbl}.fna ] ; then
+					vir_name="unclassified element" ;
+				else
+					vir_name="Circular genetic element" ;
+				fi
+			fi		
 		if [ $TAX_CUTOFF == "family" ] ; then
 			if grep -q "Virophage	Unclassified Taxon" $tax_info ; then
 				vir_name="Virophage" ;

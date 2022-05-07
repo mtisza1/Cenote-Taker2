@@ -709,15 +709,16 @@ if [ -n "$COMB3_TBL" ] ; then
 				if [ ! -s "${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out" ]; then
 					echo "unclassified virus" > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ;
 				elif grep -q "virophage" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
-					echo "Virophage" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+					echo "Virophage	Unclassified Taxon" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 				elif grep -q "adinto" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
-					echo "Adintovirus" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
+					echo "Adintovirus	Unclassified Taxon" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 				elif grep -i -q "polinton" ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out ; then
-					echo "Polinton-like virus" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out				
+					echo "Polinton-like virus	Unclassified Taxon" >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out				
 				else
 					ORGANISM_H=$( head -n1 ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out | sed 's/\[/&\n/;s/.*\n//;s/\]/\n&/;s/\n.*//' )
 					if grep -q "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp ; then
 						taxid=$( grep "	|	${ORGANISM_H}	|	" ${CENOTE_DBS}/taxdump/names.dmp | head -n1 | cut -f1 )
+						echo "taxid: "$taxid >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 						efetch -db taxonomy -id $taxid -format xml | xtract -pattern Taxon -block "*/Taxon" -tab "\n" -element TaxId,ScientificName,Rank >> ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 						sleep 0.4s
 					fi
@@ -730,7 +731,7 @@ fi
 # module for taxonomy of all hallmark genes
 
 if [ "$HALLMARK_TAX" == "True" ] ;then
-	HALLMARK_FILES=$( find . -maxdepth 1 -type f -regextype sed -regex ".*_vs[0-9]\{1,2\}.AA.hmmscan.sort.out" | sed 's/\.\///g' )
+	HALLMARK_FILES=$( find . -maxdepth 1 -type f -name "${run_title}*AA.hmmscan.sort.out" | sed 's/\.\///g' )
 	if [ -n "${HALLMARK_FILES}" ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: reporting taxonomy for each hallmark gene, linear contigs " $MDYT
