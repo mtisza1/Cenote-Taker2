@@ -2052,7 +2052,8 @@ if [ -d sequin_and_genome_maps ] ; then
 					FEAT_END=$( echo $LINE | cut -d " " -f2 )
 					FEAT_NAME="ITR"
 					FEAT_ATT="ITR"
-					FEAT_ID="ITR"				fi
+					FEAT_ID="ITR"	
+				fi
 				echo -e "$GENOME\t""Cenote-Taker\t""$FEAT_TYPE\t""$FEAT_START\t""$FEAT_END\t"".\t"".\t"".\t""gene_id \"$FEAT_ID\"; gene_name \"$FEAT_NAME\"; gene_inference \"$FEAT_ATT\"" >> ${feat_tbl2%.tbl}.gtf
 			done
 		done
