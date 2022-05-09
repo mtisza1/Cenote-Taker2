@@ -80,10 +80,10 @@ if is_tool("prodigal") :
 else:
 	print ("prodigal is not found. Exiting.")
 	quit()
-
-	quit()
 if is_tool("samtools") :
 	print ("samtools found")
+elif str(args.F_READS) == "no_reads" :
+	print ("samtools will not be used")
 else:
 	print ("samtools is not found. Exiting.")
 	quit()
@@ -124,6 +124,8 @@ else:
 	quit()
 if is_tool("bowtie2") :
 	print ("bowtie2 found")
+elif str(args.F_READS) == "no_reads" :
+	print ("bowtie2 will not be used")
 else:
 	print ("bowtie2 is not found. Exiting.")
 	quit()
@@ -134,6 +136,8 @@ else:
 	quit()
 if is_tool("pileup.sh") :
 	print ("pileup.sh found")
+elif str(args.F_READS) == "no_reads" :
+	print ("pileup.sh will not be used")
 else:
 	print ("pileup.sh is not found. Exiting.")
 	quit()

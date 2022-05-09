@@ -102,7 +102,7 @@ echo "Location of Cenote scripts:        $CENOTE_SCRIPT_DIR"
 echo "Location of scratch directory:     $SCRATCH_DIR"
 echo "GB of memory:                      $MEM"
 echo "number of CPUs available for run:  $CPU"
-echo "Annotation mode?                   $ANNOTATION_MODE"
+echo "Annotation only mode?                   $ANNOTATION_MODE"
 echo "Cenote-Taker 2 DBs directory:      $CENOTE_DBS"
 echo "Wrap circular contigs?:            $WRAP"
 echo "Taxonomy for each hallmark?:       $HALLMARK_TAX"
@@ -853,14 +853,14 @@ if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 			FWD_GENES=$( grep "^>" ${nucl_fa%.fna}.AA.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == 1) {print $4}}' | wc -l )
 			REV_GENES=$( grep "^>" ${nucl_fa%.fna}.AA.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == -1) {print $4}}' | wc -l )
 			if [ $FWD_GENES -ge $REV_GENES ] && [ $FWD_GENES -ge 1 ]; then
-				START_BASE=$( grep "^>" ${nucl_fa%.fna}.AA.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == 1) {print $2}}' | head -n1 )
+				START_BASE=$( grep "^>" ${nucl_fa%.fna}.AA.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == 1) {print $2, ($3-$2)}}' | sort -rg -k2,2 | head -n1 | cut -f1 )
 				cat $nucl_fa | seqkit restart -i ${START_BASE} > ${nucl_fa%.fna}.rotate.fasta
 			elif [ $REV_GENES -ge 1 ]; then
 				seqkit seq $nucl_fa --quiet -t DNA -r -p > ${nucl_fa%.fna}.rc.fna
 				prodigal -a ${nucl_fa%.fna}.AA.rc.fasta -i ${nucl_fa%.fna}.rc.fna -p meta -q >/dev/null 2>&1
 				RC_FWD_GENES=$( grep "^>" ${nucl_fa%.fna}.AA.rc.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == 1) {print $4}}' | wc -l )
 				if [ $RC_FWD_GENES -ge 1 ] ; then 
-					START_BASE=$( grep "^>" ${nucl_fa%.fna}.AA.rc.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == 1) {print $2}}' | head -n1 )
+					START_BASE=$( grep "^>" ${nucl_fa%.fna}.AA.rc.fasta | sed 's/ # /	/g' | awk '{FS=OFS="\t"}{if ($0 ~ "partial=00;start_type" && $4 == 1) {print $2, ($3-$2)}}' | sort -rg -k2,2 | head -n1 | cut -f1 )
 					cat ${nucl_fa%.fna}.rc.fna | seqkit restart -i ${START_BASE} > ${nucl_fa%.fna}.rotate.fasta
 				else
 					echo "Can't find suitable ORF to set rotation of $nucl_fa and will remain unrotated"
@@ -874,7 +874,7 @@ if [ -n "$CIRCULAR_HALLMARK_CONTIGS" ] ; then
 	else
 		echo "Annotating DTR contigs"
 		echo "contigs will not be wrapped: --wrap False"
-		echo "rotate.fasta files will be created for processing purposes (but these are not wrapped)"
+		echo "(rotate.fasta) files will be created for processing purposes (but these are not wrapped)"
 		for nucl_fa in $CIRCULAR_HALLMARK_CONTIGS ; do
 			cp $nucl_fa ${nucl_fa%.fna}.rotate.fasta
 		done
@@ -2037,6 +2037,14 @@ if [ -d sequin_and_genome_maps ] ; then
 					FEAT_NAME=$( echo $LINE | cut -d " " -f7 )
 					FEAT_ATT=$( echo $LINE | cut -d " " -f9 )
 					FEAT_ID=$( echo $LINE | cut -d " " -f5 )
+				elif echo $LINE | grep -q "repeat_region" && grep -q "DTR" ; then
+					GENOME=${feat_tbl2%.tbl}
+					FEAT_TYPE=$( echo $LINE | cut -d " " -f3 )
+					FEAT_START=$( echo $LINE | cut -d " " -f1 )
+					FEAT_END=$( echo $LINE | cut -d " " -f2 )
+					FEAT_NAME="DTR"
+					FEAT_ATT="DTR"
+					FEAT_ID="DTR"	
 				elif echo $LINE | grep -q "repeat_region" ; then
 					GENOME=${feat_tbl2%.tbl}
 					FEAT_TYPE=$( echo $LINE | cut -d " " -f3 )
@@ -2044,8 +2052,7 @@ if [ -d sequin_and_genome_maps ] ; then
 					FEAT_END=$( echo $LINE | cut -d " " -f2 )
 					FEAT_NAME="ITR"
 					FEAT_ATT="ITR"
-					FEAT_ID="ITR"	
-				fi
+					FEAT_ID="ITR"				fi
 				echo -e "$GENOME\t""Cenote-Taker\t""$FEAT_TYPE\t""$FEAT_START\t""$FEAT_END\t"".\t"".\t"".\t""gene_id \"$FEAT_ID\"; gene_name \"$FEAT_NAME\"; gene_inference \"$FEAT_ATT\"" >> ${feat_tbl2%.tbl}.gtf
 			done
 		done

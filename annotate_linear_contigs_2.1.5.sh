@@ -731,7 +731,12 @@ fi
 # module for taxonomy of all hallmark genes
 
 if [ "$HALLMARK_TAX" == "True" ] ;then
-	HALLMARK_FILES=$( find . -maxdepth 1 -type f -name "${run_title}*AA.hmmscan.sort.out" | sed 's/\.\///g' )
+	
+	if [ "$PROPHAGE" == "True" ] ;then
+		HALLMARK_FILES=$( find . -maxdepth 1 -type f -name "${run_title}*_vs*AA.hmmscan.sort.out" | sed 's/\.\///g' )
+	else
+		HALLMARK_FILES=$( find . -maxdepth 1 -type f -name "${run_title}*AA.hmmscan.sort.out" | sed 's/\.\///g' )
+	fi
 	if [ -n "${HALLMARK_FILES}" ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: reporting taxonomy for each hallmark gene, linear contigs " $MDYT

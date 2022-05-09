@@ -102,13 +102,13 @@ else
 
 fi
 
-
+#-#-# fix apc
 if [ ${original_contigs: -6} == ".fasta" ]; then
 	echo "$(tput setaf 5)File with .fasta extension detected, attempting to keep contigs over $LENGTH_MINIMUM nt and find circular sequences with apc.pl$(tput sgr 0)"
 	bioawk -v run_var="$run_title" -v contig_cutoff="$LENGTH_MINIMUM" -c fastx '{ if(length($seq) > contig_cutoff) { print ">"run_var NR" "$name; print $seq }}' $original_contigs > ${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta ;
 	cd $run_title
 	echo "unlimited_breadsticks" > ${run_title}_CONTIG_SUMMARY.tsv
-	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c $CENOTE_SCRIPT_DIR ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta  >/dev/null 2>&1
+	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c lastdb -d lastal ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta  >/dev/null 2>&1
 	rm -f apc_aln*
 	APC_CIRCS=$( find . -maxdepth 1 -type f -name "${run_title}*.fa" | sed 's/\.\///g' )
 	if [ -n "$APC_CIRCS" ] ;then

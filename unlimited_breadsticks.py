@@ -71,7 +71,11 @@ if is_tool("hmmscan") :
 else:
 	print ("hmmscan is not found. Exiting.")
 	quit()
-
+if is_tool("lastal") and is_tool("lastdb"):
+	print ("lastal/lastdb found")
+else:
+	print ("lastal/lastdb is not found. Exiting. You may have to manually install last using: conda install -y -n cenote-taker2_env -c conda-forge -c bioconda last=1282")
+	quit()
 
 
 subprocess.call(['bash', str(cenote_script_path) + '/unlimited_breadsticks_0.1.sh', str(args.original_contigs), str(args.run_title), str(args.circ_length_cutoff), str(args.linear_length_cutoff), str(args.virus_domain_db), str(args.LIN_MINIMUM_DOMAINS), str(args.PROPHAGE), str(args.FILTER_PLASMIDS), str(cenote_script_path), str(args.CIRC_MINIMUM_DOMAINS), str(args.MEM), str(args.CPU)])
