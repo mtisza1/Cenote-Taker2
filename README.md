@@ -139,7 +139,7 @@ conda activate cenote-taker2_env
 cd Cenote-Taker2
 
 # run the update script:
-`python update_ct2_databases.py --hmm True --protein True`
+python update_ct2_databases.py --hmm True --protein True
 ```
 
 ## Schematic
@@ -152,15 +152,15 @@ Cenote-Taker 2 currently runs in a python wrapper.
 Check environments:
 
 `conda info --envs`
+```
+#Default:
 
-Default:
+conda activate cenote-taker2_env
 
-`conda activate cenote-taker2_env`
+#Or if you've put your conda environment in a custom location:
 
-Or if you've put your conda environment in a custom location:
-
-`conda activate /path/to/better/directory/cenote-taker2_env`
-
+conda activate /path/to/better/directory/cenote-taker2_env
+```
 2. Run the python script to get the help menu (see options below).
 
 ```
@@ -175,7 +175,7 @@ python /path/to/Cenote-Taker2/run_cenote-taker2.py -h
 ```
 python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_CONTIGS.fasta -r my_contigs1_ct -m 32 -t 32 -p true -db virion
 
-#Or, if you want to save a log of the run, add  "2>&1 | tee output.log" to the end of the command):
+#Or, if you want to save a log of the run, add  "2>&1 | tee output.log" to the end of the command:
 
 python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_CONTIGS.fasta -r my_contigs1_ct -m 32 -t 32 -p true -db virion 2>&1 | tee output.log
 ```
@@ -197,7 +197,7 @@ python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_VIRUSES.fasta -r viruse
 
 For very divergent genomes, setting `-hh hhsearch` will marginally improve number of genes that are annotated. This setting increasese the run time quite a bit. On the other hand, setting `-hh none` will skip the time consuming hhblits step. With this, you'll still get pretty good genome maps, and might be most appropriate for very large virus genome databases, or for runs where you just want to do a quick check.
 
-#### *Discovery*
+#### *Discovery + Annotation*
 
 **Virus-like particle (VLP) prep assembly:**
 
@@ -222,7 +222,7 @@ python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_WGS_ASSEMBLY.fasta -r m
 ```
 
 
-**Bacterial reference genome or MAG**
+**Bacterial isolate genome or MAG**
 
 `-p True -db virion --minimum_length_linear 3000 --lin_minimum_hallmark_genes 2`
 

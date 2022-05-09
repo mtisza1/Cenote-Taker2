@@ -1601,7 +1601,7 @@ fi
 cd ${base_directory}/${run_title}
 
 if [ "$HALLMARK_TAX" == "True" ] && [ -d DTR_contigs_with_viral_domain/ ] ;then
-	HALLMARK_FILES=$( find DTR_contigs_with_viral_domain/ -maxdepth 1 -type f -name ".*rotate.AA.hmmscan.sort.out" | sed 's/\.\///g' )
+	HALLMARK_FILES=$( find DTR_contigs_with_viral_domain/ -maxdepth 1 -type f -name "*rotate.AA.hmmscan.sort.out" | sed 's/\.\///g' )
 	if [ -n "${HALLMARK_FILES}" ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: reporting taxonomy for each hallmark gene, circular contigs " $MDYT
