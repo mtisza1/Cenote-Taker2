@@ -59,6 +59,7 @@ base_directory=$PWD
 CENOTE_DBS=${35}
 WRAP=${36}
 HALLMARK_TAX=${37}
+EXACT=${38}
 
 if [ "$ANNOTATION_MODE" == "True" ] ; then
 	LIN_MINIMUM_DOMAINS=0
@@ -102,10 +103,11 @@ echo "Location of Cenote scripts:        $CENOTE_SCRIPT_DIR"
 echo "Location of scratch directory:     $SCRATCH_DIR"
 echo "GB of memory:                      $MEM"
 echo "number of CPUs available for run:  $CPU"
-echo "Annotation only mode?                   $ANNOTATION_MODE"
+echo "Annotation only mode?              $ANNOTATION_MODE"
 echo "Cenote-Taker 2 DBs directory:      $CENOTE_DBS"
 echo "Wrap circular contigs?:            $WRAP"
 echo "Taxonomy for each hallmark?:       $HALLMARK_TAX"
+echo "Exact match DTRs?:                 $EXACT"
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@"
 
 #checking validity of run_title
@@ -303,7 +305,11 @@ if [ ${original_contigs: -6} == ".fasta" ]; then
 	bioawk -v run_var="$run_title" -v contig_cutoff="$LENGTH_MINIMUM" -c fastx '{ if(length($seq) > contig_cutoff) { print ">"run_var NR" "$name; print $seq }}' $original_contigs > ${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta ;
 	cd $run_title
 	echo "cenote_shortcut" > ${run_title}_CONTIG_SUMMARY.tsv
-	perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c lastdb -d lastal ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta >/dev/null 2>&1
+	if [ "$EXACT" == "True" ] ; then
+		perl ${CENOTE_SCRIPT_DIR}/apc_exact1.pl -b $run_title -c lastdb -d lastal ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta >/dev/null 2>&1
+	else
+		perl ${CENOTE_SCRIPT_DIR}/apc_cenote1.pl -b $run_title -c lastdb -d lastal ../${original_contigs%.fasta}.over_${LENGTH_MINIMUM}nt.fasta >/dev/null 2>&1
+	fi
 	find . -type f -name "apc_aln*" -exec rm -f {} \;
 	APC_CIRCS=$( find . -maxdepth 1 -type f -name "${run_title}*.fa" )
 	if [ -n "$APC_CIRCS" ] ;then
