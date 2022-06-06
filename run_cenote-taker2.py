@@ -64,7 +64,7 @@ optional_args.add_argument("--blastp", dest="BLASTP", type=str, default="no_blas
 optional_args.add_argument("--orf-within-orf", dest="ORF_WITHIN", type=str2bool, default="False", help='Default: False -- Remove called ORFs without HMMSCAN or RPS-BLAST hits that begin and end within other ORFs? True or False')
 optional_args.add_argument("--cenote-dbs", dest="CENOTE_DBS", type=str, default=cenote_script_path, help='Default: cenote_script_path -- If you downloaded and setup the databases in a non-standard location, specify path')
 optional_args.add_argument("--wrap", dest="WRAP", type=str2bool, default="True", help='Default: True -- Wrap/rotate DTR/circular contigs so the start codon of an ORF is the first nucleotide in the contig/genome')
-optional_args.add_argument("--hallmark_taxonomy", dest="HALLMARK_TAX", type=str2bool, default="False", help='Default: False -- Get hierarchical taxonomy information for all hallmark genes? This report (*.hallmarks.taxonomy.out) is not considered in the final taxonomy call.')
+optional_args.add_argument("--hallmark_taxonomy", dest="HALLMARK_TAX", type=str2bool, default="False", help='Default: False -- Get hierarchical taxonomy information for all hallmark genes? This report (.hallmarks.taxonomy.out) is not considered in the final taxonomy call.')
 
 
 
