@@ -65,7 +65,7 @@ optional_args.add_argument("--orf-within-orf", dest="ORF_WITHIN", type=str2bool,
 optional_args.add_argument("--cenote-dbs", dest="CENOTE_DBS", type=str, default=cenote_script_path, help='Default: cenote_script_path -- If you downloaded and setup the databases in a non-standard location, specify path')
 optional_args.add_argument("--wrap", dest="WRAP", type=str2bool, default="True", help='Default: True -- Wrap/rotate DTR/circular contigs so the start codon of an ORF is the first nucleotide in the contig/genome')
 optional_args.add_argument("--hallmark_taxonomy", dest="HALLMARK_TAX", type=str2bool, default="False", help='Default: False -- Get hierarchical taxonomy information for all hallmark genes? This report (.hallmarks.taxonomy.out) is not considered in the final taxonomy call.')
-optional_args.add_argument("--exact_dtrs", dest="EXACT", type=str2bool, default="False", help='Default: False -- Only record DTRs if each ends matches with 100% ID.')
+optional_args.add_argument("--exact_dtrs", dest="EXACT", type=str2bool, default="False", help='Default: False -- Only record DTRs if each ends matches with 100 percent ID.')
 
 
 
