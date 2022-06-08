@@ -41,7 +41,7 @@ if [ -n "$LINEAR_HALLMARK_CONTIGS" ] ; then
 		if [ ! -s ${nucl_fa%.fna}.tax_guide.blastx.out ] ; then
 			echo "No homologues found" > ${nucl_fa%.fna}.tax_guide.blastx.out
 		fi
-		if grep -i -q "Caudovir\|Ackermannvir\|Herellevir\|Corticovir\|Levivir\|Tectivir\|crAss-like virus\|CrAssphage\|Cyanophage\|Microvir\microphage\|Siphoviridae\|Myoviridae\|phage\|Podovir\|Halovir\|sphaerolipovir\|pleolipovir\|plasmid\|Inovir\|Ampullavir\|Bicaudavir\|Fusellovir\|Guttavir\|Ligamenvir\|Plasmavir\|Salterprovir\|Cystovir" ${nucl_fa%.fna}.tax_guide.blastx.out ; then
+		if grep -i -q "Caudovir\|Ackermannvir\|Herellevir\|Corticovir\|Levivir\|Tectivir\|crAss-like virus\|CrAssphage\|crassvirales\|Cyanophage\|Microvir\microphage\|Siphoviridae\|Myoviridae\|phage\|Podovir\|Halovir\|sphaerolipovir\|pleolipovir\|plasmid\|Inovir\|Ampullavir\|Bicaudavir\|Fusellovir\|Guttavir\|Ligamenvir\|Plasmavir\|Salterprovir\|Cystovir" ${nucl_fa%.fna}.tax_guide.blastx.out ; then
 			echo ${nucl_fa} >> LIN_seqs_for_phanotate.txt
 		else
 			echo ${nucl_fa} >> LIN_seqs_for_prodigal.txt
@@ -671,8 +671,7 @@ if [ -n "$COMB3_TBL" ] ; then
 			STRUCTURAL_COUNT=$( grep -i "capsid\|terminase\|portal\|baseplate\|base plate\|tail\|collar\|zot\|zonular\|minor coat\|packaging\|	virion protein" $feat_tbl2 | wc -l )
 			if [[ $CONJ_COUNT -gt 0 ]] && [[ $STRUCTURAL_COUNT == 0 ]] ; then
 				TAX_ORF="Conjugative Transposon"
-			elif grep -i -q "zot\|zonular" $feat_tbl2 ; then
-				TAX_ORF="Inoviridae"
+
 			elif grep -i -q "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 ; then
 				TAX_ORF=$( grep -i -B1 "large terminase\|large subunit terminase\|packaging\|terminase, large\|terminase large" $feat_tbl2 | head -n1 | sed 's/.*lcl|\(.*\)/\1/' )
 			elif grep -i -q "dnab\|dna polymerase\|polb\|rdrp\|rna dependent rna polymerase" $feat_tbl2 ; then
@@ -692,9 +691,6 @@ if [ -n "$COMB3_TBL" ] ; then
 
 			if [ "$TAX_ORF" == "Conjugative Transposon" ] ; then
 				#echo "${feat_tbl2%.comb3.tbl} looks like a conjugative transposon"
-				echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
-			elif [ "$TAX_ORF" == "Inoviridae" ] ; then
-				#echo "${feat_tbl2%.comb3.tbl} looks like an Inovirus"
 				echo $TAX_ORF > ${feat_tbl2%.comb3.tbl}.tax_guide.blastx.out
 			elif [ "$TAX_ORF" == "No_suitable_orf" ] ; then
 				echo "No suitable ORF for taxonomy found for ${feat_tbl2%.comb3.tbl}, using BLASTX result."
