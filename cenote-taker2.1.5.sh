@@ -1912,9 +1912,14 @@ if [ -n "$COMB3_TBL" ] ; then
 			GCODE="1"
 		fi
 		if echo "$feat_tbl2" | grep -q "DTR_contigs_with_viral_domain" ; then
-			TOPOLOGY="circular"
+			
 			NUCL_FILE="${feat_tbl2%.comb3.tbl}.rotate.fasta"
-			input_contig_name=$( head -n1 ${feat_tbl2%.comb3.tbl}.rotate.fasta | cut -d " " -f 2 | sed 's/|.*//g; s/>//g' ) 
+			input_contig_name=$( head -n1 ${feat_tbl2%.comb3.tbl}.rotate.fasta | cut -d " " -f 2 | sed 's/|.*//g; s/>//g' )
+			if [ "$WRAP" == "True" ] ; then 
+				TOPOLOGY="circular"
+			else
+				TOPOLOGY="linear"
+			fi
 		else
 			TOPOLOGY="linear"
 			NUCL_FILE="${feat_tbl2%.comb3.tbl}.fna"
