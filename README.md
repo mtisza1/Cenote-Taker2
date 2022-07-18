@@ -252,7 +252,8 @@ python /path/to/Cenote-Taker2/run_cenote-taker2.py -c MY_METATRANSCRIPTOME.fasta
 
 ```
 # change directory to a Cenote-Taker 2 output directory
-# specify summary file:
+# specify summary file (name based on run title):
+ls *_CONTIG_SUMMARY.tsv
 SUMMARY="cenote_out_CONTIG_SUMMARY.tsv"
 # make files for VContact2
 if [ -s vcontact2_gene_to_genome1.csv ] || [ -s vcontact2_all_proteins.faa ] ; then echo "vcontact2 files already exist. NOT overwriting." ; else echo "protein_id,contig_id,keywords" > vcontact2_gene_to_genome1.csv ; tail -n+2 $SUMMARY | cut -f2,4 | while read VIRUS END ;do if [[ "$END" == "DTR" ]] ; then AA=$( find . -type f -name "${VIRUS}.rotate.AA.sorted.fasta" ) ; else AA=$( find . -type f -name "${VIRUS}.AA.sorted.fasta" ) ; fi ; grep -F ">" $AA | cut -d " " -f1 | sed 's/>//g' | while read LINE ; do echo "${LINE},${VIRUS}" ; done >> vcontact2_gene_to_genome1.csv ; cat $AA >> vcontact2_all_proteins.faa ; done ; fi
