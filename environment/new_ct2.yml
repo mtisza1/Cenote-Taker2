@@ -1,0 +1,34 @@
+name: ct2_dev
+channels:
+  - defaults
+  - bioconda
+  - conda-forge
+dependencies:
+  - python>=3.11
+#  - prodigal=2.6.3
+  - pyrodigal
+  - samtools
+#  - blast=2.9.0
+  - bioawk=1.0
+#  - entrez-direct=13.3
+#  - hmmer=3.3
+  - pyhmmer
+#  - bowtie2=2.3.5
+  - trnascan-se
+#  - bbtools=37.62
+#  - tbl2asn=25.7
+  - table2asn=1.27.792-0
+#  - cmake=3.14.0
+  - numpy
+  - pandas
+  - matplotlib
+#  - pysam=0.15.3
+  - biopython
+#  - tbb=2020.2
+  - seqkit=2.5.0
+  - bedtools>=2.0
+  - mmseqs2
+  - sed
+  - grep
+  - findutils
+  - coreutils
