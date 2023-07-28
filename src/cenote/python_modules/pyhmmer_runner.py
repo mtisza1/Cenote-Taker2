@@ -51,25 +51,24 @@ with multiprocessing.pool.ThreadPool() as pool:
     for alignments in pool.map(hmmscanner, splitAA_list):
         for model in alignments:
             quer1 = model.query_name.decode()
+            pos = quer1.rfind("_")
+            contig = quer1[:pos]
             for hit in model:
                 target_name = hit.name.decode()
                 target_acc = hit.accession
                 full_seq_evalue = hit.evalue
-                seq_pvalue = hit.pvalue        
-                hmmscan_list.append([quer1, target_name, full_seq_evalue, seq_pvalue])
+                seq_pvalue = hit.pvalue      
+                hmmscan_list.append([quer1, contig, target_name, full_seq_evalue, seq_pvalue])
 
-hmmscan_pools_df = pd.DataFrame(hmmscan_list, columns=["ORFquery", "target", "evalue", "pvalue"])\
+hmmscan_pools_df = pd.DataFrame(hmmscan_list, columns=["ORFquery", "contig", "target", "evalue", "pvalue"])\
     .sort_values('evalue').drop_duplicates('ORFquery').query("evalue <= 1e-8")
 
 
-hmmscan_output_file = os.path.join(out_dir, "pyhmmer_orig_split_AAs.tsv")
+hmmscan_output_file = os.path.join(out_dir, "pyhmmer_report_AAs.tsv")
 
 hmmscan_pools_df.to_csv(hmmscan_output_file,
                         sep = "\t", index = False)
 
-hmmscan_pools_df["pos"] = hmmscan_pools_df["ORFquery"].str.rfind("_")
-
-hmmscan_pools_df["contig"] = hmmscan_pools_df.apply(lambda x: x['ORFquery'][0:x['pos']],axis=1)
 
 hmmscan_contig_sum = hmmscan_pools_df.groupby("contig").size().reset_index(name='count')
 

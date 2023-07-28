@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import pandas as pd
+import math
+import re
+import numpy as np
+
+
+
+### process hallmark taxonomy for ORF calling
+
+mmseqs2_tax_table = sys.argv[1]
+
+out_dir = sys.argv[2]
+
+tax_df = pd.read_csv(mmseqs2_tax_table, header = None, sep = "\t",
+                     names = ["query","target","pident","alnlen","evalue","theader","taxlineage"])\
+                     .sort_values('evalue').drop_duplicates('query').query("evalue <= 1e-3")
+
+tax_df['ORFcaller'] = np.where(tax_df['taxlineage']
+                               .str.contains(
+                                   "Crassvirales|Malgrandaviricetes|Tubulavirales|Leviviricetes|Duplopiviricetes|Kalamavirales|Vinavirales|Autolykiviridae",
+                                   case = False), 'phanotate', 'prodigal')
+
+tax_df["pos"] = tax_df["query"].str.rfind("_")
+
+tax_df["contig"] = tax_df.apply(lambda x: x["query"][0:x["pos"]], axis = 1)
+
+ORFcaller_majority = tax_df.groupby("contig")['ORFcaller'].agg(pd.Series.mode).to_frame()
+
+prodigal_seqs = ORFcaller_majority.query("ORFcaller == 'prodigal'")
+
+
+
+if not prodigal_seqs.empty:
+    prodigal_file = os.path.join(out_dir, "prodigal_seqs1.txt")
+    if os.path.isfile(prodigal_file):
+        os.remove(prodigal_file)
+
+    for i in prodigal_seqs.index:
+
+        print(i, file = open(prodigal_file, "a"))
+
+
+phanotate_seqs = ORFcaller_majority.query("ORFcaller == 'phanotate'")
+
+if not phanotate_seqs.empty:
+    phanotate_file = os.path.join(out_dir, "phanotate_seqs1.txt")
+    if os.path.isfile(phanotate_file):
+        os.remove(phanotate_file)
+
+    for i in phanotate_seqs.index:
+        print(i, file = open(phanotate_file, "a"))
+
+
+
+

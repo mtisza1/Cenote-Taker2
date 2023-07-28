@@ -16,8 +16,12 @@ MEM=25
 CPU=12
 WRAP="True"
 
-CENOTE_DBs="/Users/u241374/mike_tisza/cmmr_repos/Cenote-Taker2"
-CENOTE_SCRIPTS="/Users/u241374/mike_tisza/cmmr_repos/Cenote-Taker2/src/cenote"
+
+## instead of this, set 
+## conda env config vars set CENOTE_DBs=
+## conda env config vars set CENOTE_SCRIPTS=
+#CENOTE_DBS="/Users/u241374/mike_tisza/cmmr_repos/Cenote-Taker2"
+#CENOTE_SCRIPTS="/Users/u241374/mike_tisza/cmmr_repos/Cenote-Taker2/src/cenote"
 
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@"
 echo "Your specified arguments:"
@@ -30,7 +34,7 @@ echo "min. viral hallmarks for linear:   $LIN_MINIMUM_DOMAINS"
 echo "min. viral hallmarks for circular: $CIRC_MINIMUM_DOMAINS"
 echo "GB of memory:                      $MEM"
 echo "number of CPUs available for run:  $CPU"
-echo "Cenote DBs directory:              $CENOTE_DBs"
+echo "Cenote DBs directory:              $CENOTE_DBS"
 echo "Cenote scripts directory:          $CENOTE_SCRIPTS"
 
 
@@ -126,13 +130,13 @@ fi
 ## run pyhmmer on prodigal ORF files
 SPLIT_ORIG_AAs=$( find ${TEMP_DIR}/split_orig_contigs -type f -name "*.prod.faa" )
 
-if [ ! -z "$SPLIT_ORIG_CONTIGS" ] ; then
+if [ ! -z "$SPLIT_ORIG_AAs" ] ; then
 
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: running pyhmmer on all ORFs " $MDYT
 
 	python ${CENOTE_SCRIPTS}/python_modules/pyhmmer_runner.py ${TEMP_DIR}/split_orig_contigs ${TEMP_DIR}/split_orig_pyhmmer\
-	  ${CENOTE_DBs}/hmmscan_DBs/virus_specific_baits_plus_missed6a.h3m
+	  ${CENOTE_DBS}/hmmscan_DBs/virus_specific_baits_plus_missed6a.h3m
 else
 	echo "couldn't find prodigal AA seqs in ${TEMP_DIR}/split_orig_contigs"
 fi
@@ -266,6 +270,296 @@ else
 	echo "couldn't find hallmark contigs with processed terminal repeats at ${TEMP_DIR}/trimmed_TRs_hallmark_contigs.fasta"
 fi
 
+
+## blastp hallmark genes for taxonomy
+if [ -s ${TEMP_DIR}/split_orig_pyhmmer/contigs_to_keep.txt ] && [ -n "$SPLIT_ORIG_AAs" ] ; then
+
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "mmseqs of original hallmark genes for taxonomy calls " $MDYT
+
+	if [ ! -d ${TEMP_DIR}/hallmark_tax ]; then
+		mkdir ${TEMP_DIR}/hallmark_tax
+	fi
+
+	awk -F '\t' 'BEGIN { split("", a) } NR == FNR { a[$0] = 1; next } $2 in a'\
+	  ${TEMP_DIR}/split_orig_pyhmmer/contigs_to_keep.txt \
+	  ${TEMP_DIR}/split_orig_pyhmmer/pyhmmer_report_AAs.tsv | cut -f1 > ${TEMP_DIR}/split_orig_pyhmmer/hallmarks_for_keepcontigs1.txt
+
+
+	seqkit grep -f ${TEMP_DIR}/split_orig_pyhmmer/hallmarks_for_keepcontigs1.txt\
+	  $SPLIT_ORIG_AAs > ${TEMP_DIR}/hallmark_tax/orig_hallmark_genes.faa
+
+	if [ -s ${TEMP_DIR}/hallmark_tax/orig_hallmark_genes.faa ] ; then
+		mmseqs createdb ${TEMP_DIR}/hallmark_tax/orig_hallmark_genes.faa ${TEMP_DIR}/hallmark_tax/orig_hallmark_genesDB -v 1
+
+		mmseqs search ${TEMP_DIR}/hallmark_tax/orig_hallmark_genesDB\
+		  /Users/michaeltisza/mike_tisza/sandbox/mmseqs_protein_DBs/virus_AA_genbank_subset1DB\
+		  ${TEMP_DIR}/hallmark_tax/orig_hallmarks_resDB ${TEMP_DIR}/hallmark_tax/tmp -v 1 --start-sens 1 --sens-steps 3 -s 7
+
+		mmseqs convertalis ${TEMP_DIR}/hallmark_tax/orig_hallmark_genesDB\
+		  /Users/michaeltisza/mike_tisza/sandbox/mmseqs_protein_DBs/virus_AA_genbank_subset1DB\
+		  ${TEMP_DIR}/hallmark_tax/orig_hallmarks_resDB ${TEMP_DIR}/hallmark_tax/orig_hallmarks_align.tsv\
+		  --format-output query,target,pident,alnlen,evalue,theader,taxlineage -v 1
+
+	else
+		echo "couldn't find ${TEMP_DIR}/hallmark_tax/orig_hallmark_genes.faa"
+		exit
+	fi
+
+else
+	echo "couldn't find ${TEMP_DIR}/split_orig_pyhmmer/contigs_to_keep.txt or $SPLIT_ORIG_AAs for mmseqs hallmarks"
+	exit
+fi
+
+## parse taxonomy on hallmark gene mmseqs2 search and decide final ORF caller
+if [ -s ${TEMP_DIR}/hallmark_tax/orig_hallmarks_align.tsv ] ; then
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "choosing ORF caller for each sequence " $MDYT
+
+	python ${CENOTE_SCRIPTS}/python_modules/orfcaller_decision1.py ${TEMP_DIR}/hallmark_tax/orig_hallmarks_align.tsv ${TEMP_DIR}/hallmark_tax
+
+else
+	echo "couldn't find ${TEMP_DIR}/hallmark_tax/orig_hallmarks_align.tsv"
+	exit
+fi
+
+## redo ORF calls for everything. Some need phanotate, some were rotated
+if [ -s ${TEMP_DIR}/hallmark_tax/prodigal_seqs1.txt ] || [ -s ${TEMP_DIR}/hallmark_tax/phanotate_seqs1.txt ] ; then
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "redoing ORF calls for each sequence " $MDYT
+
+	if [ ! -d ${TEMP_DIR}/reORF ]; then
+		mkdir ${TEMP_DIR}/reORF
+	fi
+else
+	echo "couldn't find prodigal_seqs1.txt or phanotate_seqs1.txt"
+	exit
+fi
+
+if [ -s ${TEMP_DIR}/hallmark_tax/prodigal_seqs1.txt ] ; then
+
+	if [ ! -d ${TEMP_DIR}/reORF/prod_split ]; then
+		mkdir ${TEMP_DIR}/reORF/prod_split
+	fi
+
+	seqkit grep -f ${TEMP_DIR}/hallmark_tax/prodigal_seqs1.txt ${TEMP_DIR}/oriented_hallmark_contigs.fasta |\
+	  seqkit split --quiet -j $CPU -p $CPU -O ${TEMP_DIR}/reORF/prod_split
+
+	SPLIT_PROD_CONTIGS=$( find ${TEMP_DIR}/reORF/prod_split -type f -name "*.fasta" )
+
+	if [ -n "$SPLIT_PROD_CONTIGS" ] ; then
+		PROD_SEQS_L=$( cat ${TEMP_DIR}/hallmark_tax/prodigal_seqs1.txt | wc -l )
+		MDYT=$( date +"%m-%d-%y---%T" )
+		echo "time update: running prodigal for re-ORF call on ${PROD_SEQS_L} seqs" $MDYT
+
+		echo "$SPLIT_PROD_CONTIGS" | sed 's/.fasta//g' |\
+		  xargs -n 1 -I {} -P $CPU -t prodigal -a {}.prod.faa -f gff -o {}.prod.gff -i {}.fasta -p meta -q >/dev/null 2>&1
+
+		echo "$SPLIT_PROD_CONTIGS" | sed 's/.fasta//g' | while read PROD ; do
+			cat ${PROD}.prod.faa
+		done >> ${TEMP_DIR}/reORF/reORFcalled_all.faa
+
+	else
+		echo "can't find split prodigal contigs"
+
+	fi
+
+else
+	echo "no prodigal list. OK."
+fi
+
+if [ -s ${TEMP_DIR}/hallmark_tax/phanotate_seqs1.txt ] ; then
+
+	if [ ! -d ${TEMP_DIR}/reORF/phan_split ]; then
+		mkdir ${TEMP_DIR}/reORF/phan_split
+	fi
+
+	seqkit grep -f ${TEMP_DIR}/hallmark_tax/phanotate_seqs1.txt ${TEMP_DIR}/oriented_hallmark_contigs.fasta |\
+	  seqkit split --quiet -j $CPU -p $CPU -O ${TEMP_DIR}/reORF/phan_split
+
+	SPLIT_PHAN_CONTIGS=$( find ${TEMP_DIR}/reORF/phan_split -type f -name "*.fasta" )
+
+	if [ -n "$SPLIT_PHAN_CONTIGS" ] ; then
+		## this part actually just calls the coordinates
+
+		PHAN_SEQS_L=$( cat ${TEMP_DIR}/hallmark_tax/phanotate_seqs1.txt | wc -l )
+		MDYT=$( date +"%m-%d-%y---%T" )
+		echo "time update: running phanotate for re-ORF call on ${PHAN_SEQS_L} seqs" $MDYT
+
+		echo "$SPLIT_PHAN_CONTIGS" | sed 's/.fasta//g' |\
+		  xargs -n 1 -I {} -P $CPU phanotate.py -f tabular {}.fasta -o {}.phan_genes.bad_fmt.tsv 
+
+		echo "$SPLIT_PHAN_CONTIGS" | sed 's/.fasta//g' | while READ PHAN_TSV ; do
+			awk -v '{OFS=FS="\t"}{ if ($1 !~ /^#/) {print $4, $1, $2, $5, $3}}' ${PHAN_TSV}.phan_genes.bad_fmt.tsv > ${PHAN_TSV}.phan_genes.tsv
+			rm ${PHAN_TSV}.phan_genes.bad_fmt.tsv
+		done
+
+
+	else
+		echo "can't find split phanotate contigs"
+
+	fi
+
+	PHAN_TABS=$( find ${TEMP_DIR}/reORF/phan_split -type f -name "*.phan_genes.tsv" )
+	if [ -n "$PHAN_TABS" ] ; then
+
+		## this part extracts the gene seqs
+		MDYT=$( date +"%m-%d-%y---%T" )
+		echo "time update: running bedtools to extract phanotate ORF calls" $MDYT
+
+		echo "$PHAN_TABS" | sed 's/.phan_genes.tsv//g' |\
+		  xargs -n 1 -I {} -P $CPU bedtools getfasta -fi {}.fasta -bed {}.phan_genes.bed -fo {}.phan_genes.fasta -s
+
+		## this part translates the gene seqs
+		MDYT=$( date +"%m-%d-%y---%T" )
+		echo "time update: running seqkit translate to on phanotate ORF calls" $MDYT
+
+		echo "$PHAN_TABS" | sed 's/.phan_genes.tsv//g' |\
+		  xargs -n 1 -I {} -P $CPU seqkit translate -x -T 11 {}.phan_genes.fasta -o {}.faa >/dev/null 2>&1 
+
+		echo "$PHAN_TABS" | sed 's/.phan_genes.tsv//g' | while read PHAN ; do
+			cat ${PHAN}.fasta
+		done >> ${TEMP_DIR}/reORF/reORFcalled_all.faa
+
+	fi
+
+else
+	echo "no phanotate list. OK."
+fi
+
+
+#-# now these annotations count, so I can make an annotation table with these starting fields
+#-# contig, ORF, orient, start, stop
+
+## pyhmmer with all/full database
+#-# to annotation table add columns
+#-# hmmscan accession, hmmscan description
+
+if [ -s ${TEMP_DIR}/reORF/reORFcalled_all.faa ] ; then
+
+	if [ ! -d ${TEMP_DIR}/reORF_split ]; then
+		mkdir ${TEMP_DIR}/reORF_split
+	fi
+
+	if [ ! -d ${TEMP_DIR}/second_reORF_split ]; then
+		mkdir ${TEMP_DIR}/second_reORF_split
+	fi
+	
+	if [ ! -d ${TEMP_DIR}/third_reORF_split ]; then
+		mkdir ${TEMP_DIR}/third_reORF_split
+	fi
+	
+
+	seqkit split --quiet -j $CPU -p $CPU -O ${TEMP_DIR}/reORF_split ${TEMP_DIR}/reORF/reORFcalled_all.faa
+
+else
+	echo "couldn't find  ${TEMP_DIR}/reORF/reORFcalled_all.faa for splitting"
+	exit
+fi
+
+SPLIT_REORF_AAs=$( find ${TEMP_DIR}/reORF_split -type f -name "*.faa" )
+
+if [ ! -z "$SPLIT_REORF_AAs" ] ; then
+
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "time update: running pyhmmer hallmarkdb on reORFs " $MDYT
+
+
+	python ${CENOTE_SCRIPTS}/python_modules/pyhmmer_runner.py ${TEMP_DIR}/reORF_split ${TEMP_DIR}/reORF_pyhmmer\
+	  ${CENOTE_DBS}/hmmscan_DBs/virus_specific_baits_plus_missed6a.h3m
+
+	if [ -s ${TEMP_DIR}/reORF_pyhmmer/pyhmmer_report_AAs.tsv ] ; then
+		tail -n+2 ${TEMP_DIR}/reORF_pyhmmer/pyhmmer_report_AAs.tsv | cut -f1 > ${TEMP_DIR}/reORF_pyhmmer/hit_this_round1.txt
+
+		echo "$SPLIT_REORF_AAs" | while read AA ; do
+			BASE_AA=$( basename $AA )
+			seqkit grep -j $CPU -v -f ${TEMP_DIR}/reORF_pyhmmer/hit_this_round1.txt $AA > ${TEMP_DIR}/second_reORF_split/${BASE_AA%.faa}.no1.faa
+		done
+
+	else
+		echo "$SPLIT_REORF_AAs" | while read AA ; do
+			BASE_AA=$( basename $AA )
+			cp $AA ${TEMP_DIR}/second_reORF_split/${BASE_AA%.faa}.no1.faa
+		done
+	fi
+
+
+else
+	echo "couldn't find prodigal AA seqs in ${TEMP_DIR}/split_orig_contigs"
+fi
+
+SECOND_REORF_AAs=$( find ${TEMP_DIR}/second_reORF_split -type f -name "*.no1.faa" )
+
+if [ ! -z "$SPLIT_REORF_AAs" ] ; then
+
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "time update: running pyhmmer additional annotation HMMs on reORFs " $MDYT
+
+
+	python ${CENOTE_SCRIPTS}/python_modules/pyhmmer_runner.py ${TEMP_DIR}/second_reORF_split ${TEMP_DIR}/second_reORF_pyhmmer\
+	  ${CENOTE_DBS}/hmmscan_DBs/useful_hmms_baits_and_not2a.h3m
+
+	if [ -s ${TEMP_DIR}/second_reORF_pyhmmer/pyhmmer_report_AAs.tsv ] ; then
+		tail -n+2 ${TEMP_DIR}/second_reORF_pyhmmer/pyhmmer_report_AAs.tsv | cut -f1 > ${TEMP_DIR}/second_reORF_pyhmmer/hit_this_round1.txt
+
+		echo "$SPLIT_REORF_AAs" | while read AA ; do
+			BASE_AA=$( basename $AA )
+			seqkit grep -j $CPU -v -f ${TEMP_DIR}/second_reORF_pyhmmer/hit_this_round1.txt $AA > ${TEMP_DIR}/third_reORF_split/${BASE_AA%no1.faa}.no2.faa
+		done
+
+	else
+		echo "$SPLIT_REORF_AAs" | while read AA ; do
+			BASE_AA=$( basename $AA )
+			cp $AA ${TEMP_DIR}/third_reORF_split/${BASE_AA%no1.faa}.no2.faa
+		done
+	fi
+
+
+else
+	echo "couldn't find prodigal AA seqs in ${TEMP_DIR}/split_orig_contigs"
+fi
+
+#
+
+
+
+## mmseqs2 with CDD profiles
+#-# to annotation table add columns
+#-# mmseqs2 accession, mmseq2 description
+
+
+## make virus-ness seq then prune
+## update all coordinates of annotation table after pruning
+## allow seqs that were split in parts
+
+
+## hhsearch
+#-# to annotation table add columns
+#-# hhsearch accession, hhsearch description
+
+## tRNAscan-SE
+#-# to annotation table add ROWS for feature (start, stop, orient)
+#-# to annotation table add columns
+#-# tRNA score, tRNA description
+
+
+## read mapping
+
+
+## blastn-style mmseqs2 taxonomy for species level
+
+
+## Format files for table2asn
+
+
+## run table2asn
+
+
+## make summary files
+
+
+MDYT=$( date +"%m-%d-%y---%T" )
+echo "pipeline ending now " $MDYT
 
 
 
