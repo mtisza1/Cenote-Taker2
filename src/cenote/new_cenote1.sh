@@ -389,9 +389,13 @@ if [ -s ${TEMP_DIR}/hallmark_tax/phanotate_seqs1.txt ] ; then
 		echo "$SPLIT_PHAN_CONTIGS" | sed 's/.fasta//g' |\
 		  xargs -n 1 -I {} -P $CPU phanotate.py -f tabular {}.fasta -o {}.phan_genes.bad_fmt.tsv 
 
-		echo "$SPLIT_PHAN_CONTIGS" | sed 's/.fasta//g' | while READ PHAN_TSV ; do
-			awk -v '{OFS=FS="\t"}{ if ($1 !~ /^#/) {print $4, $1, $2, $5, $3}}' ${PHAN_TSV}.phan_genes.bad_fmt.tsv > ${PHAN_TSV}.phan_genes.tsv
-			rm ${PHAN_TSV}.phan_genes.bad_fmt.tsv
+
+		SPLIT_PHAN_TABS=$( find ${TEMP_DIR}/reORF/phan_split -type f -name "*.phan_genes.bad_fmt.tsv" )
+
+		for PHAN_TSV in $SPLIT_PHAN_TABS; do
+			#echo $PHAN_TSV
+			awk '{OFS=FS="\t"}{ if ($1 !~ /^#/) {print $4, ($1-1), $2, $4"_"NR, $5, $3}}' ${PHAN_TSV} > ${PHAN_TSV%.phan_genes.bad_fmt.tsv}.phan_genes.bed
+			rm ${PHAN_TSV}
 		done
 
 
@@ -400,25 +404,27 @@ if [ -s ${TEMP_DIR}/hallmark_tax/phanotate_seqs1.txt ] ; then
 
 	fi
 
-	PHAN_TABS=$( find ${TEMP_DIR}/reORF/phan_split -type f -name "*.phan_genes.tsv" )
+	PHAN_TABS=$( find ${TEMP_DIR}/reORF/phan_split -type f -name "*.phan_genes.bed" )
 	if [ -n "$PHAN_TABS" ] ; then
 
 		## this part extracts the gene seqs
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running bedtools to extract phanotate ORF calls" $MDYT
 
-		echo "$PHAN_TABS" | sed 's/.phan_genes.tsv//g' |\
-		  xargs -n 1 -I {} -P $CPU bedtools getfasta -fi {}.fasta -bed {}.phan_genes.bed -fo {}.phan_genes.fasta -s
+
+		echo "$PHAN_TABS" | sed 's/.phan_genes.bed//g' |\
+		  xargs -n 1 -I {} -P $CPU bedtools getfasta -fi {}.fasta -bed {}.phan_genes.bed -fo {}.phan_genes.fasta -s -nameOnly
 
 		## this part translates the gene seqs
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running seqkit translate to on phanotate ORF calls" $MDYT
 
-		echo "$PHAN_TABS" | sed 's/.phan_genes.tsv//g' |\
+		### this part is not working on each file...
+		echo "$PHAN_TABS" | sed 's/.phan_genes.bed//g' |\
 		  xargs -n 1 -I {} -P $CPU seqkit translate -x -T 11 {}.phan_genes.fasta -o {}.faa >/dev/null 2>&1 
 
-		echo "$PHAN_TABS" | sed 's/.phan_genes.tsv//g' | while read PHAN ; do
-			cat ${PHAN}.fasta
+		echo "$PHAN_TABS" | sed 's/.phan_genes.bed//g' | while read PHAN ; do
+			cat ${PHAN}.faa
 		done >> ${TEMP_DIR}/reORF/reORFcalled_all.faa
 
 	fi
@@ -488,7 +494,7 @@ else
 	echo "couldn't find prodigal AA seqs in ${TEMP_DIR}/split_orig_contigs"
 fi
 
-SECOND_REORF_AAs=$( find ${TEMP_DIR}/second_reORF_split -type f -name "*.no1.faa" )
+SECOND_REORF_AAs=$( find ${TEMP_DIR}/second_reORF_split -type f ! -size 0 -name "*.no1.faa" )
 
 if [ ! -z "$SPLIT_REORF_AAs" ] ; then
 
