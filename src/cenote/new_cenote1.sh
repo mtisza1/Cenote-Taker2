@@ -394,7 +394,7 @@ if [ -s ${TEMP_DIR}/hallmark_tax/phanotate_seqs1.txt ] ; then
 
 		for PHAN_TSV in $SPLIT_PHAN_TABS; do
 			#echo $PHAN_TSV
-			awk '{OFS=FS="\t"}{ if ($1 !~ /^#/) {print $4, ($1-1), $2, $4"_"NR, $5, $3}}' ${PHAN_TSV} > ${PHAN_TSV%.phan_genes.bad_fmt.tsv}.phan_genes.bed
+			awk '{OFS=FS="\t"}{ if ($1 !~ /^#/) { if ($2>$1) {print $4, ($1-1), $2, $4"_"NR, $5, $3} else {print $4, ($2-1), $1, $4"_"NR, $5, $3}}}' ${PHAN_TSV} > ${PHAN_TSV%.phan_genes.bad_fmt.tsv}.phan_genes.bed
 			rm ${PHAN_TSV}
 		done
 

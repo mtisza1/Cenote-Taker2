@@ -21,12 +21,18 @@ tax_df = pd.read_csv(mmseqs2_tax_table, header = None, sep = "\t",
 
 tax_df['ORFcaller'] = np.where(tax_df['taxlineage']
                                .str.contains(
-                                   "Crassvirales|Malgrandaviricetes|Tubulavirales|Leviviricetes|Duplopiviricetes|Kalamavirales|Vinavirales|Autolykiviridae",
+                                   "Caudoviricetes|Crassvirales|Malgrandaviricetes|Tubulavirales|Leviviricetes|Duplopiviricetes|Kalamavirales|Vinavirales|Autolykiviridae",
                                    case = False), 'phanotate', 'prodigal')
 
 tax_df["pos"] = tax_df["query"].str.rfind("_")
 
 tax_df["contig"] = tax_df.apply(lambda x: x["query"][0:x["pos"]], axis = 1)
+
+
+### I don't really need to make this file, just for dev
+tax_label_file = os.path.join(out_dir, "orf_caller_each_seq.tsv")
+
+tax_df.to_csv(tax_label_file, sep = "\t", index = False)
 
 ORFcaller_majority = tax_df.groupby("contig")['ORFcaller'].agg(pd.Series.mode).to_frame()
 
