@@ -293,11 +293,11 @@ if [ -s ${TEMP_DIR}/split_orig_pyhmmer/contigs_to_keep.txt ] && [ -n "$SPLIT_ORI
 		mmseqs createdb ${TEMP_DIR}/hallmark_tax/orig_hallmark_genes.faa ${TEMP_DIR}/hallmark_tax/orig_hallmark_genesDB -v 1
 
 		mmseqs search ${TEMP_DIR}/hallmark_tax/orig_hallmark_genesDB\
-		  /Users/michaeltisza/mike_tisza/sandbox/mmseqs_protein_DBs/virus_AA_genbank_subset1DB\
+		  ${CENOTE_DBS}/mmseqs_DBs/refseq_virus_prot_taxDB\
 		  ${TEMP_DIR}/hallmark_tax/orig_hallmarks_resDB ${TEMP_DIR}/hallmark_tax/tmp -v 1 --start-sens 1 --sens-steps 3 -s 7
 
 		mmseqs convertalis ${TEMP_DIR}/hallmark_tax/orig_hallmark_genesDB\
-		  /Users/michaeltisza/mike_tisza/sandbox/mmseqs_protein_DBs/virus_AA_genbank_subset1DB\
+		  ${CENOTE_DBS}/mmseqs_DBs/refseq_virus_prot_taxDB\
 		  ${TEMP_DIR}/hallmark_tax/orig_hallmarks_resDB ${TEMP_DIR}/hallmark_tax/orig_hallmarks_align.tsv\
 		  --format-output query,target,pident,alnlen,evalue,theader,taxlineage -v 1
 
@@ -327,6 +327,22 @@ fi
 if [ -s ${TEMP_DIR}/hallmark_tax/prodigal_seqs1.txt ] || [ -s ${TEMP_DIR}/hallmark_tax/phanotate_seqs1.txt ] ; then
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "redoing ORF calls for each sequence " $MDYT
+
+
+	## adding contigs that had no hits in mmseqs search to list of contigs that need prodigal ORF calling
+	if [ -s ${TEMP_DIR}/hallmark_tax/phanotate_seqs1.txt ] ; then
+		cat ${TEMP_DIR}/hallmark_tax/phanotate_seqs1.txt >> ${TEMP_DIR}/hallmark_tax/taxed_seqs1.txt
+	fi
+
+	if [ -s ${TEMP_DIR}/hallmark_tax/prodigal_seqs1.txt ] ; then
+		cat ${TEMP_DIR}/hallmark_tax/prodigal_seqs1.txt >> ${TEMP_DIR}/hallmark_tax/taxed_seqs1.txt
+	fi
+	if [ -s ${TEMP_DIR}/hallmark_tax/taxed_seqs1.txt ] ; then
+		grep -v -f ${TEMP_DIR}/hallmark_tax/taxed_seqs1.txt\
+		  ${TEMP_DIR}/split_orig_pyhmmer/contigs_to_keep.txt >> ${TEMP_DIR}/hallmark_tax/prodigal_seqs1.txt
+	fi
+
+
 
 	if [ ! -d ${TEMP_DIR}/reORF ]; then
 		mkdir ${TEMP_DIR}/reORF
@@ -451,8 +467,8 @@ if [ -s ${TEMP_DIR}/reORF/reORFcalled_all.faa ] ; then
 		mkdir ${TEMP_DIR}/second_reORF_split
 	fi
 	
-	if [ ! -d ${TEMP_DIR}/third_reORF_split ]; then
-		mkdir ${TEMP_DIR}/third_reORF_split
+	if [ ! -d ${TEMP_DIR}/third_reORF_combined ]; then
+		mkdir ${TEMP_DIR}/third_reORF_combined
 	fi
 	
 
@@ -496,7 +512,7 @@ fi
 
 SECOND_REORF_AAs=$( find ${TEMP_DIR}/second_reORF_split -type f ! -size 0 -name "*.no1.faa" )
 
-if [ ! -z "$SPLIT_REORF_AAs" ] ; then
+if [ ! -z "$SECOND_REORF_AAs" ] ; then
 
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "time update: running pyhmmer additional annotation HMMs on reORFs " $MDYT
@@ -508,16 +524,14 @@ if [ ! -z "$SPLIT_REORF_AAs" ] ; then
 	if [ -s ${TEMP_DIR}/second_reORF_pyhmmer/pyhmmer_report_AAs.tsv ] ; then
 		tail -n+2 ${TEMP_DIR}/second_reORF_pyhmmer/pyhmmer_report_AAs.tsv | cut -f1 > ${TEMP_DIR}/second_reORF_pyhmmer/hit_this_round1.txt
 
-		echo "$SPLIT_REORF_AAs" | while read AA ; do
-			BASE_AA=$( basename $AA )
-			seqkit grep -j $CPU -v -f ${TEMP_DIR}/second_reORF_pyhmmer/hit_this_round1.txt $AA > ${TEMP_DIR}/third_reORF_split/${BASE_AA%no1.faa}.no2.faa
+		echo "$SECOND_REORF_AAs" | while read AA ; do
+			seqkit grep -j $CPU -v -f ${TEMP_DIR}/second_reORF_pyhmmer/hit_this_round1.txt $AA >> ${TEMP_DIR}/third_reORF_combined/all_AA_seqs.no2.faa
 		done
 
 	else
-		echo "$SPLIT_REORF_AAs" | while read AA ; do
-			BASE_AA=$( basename $AA )
-			cp $AA ${TEMP_DIR}/third_reORF_split/${BASE_AA%no1.faa}.no2.faa
-		done
+		echo "$SECOND_REORF_AAs" | while read AA ; do
+			cat $AA
+		done > ${TEMP_DIR}/third_reORF_combined/all_AA_seqs.no2.faa
 	fi
 
 
@@ -525,13 +539,33 @@ else
 	echo "couldn't find prodigal AA seqs in ${TEMP_DIR}/split_orig_contigs"
 fi
 
-#
-
 
 
 ## mmseqs2 with CDD profiles
 #-# to annotation table add columns
 #-# mmseqs2 accession, mmseq2 description
+if [ -s ${TEMP_DIR}/third_reORF_combined/all_AA_seqs.no2.faa ] ; then
+
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "time update: running mmseqs2 against CDD with ORFs not annotated with HMMs " $MDYT
+
+	mmseqs createdb ${TEMP_DIR}/third_reORF_combined/all_AA_seqs.no2.faa ${TEMP_DIR}/third_reORF_combined/all_AA_seqs.no2DB -v 1
+
+	mmseqs search ${TEMP_DIR}/third_reORF_combined/all_AA_seqs.no2DB\
+	  ${CENOTE_DBS}/mmseqs_DBs/CDD ${TEMP_DIR}/third_reORF_combined/all_AA_seqs.no2_vs_CDD_resDB\
+	  ${TEMP_DIR}/third_reORF_combined/tmp -s 4
+
+	mmseqs convertalis ${TEMP_DIR}/third_reORF_combined/all_AA_seqs.no2DB\
+	  ${CENOTE_DBS}/mmseqs_DBs/CDD\
+	  ${TEMP_DIR}/third_reORF_combined/all_AA_seqs.no2_vs_CDD_resDB ${TEMP_DIR}/third_reORF_combined/no2_seqs_CDD.tsv\
+	  --format-output query,target,pident,alnlen,evalue,bits
+
+	python ${CENOTE_SCRIPTS}/python_modules/parse_mmseqs_cdd_results1.py ${TEMP_DIR}/third_reORF_combined/no2_seqs_CDD.tsv\
+	  ${CENOTE_DBS}/mmseqs_DBs/cddid_all.tbl ${TEMP_DIR}/third_reORF_combined
+
+else
+	echo "couldn't find ${TEMP_DIR}/third_reORF_combined/all_AA_seqs.no2.faa for mmseqs CDD"
+fi
 
 
 ## make virus-ness seq then prune
