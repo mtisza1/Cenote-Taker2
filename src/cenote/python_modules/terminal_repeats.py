@@ -84,7 +84,7 @@ for seq_record in SeqIO.parse(fasta_file, "fasta"):
         print(f">{seq_record.id}", file = open(output_file, "a"))
         print(seq_record.seq, file = open(output_file, "a"))
 
-        terminal_r_list.append([seq_record.id, len(seq_record.seq), len(seq_record.seq[:-len(dtr_seq)]), dtr_seq, itr_seq])
+        terminal_r_list.append([seq_record.id, len(seq_record.seq), len(seq_record.seq), dtr_seq, itr_seq])
 
 terminal_df = pd.DataFrame(terminal_r_list, columns=["contig", "in_length_contig", "out_length_contig", "dtr_seq", "itr_seq"])
 

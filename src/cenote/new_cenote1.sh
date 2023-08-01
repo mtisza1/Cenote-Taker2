@@ -312,14 +312,15 @@ else
 fi
 
 ## parse taxonomy on hallmark gene mmseqs2 search and decide final ORF caller
-if [ -s ${TEMP_DIR}/hallmark_tax/orig_hallmarks_align.tsv ] ; then
+if [ -s ${TEMP_DIR}/hallmark_tax/orig_hallmarks_align.tsv ] && [ -s ${TEMP_DIR}/hallmark_contigs_terminal_repeat_summary.tsv ] ; then
 	MDYT=$( date +"%m-%d-%y---%T" )
 	echo "choosing ORF caller for each sequence " $MDYT
 
-	python ${CENOTE_SCRIPTS}/python_modules/orfcaller_decision1.py ${TEMP_DIR}/hallmark_tax/orig_hallmarks_align.tsv ${TEMP_DIR}/hallmark_tax
+	python ${CENOTE_SCRIPTS}/python_modules/orfcaller_decision1.py ${TEMP_DIR}/hallmark_tax/orig_hallmarks_align.tsv\
+	  ${TEMP_DIR}/hallmark_contigs_terminal_repeat_summary.tsv ${TEMP_DIR}/hallmark_tax
 
 else
-	echo "couldn't find ${TEMP_DIR}/hallmark_tax/orig_hallmarks_align.tsv"
+	echo "couldn't find ${TEMP_DIR}/hallmark_tax/orig_hallmarks_align.tsv or ${TEMP_DIR}/hallmark_contigs_terminal_repeat_summary.tsv"
 	exit
 fi
 
@@ -341,6 +342,8 @@ if [ -s ${TEMP_DIR}/hallmark_tax/prodigal_seqs1.txt ] || [ -s ${TEMP_DIR}/hallma
 		grep -v -f ${TEMP_DIR}/hallmark_tax/taxed_seqs1.txt\
 		  ${TEMP_DIR}/split_orig_pyhmmer/contigs_to_keep.txt >> ${TEMP_DIR}/hallmark_tax/prodigal_seqs1.txt
 	fi
+
+	#### I NEED TO MAKE A MAX LENGTH FOR PHANOTATE BECAUSE IT DOESN'T WORK ON FULL BACTERIAL GENOMES
 
 
 
@@ -403,7 +406,7 @@ if [ -s ${TEMP_DIR}/hallmark_tax/phanotate_seqs1.txt ] ; then
 		echo "time update: running phanotate for re-ORF call on ${PHAN_SEQS_L} seqs" $MDYT
 
 		echo "$SPLIT_PHAN_CONTIGS" | sed 's/.fasta//g' |\
-		  xargs -n 1 -I {} -P $CPU phanotate.py -f tabular {}.fasta -o {}.phan_genes.bad_fmt.tsv 
+		  xargs -n 1 -I {} -P $CPU phanotate.py -f tabular {}.fasta -o {}.phan_genes.bad_fmt.tsv >/dev/null 2>&1
 
 
 		SPLIT_PHAN_TABS=$( find ${TEMP_DIR}/reORF/phan_split -type f -name "*.phan_genes.bad_fmt.tsv" )
@@ -553,12 +556,12 @@ if [ -s ${TEMP_DIR}/third_reORF_combined/all_AA_seqs.no2.faa ] ; then
 
 	mmseqs search ${TEMP_DIR}/third_reORF_combined/all_AA_seqs.no2DB\
 	  ${CENOTE_DBS}/mmseqs_DBs/CDD ${TEMP_DIR}/third_reORF_combined/all_AA_seqs.no2_vs_CDD_resDB\
-	  ${TEMP_DIR}/third_reORF_combined/tmp -s 4
+	  ${TEMP_DIR}/third_reORF_combined/tmp -s 4 -v 1
 
 	mmseqs convertalis ${TEMP_DIR}/third_reORF_combined/all_AA_seqs.no2DB\
 	  ${CENOTE_DBS}/mmseqs_DBs/CDD\
 	  ${TEMP_DIR}/third_reORF_combined/all_AA_seqs.no2_vs_CDD_resDB ${TEMP_DIR}/third_reORF_combined/no2_seqs_CDD.tsv\
-	  --format-output query,target,pident,alnlen,evalue,bits
+	  --format-output query,target,pident,alnlen,evalue,bits -v 1
 
 	python ${CENOTE_SCRIPTS}/python_modules/parse_mmseqs_cdd_results1.py ${TEMP_DIR}/third_reORF_combined/no2_seqs_CDD.tsv\
 	  ${CENOTE_DBS}/mmseqs_DBs/cddid_all.tbl ${TEMP_DIR}/third_reORF_combined
@@ -571,7 +574,57 @@ fi
 ## make virus-ness seq then prune
 ## update all coordinates of annotation table after pruning
 ## allow seqs that were split in parts
+if [ -s ${TEMP_DIR}/hallmark_contigs_terminal_repeat_summary.tsv ] && [ -s ${CENOTE_DBS}/viral_cdds_and_pfams_191028.txt ] ; then
 
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "time update: assessing each gene on all contigs and pruning any linear contigs over 10kb " $MDYT
+
+	python ${CENOTE_SCRIPTS}/python_modules/assess_virus_genes1.py ${TEMP_DIR}/hallmark_contigs_terminal_repeat_summary.tsv\
+	  ${TEMP_DIR}/reORF/phan_split ${TEMP_DIR}/reORF/prod_split ${TEMP_DIR}/reORF_pyhmmer/pyhmmer_report_AAs.tsv\
+	  ${TEMP_DIR}/second_reORF_pyhmmer/pyhmmer_report_AAs.tsv ${TEMP_DIR}/third_reORF_combined/summary_no2_AAs_vs_CDD.besthit.tsv\
+	  ${CENOTE_DBS}/viral_cdds_and_pfams_191028.txt ${TEMP_DIR}/assess_prune
+
+else
+	echo "couldn't start assess and prune script"
+fi
+
+CHUNK_FILES=$( find ${TEMP_DIR}/assess_prune/prune_figures -type f -name "*chunks.tsv" )
+
+if [ -s ${TEMP_DIR}/assess_prune/contig_gene_annotation_summary.tsv ] && [ -n "$CHUNK_FILES" ] ; then
+
+	if [ ! -d ${TEMP_DIR}/assess_prune/indiv_seqs ]; then
+		mkdir ${TEMP_DIR}/assess_prune/indiv_seqs
+	fi
+
+	tail -n+2 ${TEMP_DIR}/assess_prune/contig_gene_annotation_summary.tsv |\
+	  grep -F "hallmark_hmm" | cut -f1,2,3 > ${TEMP_DIR}/assess_prune/contig_gene_annotation_summary.hallmarks.bed
+
+	echo ""
+	echo "$CHUNK_FILES" | while read SEQ_CHUNK ; do
+
+		B_SEQ=$( basename $SEQ_CHUNK )
+
+		tail -n+2 $SEQ_CHUNK > ${TEMP_DIR}/assess_prune/indiv_seqs/${B_SEQ%.tsv}.bed
+
+		bedtools intersect -c -a ${TEMP_DIR}/assess_prune/indiv_seqs/${B_SEQ%.tsv}.bed\
+		  -b ${TEMP_DIR}/assess_prune/contig_gene_annotation_summary.hallmarks.bed |\
+		  awk -v minh="$LIN_MINIMUM_DOMAINS" '{OFS=FS="\t"}{if ($5 >= minh) {print}}' > ${TEMP_DIR}/assess_prune/indiv_seqs/${B_SEQ%chunks.tsv}.viruses.tsv
+
+	done
+
+	VIR_COORD_FILES=$( find ${TEMP_DIR}/assess_prune/indiv_seqs -type f -name "*viruses.tsv" )
+
+#	if [ -n "$VIR_COORD_FILES" ] ; then
+
+#		python adjust_viruses1.py ${TEMP_DIR}/assess_prune/indiv_seqs\
+#		  ${TEMP_DIR}/assess_prune/contig_gene_annotation_summary.tsv ${TEMP_DIR}/oriented_hallmark_contigs.fasta
+
+#	fi
+
+
+else
+	echo "couldn't find files to actually prune"
+fi
 
 ## hhsearch
 #-# to annotation table add columns
@@ -600,6 +653,8 @@ fi
 
 MDYT=$( date +"%m-%d-%y---%T" )
 echo "pipeline ending now " $MDYT
+
+echo "output: ${run_title}"
 
 
 
