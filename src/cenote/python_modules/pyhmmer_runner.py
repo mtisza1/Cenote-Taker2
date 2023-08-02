@@ -39,7 +39,7 @@ for splitAA in os.listdir(input_dir):
     if splitAA.endswith('.faa'):
         f = os.path.join(input_dir, splitAA)
 
-        if os.path.isfile(f):
+        if os.path.isfile(f) and os.path.getsize(f) > 0:
             splitAA_list.append(f)
 
 if not splitAA_list:

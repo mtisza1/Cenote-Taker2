@@ -19,7 +19,7 @@ import math
 import collections
 import bisect
 
-from prune_viruses1 import prune
+from prune_virus_coords1 import prune_chunks
 
 repeat_table = sys.argv[1]
 
@@ -120,11 +120,8 @@ except:
 try:
     first_pyh_df = pd.read_csv(first_pyhmmer_table, sep = "\t")[['ORFquery', 'target']]
 
-    first_pyh_df['lpar_pos'] = np.where(first_pyh_df['ORFquery'].str.contains("\("), 
-                                        first_pyh_df["ORFquery"].str.find("("), 
-                                        len(first_pyh_df['ORFquery']))
 
-    first_pyh_df["gene_name"] = first_pyh_df.apply(lambda x: x["ORFquery"][0:x["lpar_pos"]], axis = 1)
+    first_pyh_df["gene_name"] = first_pyh_df["ORFquery"]
 
     first_pyh_df["slash_pos"] = first_pyh_df["target"].str.find("/")
     first_pyh_df["fdash_pos"] = first_pyh_df["target"].str.find("-")
@@ -148,11 +145,7 @@ except:
 try:
     second_pyh_df = pd.read_csv(second_pyhmmer_table, sep = "\t")[['ORFquery', 'target']]
 
-    second_pyh_df['lpar_pos'] = np.where(second_pyh_df['ORFquery'].str.contains("\("), 
-                                    second_pyh_df["ORFquery"].str.find("("), 
-                                    len(second_pyh_df['ORFquery']))
-
-    second_pyh_df["gene_name"] = second_pyh_df.apply(lambda x: x["ORFquery"][0:x["lpar_pos"]], axis = 1)
+    second_pyh_df["gene_name"] = second_pyh_df["ORFquery"]
 
     second_pyh_df["slash_pos"] = second_pyh_df["target"].str.find("/")
     second_pyh_df["fdash_pos"] = second_pyh_df["target"].str.find("-")
@@ -176,11 +169,7 @@ except:
 try:
     cdd_df = pd.read_csv(mmseqs_CDD_table, sep = "\t")[['query', 'target', 'description']]
 
-    cdd_df['lpar_pos'] = np.where(cdd_df['query'].str.contains("\("), 
-                                cdd_df["query"].str.find("("), 
-                                len(cdd_df['query']))
-
-    cdd_df["gene_name"] = cdd_df.apply(lambda x: x["query"][0:x["lpar_pos"]], axis = 1)
+    cdd_df["gene_name"] = cdd_df["query"]
 
     cdd_df = cdd_df[['gene_name', 'target', 'description']]
 
@@ -247,7 +236,7 @@ grouped_df = contig_gene_df.query("contig_length >= 10000")\
 try:
     for name, group in grouped_df:
 
-        prune(name, group, fig_out_dir)
+        prune_chunks(name, group, fig_out_dir)
     
 except:
     print("No non-DTR virus contigs >= 10,000 nt. So pruning will not happen")

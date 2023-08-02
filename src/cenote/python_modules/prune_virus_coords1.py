@@ -13,7 +13,7 @@ import math
 import collections
 import bisect
 
-def prune(name, group, out_dir1):
+def prune_chunks(name, group, out_dir1):
 
     #print(name + "in prune")
 

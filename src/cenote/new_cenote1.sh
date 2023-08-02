@@ -15,7 +15,20 @@ CIRC_MINIMUM_DOMAINS=1
 MEM=25
 CPU=12
 WRAP="True"
+PFAM_HHSUITE="${CENOTE_DBS}/pfam_32_db/pfam"
+HHSUITE_DB_STR="-d ${PFAM_HHSUITE} "
+READS="/Users/u241374/mike_tisza/sandbox/SRS893334_mockreads1.fastq"
+MAP_READS="True"
 
+for READ_FILE in $READS ; do
+	if [ -s $READ_FILE ] ; then
+		echo $READ_FILE
+	else
+		echo "$READ_FILE not found."
+		echo "exiting"
+		exit
+	fi
+done
 
 ## instead of this, set 
 ## conda env config vars set CENOTE_DBs=
@@ -438,12 +451,12 @@ if [ -s ${TEMP_DIR}/hallmark_tax/phanotate_seqs1.txt ] ; then
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running seqkit translate to on phanotate ORF calls" $MDYT
 
-		### this part is not working on each file...
 		echo "$PHAN_TABS" | sed 's/.phan_genes.bed//g' |\
 		  xargs -n 1 -I {} -P $CPU seqkit translate -x -T 11 {}.phan_genes.fasta -o {}.faa >/dev/null 2>&1 
 
+
 		echo "$PHAN_TABS" | sed 's/.phan_genes.bed//g' | while read PHAN ; do
-			cat ${PHAN}.faa
+			sed 's/(.*//g' ${PHAN}.faa
 		done >> ${TEMP_DIR}/reORF/reORFcalled_all.faa
 
 	fi
@@ -608,42 +621,161 @@ if [ -s ${TEMP_DIR}/assess_prune/contig_gene_annotation_summary.tsv ] && [ -n "$
 
 		bedtools intersect -c -a ${TEMP_DIR}/assess_prune/indiv_seqs/${B_SEQ%.tsv}.bed\
 		  -b ${TEMP_DIR}/assess_prune/contig_gene_annotation_summary.hallmarks.bed |\
-		  awk -v minh="$LIN_MINIMUM_DOMAINS" '{OFS=FS="\t"}{if ($5 >= minh) {print}}' > ${TEMP_DIR}/assess_prune/indiv_seqs/${B_SEQ%chunks.tsv}.viruses.tsv
+		  awk -v minh="$LIN_MINIMUM_DOMAINS" '{OFS=FS="\t"}{if ($5 >= minh) {print}}' > ${TEMP_DIR}/assess_prune/indiv_seqs/${B_SEQ%.chunks.tsv}.viruses.tsv
 
 	done
 
 	VIR_COORD_FILES=$( find ${TEMP_DIR}/assess_prune/indiv_seqs -type f -name "*viruses.tsv" )
 
-#	if [ -n "$VIR_COORD_FILES" ] ; then
+	if [ -n "$VIR_COORD_FILES" ] ; then
 
-#		python adjust_viruses1.py ${TEMP_DIR}/assess_prune/indiv_seqs\
-#		  ${TEMP_DIR}/assess_prune/contig_gene_annotation_summary.tsv ${TEMP_DIR}/oriented_hallmark_contigs.fasta
-
-#	fi
+		python ${CENOTE_SCRIPTS}/python_modules/adjust_viruses1.py ${TEMP_DIR}/assess_prune/indiv_seqs\
+		  ${TEMP_DIR}/assess_prune/contig_gene_annotation_summary.tsv ${TEMP_DIR}
 
 
+		seqkit subseq -j $CPU --bed ${TEMP_DIR}/prune_coords.bed ${TEMP_DIR}/oriented_hallmark_contigs.fasta |\
+		  sed 's/>.* />/g' > ${TEMP_DIR}/oriented_hallmark_contigs.pruned.fasta
+
+
+		awk '{OFS=FS="\t"}{ if \
+			($9 ~ /hypothetical protein/ || $9 ~ /unnamed protein product/ || $9 ~ /Predicted protein/ || \
+			$9 ~ /Uncharacterized protein/ || $9 ~ /Domain of unknown function/ ||$9 ~ /^gp/) \
+			{print $4} }' ${TEMP_DIR}/contig_gene_annotation_summary.pruned.tsv > ${TEMP_DIR}/hypothetical_proteins.for_hhpred.txt
+
+	else
+		echo "no virus coordinate files"
+
+	fi
 else
-	echo "couldn't find files to actually prune"
+	echo "couldn't find chunk files"
 fi
+
 
 ## hhsearch
 #-# to annotation table add columns
 #-# hhsearch accession, hhsearch description
+if  [[ $HHSUITE_TOOL = "hhsearch" ]] || [[ $HHSUITE_TOOL = "hhblits" ]] ; then
+	if [ -s ${TEMP_DIR}/hypothetical_proteins.for_hhpred.txt ] ; then
+		MDYT=$( date +"%m-%d-%y---%T" )
+		echo "time update: hhsuite search of hypothetical proteins " $MDYT
+
+		if [ ! -d ${TEMP_DIR}/hhpred ]; then
+			mkdir ${TEMP_DIR}/hhpred
+		fi
+
+		if [ ! -d ${TEMP_DIR}/hhpred/AA_files ]; then
+			mkdir ${TEMP_DIR}/hhpred/AA_files
+		fi
+
+		seqkit grep -f ${TEMP_DIR}/hypothetical_proteins.for_hhpred.txt reORFcalled_all.faa |\
+		  seqkit split --quiet -j $CPU -s 1 -O ${TEMP_DIR}/hhpred/AA_files
+
+		HH_AAs=$( find ${TEMP_DIR}/hhpred/AA_files -type f -name "*.fasta" )
+
+		if [ -n "$HH_AAs" ] ; then
+			echo "$HH_AAs" | sed 's/.fasta//g' |\
+			  xargs -n 1 -I {} -P $CPU hhblits -i {}.fasta "${HHSUITE_DB_STR}" -o {}.out.hhr\
+			  -cpu 1 -maxmem 1 -p 80 -Z 20 -z 0 -b 0 -B 10 -ssm 2 -sc 1 >/dev/null 2>&1
+
+
+		else
+			echo "AA seqs for hhpred not found"
+		fi
+
+		###parse tables somehow
+
+
+		###add annotations to annotation table
+
+	else
+		echo "no list of proteins for hhpred"
+	fi
+else
+	echo "not running hhsearch/hhblits"
+fi
 
 ## tRNAscan-SE
 #-# to annotation table add ROWS for feature (start, stop, orient)
 #-# to annotation table add columns
 #-# tRNA score, tRNA description
 
+if [ -s ${TEMP_DIR}/oriented_hallmark_contigs.pruned.fasta ] ; then
+
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "time update: tRNAscan-SE on virus contigs" $MDYT
+
+	tRNAscan-SE -Q -G -o ${TEMP_DIR}/oriented_hallmark_contigs.pruned.tRNAscan.tsv --brief ${TEMP_DIR}/oriented_hallmark_contigs.pruned.fasta
+
+	## python script to remove overlapping genes and replace them with tRNAs
+else
+	echo "couldn't find oriented pruned contigs for tRNAscan-SE"
+fi
+
 
 ## read mapping
 
+if [ -s ${TEMP_DIR}/oriented_hallmark_contigs.pruned.fasta ] && [ "${MAP_READS}" == "True" ] ; then
+
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "time update: mapping reads to virus contigs" $MDYT
+
+	if [ ! -d ${TEMP_DIR}/mapping_reads ]; then
+		mkdir ${TEMP_DIR}/mapping_reads
+	fi
+
+	minimap2 -t $CPU -ax sr ${TEMP_DIR}/oriented_hallmark_contigs.pruned.fasta ${READS} |\
+	  samtools sort - | samtools coverage -o ${TEMP_DIR}/mapping_reads/oriented_hallmark_contigs.pruned.coverage.tsv -
+
+else
+	echo "not mapping reads"
+fi
+
+
+## redo hallmark taxonomy on reORF viruses/chunks
+
+if [ -s ${TEMP_DIR}/reORF_pyhmmer/hit_this_round1.txt ] ; then
+
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo "time update: reassessing taxonomy on final virus seqs" $MDYT
+
+	if [ ! -d ${TEMP_DIR}/final_taxonomy ]; then
+		mkdir ${TEMP_DIR}/final_taxonomy
+	fi
+
+	seqkit grep -f ${TEMP_DIR}/reORF_pyhmmer/hit_this_round1.txt\
+	  ${TEMP_DIR}/reORF/reORFcalled_all.faa > ${TEMP_DIR}/final_taxonomy/hallmark_proteins.faa
+
+	if [ -s ${TEMP_DIR}/final_taxonomy/hallmark_proteins.faa ] ; then
+		mmseqs createdb ${TEMP_DIR}/final_taxonomy/hallmark_proteins.faa ${TEMP_DIR}/final_taxonomy/hallmark_proteinsDB -v 1
+
+		mmseqs search ${TEMP_DIR}/final_taxonomy/hallmark_proteinsDB\
+		  ${CENOTE_DBS}/mmseqs_DBs/refseq_virus_prot_taxDB\
+		  ${TEMP_DIR}/final_taxonomy/hallmark_proteins_resDB ${TEMP_DIR}/final_taxonomy/tmp -v 1 --start-sens 1 --sens-steps 3 -s 7
+
+		mmseqs convertalis ${TEMP_DIR}/final_taxonomy/hallmark_proteinsDB\
+		  ${CENOTE_DBS}/mmseqs_DBs/refseq_virus_prot_taxDB\
+		  ${TEMP_DIR}/final_taxonomy/hallmark_proteins_resDB ${TEMP_DIR}/final_taxonomy/hallmark_proteins_align.tsv\
+		  --format-output query,target,pident,alnlen,evalue,theader,taxlineage -v 1
+
+	else
+		echo "couldn't find ${TEMP_DIR}/hallmark_tax/orig_hallmark_genes.faa"
+	fi
+
+	if [ -s ${TEMP_DIR}/final_taxonomy/hallmark_proteins_align.tsv ] ; then
+
+		##python script to merge these results with gene annotation table, find best hit, decide taxon
+		echo "placeholder"
+	fi
+
+else
+	echo "can't find the reORF hallmark hits for taxonomy"
+fi
 
 ## blastn-style mmseqs2 taxonomy for species level
 
 
 ## Format files for table2asn
-
+##  remove overlapping tRNAs/genes and replace them with tRNAs
 
 ## run table2asn
 

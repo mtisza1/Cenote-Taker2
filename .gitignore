@@ -5,3 +5,4 @@ taxdump/
 .DS_Store
 **/.DS_Store
 mmseqs_DBs/
+pfam_32_db/
