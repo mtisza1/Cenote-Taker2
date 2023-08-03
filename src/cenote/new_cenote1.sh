@@ -17,7 +17,7 @@ CPU=12
 WRAP="True"
 PFAM_HHSUITE="${CENOTE_DBS}/pfam_32_db/pfam"
 HHSUITE_DB_STR="-d ${PFAM_HHSUITE} "
-READS="/Users/u241374/mike_tisza/sandbox/SRS893334_mockreads1.fastq"
+READS="SRS893334_mockreads1.fastq"
 MAP_READS="True"
 
 for READ_FILE in $READS ; do
@@ -101,9 +101,13 @@ if [ -s ${original_contigs} ] ; then
 	original_con_base=$( basename $original_contigs )
 
 	## filter on minimum length
-	bioawk -v run_var="$run_title" -v contig_cutoff="$LENGTH_MINIMUM" -c fastx\
-	  '{ if(length($seq) > contig_cutoff) { print ">"run_var NR" "$name; print $seq }}' \
-	  $original_contigs > ${run_title}/${run_title}.contigs_over_${LENGTH_MINIMUM}nt.fasta
+	#bioawk -v run_var="$run_title" -v contig_cutoff="$LENGTH_MINIMUM" -c fastx\
+	#  '{ if(length($seq) > contig_cutoff) { print ">"run_var NR" "$name; print $seq }}' \
+	#  $original_contigs > ${run_title}/${run_title}.contigs_over_${LENGTH_MINIMUM}nt.fasta
+	
+	seqkit seq -m $LENGTH_MINIMUM $original_contigs |\
+	  seqkit replace -p '^' -r ${run_title}_{nr}@#@# |\
+	sed 's/@#@#/ /g' > ${run_title}/${run_title}.contigs_over_${LENGTH_MINIMUM}nt.fasta
 
 
 else
@@ -390,6 +394,13 @@ if [ -s ${TEMP_DIR}/hallmark_tax/prodigal_seqs1.txt ] ; then
 		echo "$SPLIT_PROD_CONTIGS" | sed 's/.fasta//g' | while read PROD ; do
 			cat ${PROD}.prod.faa
 		done >> ${TEMP_DIR}/reORF/reORFcalled_all.faa
+
+		## extract genetic code from prodigal files.
+		cat ${TEMP_DIR}/hallmark_tax/prodigal_seqs1.txt | while read SEQ ; do 
+			GCODE=$( grep -A1 "\"${SEQ}\"" ${TEMP_DIR}/reORF/prod_split/*gff | tail -n1 |\
+			  sed 's/.*transl_table=\([0-9]\{1,2\}\).*/\1/' )
+			echo -e "${SEQ}\t${GCODE}"
+		done > ${TEMP_DIR}/reORF/prod_split/contig_gcodes1.txt
 
 	else
 		echo "can't find split prodigal contigs"
@@ -765,6 +776,11 @@ if [ -s ${TEMP_DIR}/reORF_pyhmmer/hit_this_round1.txt ] ; then
 
 		##python script to merge these results with gene annotation table, find best hit, decide taxon
 		echo "placeholder"
+		python ${CENOTE_SCRIPTS}/python_modules/vote_taxonomy.py ${TEMP_DIR}/final_taxonomy/hallmark_proteins_align.tsv\
+		  ${TEMP_DIR}/contig_gene_annotation_summary.pruned.tsv ${TEMP_DIR}/final_taxonomy
+	
+	else
+		echo "couldn't find mmseqs hallmark tax table for final taxonomy assessment"
 	fi
 
 else
@@ -776,6 +792,27 @@ fi
 
 ## Format files for table2asn
 ##  remove overlapping tRNAs/genes and replace them with tRNAs
+
+##fsa
+# seqname
+# input name:
+# organism=
+# moltype=
+# isolate=
+# topology=
+# gcode=
+#	bioawk -v srr_var="$srr_number" -v tax_var="$tax_guess" -v perc_var="$perc_id" -v headername="$fsa_head" \
+#	  -v newname="$file_core" -v source_var="$isolation_source" -v rand_var="$rand_id" -v \
+#	  number_var="$file_numbers" -v date_var="$collection_date" -v metgenome_type_var="$metagenome_type" \
+#	  -v srx_var="$srx_number" -v prjn_var="$bioproject" -v samn_var="$biosample" \
+#	  -v molecule_var="$MOLECULE_TYPE" -v topoq="$TOPOLOGY" -v gcodeq="$GCODE" -v o_name="$input_contig_name" \
+#	  -v crispr1="$CRISPR" -v blastn="$BLASTN_INFO" -c fastx \
+#	  '{ print ">" newname " [note=input name:"o_name" -- closest relative: " tax_var " " perc_var " ; " crispr1" "blastn"] \
+#	  [organism=" headername " ct" rand_var number_var "] [moltype=genomic "molecule_var"]\
+#	  [isolation_source=" source_var "] [isolate=ct" rand_var number_var " ] [collection_date=" date_var "] \
+#	  [metagenome_source=" metgenome_type_var "] [note=genome binned from sequencing reads available in " srx_var "] \
+#	  [topology="topoq"] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode="gcodeq"]" ;\
+#	  print $seq }' $NUCL_FILE > sequin_and_genome_maps/${JUST_TBL2_FILE%.comb3.tbl}.fsa ; 
 
 ## run table2asn
 
