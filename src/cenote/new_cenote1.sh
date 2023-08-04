@@ -793,7 +793,7 @@ fi
 ## Format files for table2asn
 ##  remove overlapping tRNAs/genes and replace them with tRNAs
 
-##fsa
+## sequin fsa
 # seqname
 # input name:
 # organism=
@@ -814,8 +814,61 @@ fi
 #	  [topology="topoq"] [Bioproject=" prjn_var "] [Biosample=" samn_var "] [SRA=" srr_var "] [gcode="gcodeq"]" ;\
 #	  print $seq }' $NUCL_FILE > sequin_and_genome_maps/${JUST_TBL2_FILE%.comb3.tbl}.fsa ; 
 
+if [ -s ${TEMP_DIR}/oriented_hallmark_contigs.pruned.fasta ] &&\
+   [ -s ${TEMP_DIR}/final_taxonomy/virus_taxonomy_summary.tsv ] &&\
+   [ -s ${TEMP_DIR}/hallmark_contigs_terminal_repeat_summary.tsv ] ; then
+
+   	## sequin fsa
+
+   	python ${CENOTE_SCRIPTS}/python_modules/make_sequin_fsas.py ${TEMP_DIR}/oriented_hallmark_contigs.pruned.fasta\
+   	  ${TEMP_DIR}/final_taxonomy/virus_taxonomy_summary.tsv\
+   	  ${TEMP_DIR}/hallmark_contigs_terminal_repeat_summary.tsv ${TEMP_DIR}
+
+
+else
+
+	echo "couldn't find files to make fsa's"
+fi
+
+if [ -s ${TEMP_DIR}/contig_gene_annotation_summary.pruned.tsv ] ; then
+
+	## sequin tbl
+	python ${CENOTE_SCRIPTS}/python_modules/make_sequin_tbls.py ${TEMP_DIR}/contig_gene_annotation_summary.pruned.tsv\
+	  ${TEMP_DIR}/oriented_hallmark_contigs.pruned.tRNAscan.tsv ${TEMP_DIR}/sequin_and_genome_maps
+
+else
+	echo "couldn't find annotation file for tbl generation"
+
+fi
+
+## sequin cmt
+FSA_FILES=$( find ${TEMP_DIR}/sequin_and_genome_maps -type f -name "*fsa" )
+
+if [ -n "$FSA_FILES" ] ; then
+	for REC in $FSA_FILES ; do
+		if [ -s ${TEMP_DIR}/mapping_reads/oriented_hallmark_contigs.pruned.coverage.tsv ] ; then
+			COVERAGE=$( awk -v SEQNAME="${REC%.fsa}" '{OFS=FS="\t"}{ if ($1 == SEQNAME) {print $7}}' \
+				${TEMP_DIR}/mapping_reads/oriented_hallmark_contigs.pruned.coverage.tsv | head -n1 )
+
+		else
+			COVERAGE=1
+		fi
+
+		echo "StructuredCommentPrefix	##Genome-Assembly-Data-START##" > ${REC%.fsa}.cmt
+		echo "Assembly Method	whoknows" >> ${REC%.fsa}.cmt
+		echo "Genome Coverage	"$COVERAGE"x" >> ${REC%.fsa}.cmt
+		echo "Sequencing Technology	Illumina" >> ${REC%.fsa}.cmt
+		echo "Annotation Pipeline	Cenote-Taker2" >> ${REC%.fsa}.cmt
+		echo "URL	https://github.com/mtisza1/Cenote-Taker2" >> ${REC%.fsa}.cmt	
+	done
+fi
+
+
+
+
 ## run table2asn
 
+tbl2asn -V vb -t ${CENOTE_DBS}/dummy_template.sbt -X C -p ${TEMP_DIR}/sequin_and_genome_maps
 
 ## make summary files
 
