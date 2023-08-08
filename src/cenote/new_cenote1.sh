@@ -614,14 +614,14 @@ fi
 
 CHUNK_FILES=$( find ${TEMP_DIR}/assess_prune/prune_figures -type f -name "*chunks.tsv" )
 
-if [ -s ${TEMP_DIR}/assess_prune/contig_gene_annotation_summary.tsv ] && [ -n "$CHUNK_FILES" ] ; then
+if [ -s ${TEMP_DIR}/assess_prune/contig_gene_annotation_summary.hallmarks.bed ] && [ -n "$CHUNK_FILES" ] ; then
 
 	if [ ! -d ${TEMP_DIR}/assess_prune/indiv_seqs ]; then
 		mkdir ${TEMP_DIR}/assess_prune/indiv_seqs
 	fi
 
-	tail -n+2 ${TEMP_DIR}/assess_prune/contig_gene_annotation_summary.tsv |\
-	  grep -F "hallmark_hmm" | cut -f1,2,3 > ${TEMP_DIR}/assess_prune/contig_gene_annotation_summary.hallmarks.bed
+	#tail -n+2 ${TEMP_DIR}/assess_prune/contig_gene_annotation_summary.tsv |\
+	#  grep -F "hallmark_hmm" | cut -f1,2,3 > ${TEMP_DIR}/assess_prune/contig_gene_annotation_summary.hallmarks.bed
 
 	echo ""
 	echo "$CHUNK_FILES" | while read SEQ_CHUNK ; do

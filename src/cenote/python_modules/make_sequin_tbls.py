@@ -60,7 +60,11 @@ all_feature_df['chunk_name'] = all_feature_df['chunk_name'].fillna("nochunk")
 
 chunk_grouped_df = all_feature_df.groupby(['contig', 'chunk_name'], dropna = False)
 
-
+def tbl_first_second(gstart, gstop, gorient):
+    if gorient == "+":
+        return gstart, gstop, gorient
+    else:
+        return gstop, gstart, gorient
 
 #### loop each virus 
 for name, seq_group in chunk_grouped_df:
@@ -81,6 +85,9 @@ for name, seq_group in chunk_grouped_df:
     # now each row is a feature that needs to be parsed and printed correctly
     for index, row in seq_group.iterrows():
         trna_number = 1
+
+        first_c = tbl_first_second(row['gene_start'], row['gene_stop'], row['gene_orient'])[0]
+        second_c = tbl_first_second(row['gene_start'], row['gene_stop'], row['gene_orient'])[1]
 
         if row['Evidence_source'] == "hallmark_hmm" or row['Evidence_source'] == "common_virus_hmm": #my hmms
             typeq = "CDS"
@@ -123,7 +130,8 @@ for name, seq_group in chunk_grouped_df:
         #        "\t\t\tproduct" + "\t" + productstr + "\n" +\
         #            "\t\t\t" + inferencestr, file = open(tbl_output_file, "a"))
         
-        print(f"{row['gene_start']}\t{row['gene_stop']}\t{typeq}\n\t\t\t{tagstr}\n\t\t\tproduct\t{productstr}\n\t\t\t{inferencestr}", file = open(tbl_output_file, "a"))
+        print(f"{first_c}\t{second_c}\t{typeq}\n\t\t\t{tagstr}\n\t\t\tproduct\t{productstr}\n\t\t\t{inferencestr}", 
+              file = open(tbl_output_file, "a"))
         #op_tbl = open(tbl_output_file, "a")
         #op_tbl.write()
         

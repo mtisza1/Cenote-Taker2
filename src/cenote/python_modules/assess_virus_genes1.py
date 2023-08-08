@@ -51,12 +51,16 @@ try:
     phan_files = glob.glob(os.path.join(phan_tab_directory, "*.bed"))
 
     df_from_each_phan = (pd.read_csv(phan, sep = "\t", header = None,
-                                    names = ["contig", "gene_start", "gene_stop", "gene_name", 
+                                    names = ["contig", "gene_bstart", "gene_bstop", "gene_name", 
                                             "gene_score", "gene_orient"])
                                     for phan in phan_files)
     phan_gene_df = pd.concat(df_from_each_phan, ignore_index=True)
 
-    phan_gene_df = phan_gene_df.drop("gene_score", axis = 1)
+    phan_gene_df['gene_start'] = (phan_gene_df['gene_bstart'] + 1).astype('int')
+    phan_gene_df['gene_stop'] = phan_gene_df['gene_bstop'].astype('int')
+
+
+    phan_gene_df = phan_gene_df.drop(['gene_score', 'gene_bstart', 'gene_bstop'], axis = 1)
 
 except:
     print("no phanotate tables")
@@ -228,6 +232,16 @@ contig_gene_outfile = os.path.join(out_dir, "contig_gene_annotation_summary.tsv"
 
 contig_gene_df.to_csv(contig_gene_outfile,
                         sep = "\t", index = False)
+
+## save hallmark genes in bed format
+hallmark_df = contig_gene_df.query("Evidence_source == 'hallmark_hmm'")
+hallmark_df = hallmark_df[['contig', 'gene_start', 'gene_stop']]
+
+hallmark_gene_outfile = os.path.join(out_dir, "contig_gene_annotation_summary.hallmarks.bed")
+
+hallmark_df.to_csv(hallmark_gene_outfile,
+                        sep = "\t", index = False, header = False)
+
 
 #try:
 grouped_df = contig_gene_df.query("contig_length >= 10000")\
