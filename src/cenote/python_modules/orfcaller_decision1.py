@@ -38,10 +38,12 @@ merge_tax_df = length_df.merge(tax_df, on = "contig", how = "left")
 merge_tax_df['ORFcaller'] = np.where(merge_tax_df['ORFcaller'].isnull(), 
                                      'prodigal', merge_tax_df['ORFcaller'])
 
-merge_tax_df['ORFcaller'] = np.where(merge_tax_df['out_length_contig'] >= 500000, 
+
+### Forcing long contigs (over 300 kb) into prodigal as phanotate does not handle these well
+merge_tax_df['ORFcaller'] = np.where(merge_tax_df['out_length_contig'] >= 300000, 
                                      'prodigal', merge_tax_df['ORFcaller'])
 
-merge_tax_df['Note'] = np.where(merge_tax_df['out_length_contig'] >= 500000, 
+merge_tax_df['Note'] = np.where(merge_tax_df['out_length_contig'] >= 300000, 
                                      'over phanotate length limit', 'NA')
 
 

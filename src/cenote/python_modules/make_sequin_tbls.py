@@ -11,6 +11,8 @@ gene_contig_file = sys.argv[1]
 
 tRNA_table = sys.argv[2]
 
+#phrogs_dir = sys.argv[3]
+
 out_dir = sys.argv[3]
 
 if not os.path.isdir(out_dir):
@@ -60,6 +62,8 @@ all_feature_df['chunk_name'] = all_feature_df['chunk_name'].fillna("nochunk")
 
 chunk_grouped_df = all_feature_df.groupby(['contig', 'chunk_name'], dropna = False)
 
+
+## coords in the right order for tbl files
 def tbl_first_second(gstart, gstop, gorient):
     if gorient == "+":
         return gstart, gstop, gorient

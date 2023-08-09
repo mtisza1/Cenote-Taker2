@@ -31,11 +31,13 @@ first_pyhmmer_table = sys.argv[4]
 
 second_pyhmmer_table = sys.argv[5]
 
-mmseqs_CDD_table = sys.argv[6]
+phrogs_pyhmmer_table = sys.argv[6]
 
-viral_cdds_list = sys.argv[7]
+mmseqs_CDD_table = sys.argv[7]
 
-out_dir = sys.argv[8]
+viral_cdds_list = sys.argv[8]
+
+out_dir = sys.argv[9]
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
@@ -113,12 +115,14 @@ try:
     length_df = length_df.rename(columns={"out_length_contig": "contig_length"})
 except:
     print("nope")
+    exit
 
 ## combine gene and contig tables
 try:
     basal_df = just_gene_df.merge(length_df, on = "contig", how = "left")
 except:
     print("nope")
+    exit
 
 ## load and parse table for first pyhmmer search (hallmarks)
 try:
@@ -144,6 +148,7 @@ try:
 
 except:
     print("nope")
+    first_pyh_df = pd.DataFrame()
 
 ## load and parse table for second pyhmmer search (other virus gene HMMs)
 try:
@@ -168,6 +173,33 @@ try:
 
 except:
     print("nope")
+    second_pyh_df = pd.DataFrame()
+
+## load and parse table for phrogs HMM search
+try:
+    phrogs_pyh_df = pd.read_csv(phrogs_pyhmmer_table, sep = "\t")[['ORFquery', 'target']]
+
+    phrogs_pyh_df["gene_name"] = phrogs_pyh_df["ORFquery"]
+
+    phrogs_pyh_df["slash_pos"] = phrogs_pyh_df["target"].str.find("/")
+    phrogs_pyh_df["fdash_pos"] = phrogs_pyh_df["target"].str.find("-")
+
+
+    phrogs_pyh_df["evidence_acession"] = phrogs_pyh_df.apply(
+        lambda x: x["target"][x["slash_pos"]+1:x["fdash_pos"]], axis = 1)
+
+    phrogs_pyh_df["evidence_description"] = phrogs_pyh_df.apply(lambda x: x["target"][x["fdash_pos"]+1:], axis = 1)
+
+    phrogs_pyh_df = phrogs_pyh_df[['gene_name', 'evidence_acession', 'evidence_description']]
+
+    phrogs_pyh_df['Evidence_source'] = 'phrogs_hmm'
+
+    phrogs_pyh_df['vscore_category'] = 'common_virus'
+
+except:
+    print("nope")
+    phrogs_pyh_df = pd.DataFrame()
+
 
 ## load and parse table for mmseqs CDD search
 try:
@@ -209,6 +241,9 @@ if not first_pyh_df.empty:
 
 if not second_pyh_df.empty:
     gene_ann_list.append(second_pyh_df)
+
+if not phrogs_pyh_df.empty:
+    gene_ann_list.append(phrogs_pyh_df)
 
 if not comb_cdd_df.empty:
     gene_ann_list.append(comb_cdd_df)

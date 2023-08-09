@@ -121,13 +121,18 @@ def taxon_decider(name, group, taxonomy_list):
     ## anything else is unclassified
     else:
         taxonomy = "Unclassified Virus"
+        level = "NA"
+        mean_AAI = "NA"
 
-
-    lineage_to_tax_S = np.where(group['taxlineage'].str.contains(taxonomy), 
+        
+    try:
+        lineage_to_tax_S = np.where(group['taxlineage'].str.contains(taxonomy), 
                                      group['taxlineage'].apply(lambda st: st[:st.find(taxonomy)+len(taxonomy)]), 
                                      taxonomy)
     
-    lineage_to_tax = lineage_to_tax_S[0]
+        lineage_to_tax = lineage_to_tax_S[0]
+    except:
+        lineage_to_tax = "NA"
     
     return taxonomy_list.append([name[0], name[1], taxonomy, lineage_to_tax, level, mean_AAI])
 

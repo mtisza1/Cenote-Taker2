@@ -17,6 +17,8 @@ out_dir = sys.argv[2]
 
 which_DB = sys.argv[3]
 
+CPUcount = sys.argv[4]
+
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
@@ -47,7 +49,7 @@ if not splitAA_list:
     exit
 
 hmmscan_list = []
-with multiprocessing.pool.ThreadPool() as pool:
+with multiprocessing.pool.ThreadPool(int(CPUcount)) as pool:
     for alignments in pool.map(hmmscanner, splitAA_list):
         for model in alignments:
             quer1 = model.query_name.decode()
@@ -63,19 +65,20 @@ with multiprocessing.pool.ThreadPool() as pool:
 hmmscan_pools_df = pd.DataFrame(hmmscan_list, columns=["ORFquery", "contig", "target", "evalue", "pvalue"])\
     .sort_values('evalue').drop_duplicates('ORFquery').query("evalue <= 1e-8")
 
+if not hmmscan_pools_df.empty:
+    hmmscan_output_file = os.path.join(out_dir, "pyhmmer_report_AAs.tsv")
 
-hmmscan_output_file = os.path.join(out_dir, "pyhmmer_report_AAs.tsv")
-
-hmmscan_pools_df.to_csv(hmmscan_output_file,
-                        sep = "\t", index = False)
+    hmmscan_pools_df.to_csv(hmmscan_output_file,
+                            sep = "\t", index = False)
 
 
 hmmscan_contig_sum = hmmscan_pools_df.groupby("contig").size().reset_index(name='count')
 
-contig_sum_file = os.path.join(out_dir, "contig_hallmark_count.tsv")
+if not hmmscan_contig_sum.empty:
+    contig_sum_file = os.path.join(out_dir, "contig_hit_count.tsv")
 
-hmmscan_contig_sum.to_csv(contig_sum_file,
-                        sep = "\t", index = False)
+    hmmscan_contig_sum.to_csv(contig_sum_file,
+                            sep = "\t", index = False)
 
 endtime = time.time()
 
