@@ -19,6 +19,8 @@ repeat_file = sys.argv[3]
 
 temp_dir = sys.argv[4]
 
+out_dir = sys.argv[5]
+
 #phanotate seqs
 phanotate_list_file = os.path.join(temp_dir, "hallmark_tax", "phanotate_seqs1.txt")
 
@@ -26,7 +28,6 @@ phanotate_list_file = os.path.join(temp_dir, "hallmark_tax", "phanotate_seqs1.tx
 prodigal_list_file = os.path.join(temp_dir, "reORF", "prod_split", "contig_gcodes1.txt")
 
 # make out dir
-out_dir = os.path.join(temp_dir, "sequin_and_genome_maps")
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)

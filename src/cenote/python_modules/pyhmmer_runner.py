@@ -26,7 +26,7 @@ if not os.path.isdir(out_dir):
 
 
 
-print("pyhmmscan pool part")
+#print("pyhmmscan pool part")
 
 starttime = time.time()
 
@@ -84,4 +84,4 @@ endtime = time.time()
 
 time_taken = endtime - starttime
 
-print("pyhmmscan part took: " + str(time_taken) + " seconds")
+print("pyhmmscan part took: " + "%.2f" % time_taken + " seconds")

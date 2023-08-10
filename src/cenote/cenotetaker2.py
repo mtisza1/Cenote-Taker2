@@ -5,7 +5,9 @@ import sys, os
 import subprocess
 from pathlib import Path
 from Bio import SeqIO
+import time
 
+ct_starttime = time.time()
 
 def str2bool(v):
     if isinstance(v, bool):
@@ -178,3 +180,10 @@ subprocess.call(['bash', str(cenote_script_path) + '/new_cenote1.sh', str(args.o
                  str(READS), str(args.circ_length_cutoff), str(args.linear_length_cutoff),
                  str(args.CIRC_MINIMUM_DOMAINS), str(args.LIN_MINIMUM_DOMAINS), 
                  str(args.virus_domain_db), str(args.C_DBS), str(args.WRAP), str(args.PHROGS)])
+
+
+ct_endtime = time.time()
+
+time_taken = ct_endtime - ct_starttime
+
+print("This Cenote-Taker run took: " + "%.2f" % time_taken + " seconds")

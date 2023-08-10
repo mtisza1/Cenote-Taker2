@@ -16,7 +16,7 @@ mmseqs2_CDD_search_df = pd.read_csv(mmseqs_search_table,
                                     sep = "\t", header = None,
                                     names = ["query", "target", "sequence_identity", "align_length",
                                              "evalue", "bitscore"])\
-    .sort_values('evalue').drop_duplicates('query').query("evalue <= 1e-4")
+    .sort_values('evalue').drop_duplicates('query').query("evalue <= 1e-3")
 
 cdd_annotation_df = pd.read_csv(cdd_annotation_table,sep = "\t", header = None,
                                 names = ["cdd_num", "cdd_accession", "shortname", "description",
