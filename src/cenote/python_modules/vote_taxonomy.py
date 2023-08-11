@@ -120,7 +120,7 @@ def taxon_decider(name, group, taxonomy_list):
 
     ## anything else is unclassified
     else:
-        taxonomy = "Unclassified Virus"
+        taxonomy = "unclassified virus"
         level = "NA"
         mean_AAI = "NA"
 

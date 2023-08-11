@@ -132,6 +132,8 @@ if [ -s ${original_contigs} ] ; then
 	  sed 's/@#@#/ /g' > ${run_title}/${run_title}.contigs_over_${LENGTH_MINIMUM}nt.fasta
 
 
+
+
 else
 	echo "${original_contigs} not found"
 	exit
@@ -143,6 +145,13 @@ if [ -s ${run_title}/${run_title}.contigs_over_${LENGTH_MINIMUM}nt.fasta ] ; the
 	if [ ! -d "${TEMP_DIR}/split_orig_contigs" ]; then
 		mkdir ${TEMP_DIR}/split_orig_contigs
 	fi
+
+	# table table with ct name and input name in separate columns
+	TABQ=$'\t'
+	grep -F ">" ${run_title}/${run_title}.contigs_over_${LENGTH_MINIMUM}nt.fasta |\
+	  sed "s/ /\t/" | sed 's/>//g' > ${TEMP_DIR}/contig_name_map.tsv
+
+	## split contigs for prodigal ORF call
 
 	seqkit split --quiet -j $CPU -p $CPU -O ${TEMP_DIR}/split_orig_contigs ${run_title}/${run_title}.contigs_over_${LENGTH_MINIMUM}nt.fasta
 
@@ -918,7 +927,8 @@ if [ -s ${TEMP_DIR}/contig_gene_annotation_summary.pruned.tsv ] ; then
 
 	## sequin tbl
 	python ${CENOTE_SCRIPTS}/python_modules/make_sequin_tbls.py ${TEMP_DIR}/contig_gene_annotation_summary.pruned.tsv\
-	  ${TEMP_DIR}/oriented_hallmark_contigs.pruned.tRNAscan.tsv ${run_title}/sequin_and_genome_maps
+	  ${TEMP_DIR}/oriented_hallmark_contigs.pruned.tRNAscan.tsv ${TEMP_DIR}/phrogs_pyhmmer/pyhmmer_report_AAs.tsv\
+	  ${run_title}/sequin_and_genome_maps
 
 else
 	echo "couldn't find annotation file for tbl generation"
@@ -956,7 +966,18 @@ tbl2asn -V vb -t ${TEMPLATE_FILE} -X C -p ${run_title}/sequin_and_genome_maps >\
 ## make summary files
 
 # virus summary
+if [ -s ${run_title}/final_genes_to_contigs_annotation_summary.tsv ] ; then
+	MDYT=$( date +"%m-%d-%y---%T" )
+	echo -e "${BYellow}time update: Making virus summary table ${MDYT}${Color_Off}"
 
+	python ${CENOTE_SCRIPTS}/python_modules/virus_summary.py ${TEMP_DIR}/hallmark_contigs_terminal_repeat_summary.tsv\
+	  ${TEMP_DIR}/contig_name_map.tsv ${run_title}/final_genes_to_contigs_annotation_summary.tsv\
+	  ${TEMP_DIR}/final_taxonomy/virus_taxonomy_summary.tsv ${run_title}/sequin_and_genome_maps ${run_title}
+
+else
+	echo "couldn't find files to make run summary"
+
+fi
 # pruning summary
 
 # gtf/gff

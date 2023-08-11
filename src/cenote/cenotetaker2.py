@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 from Bio import SeqIO
 import time
+from datetime import timedelta
 
 ct_starttime = time.time()
 
@@ -186,4 +187,6 @@ ct_endtime = time.time()
 
 time_taken = ct_endtime - ct_starttime
 
-print("This Cenote-Taker run took: " + "%.2f" % time_taken + " seconds")
+time_taken = round(time_taken, 2) 
+
+print("This Cenote-Taker run took: " + str(timedelta(seconds=time_taken)))

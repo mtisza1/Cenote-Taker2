@@ -6,14 +6,15 @@ import pandas as pd
 import math
 import re
 import numpy as np
+from pathlib import Path
 
 gene_contig_file = sys.argv[1]
 
 tRNA_table = sys.argv[2]
 
-#phrogs_dir = sys.argv[3]
+phrogs_table = sys.argv[3]
 
-out_dir = sys.argv[3]
+out_dir = sys.argv[4]
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
@@ -53,14 +54,76 @@ if  os.path.isfile(tRNA_table) and os.path.getsize(tRNA_table) > 0:
     tRNA_df = tRNA_df[['contig', 'chunk_name', 'gene_start', 'gene_stop', 'gene_name', 
                     'gene_orient', 'evidence_description', 'evidence_acession', 'Evidence_source']]
 
-    # merge tables
-    all_feature_df = pd.concat([gene_contig_df, tRNA_df], ignore_index=True)
+    # concat tables
+    more_feature_df = pd.concat([gene_contig_df, tRNA_df], ignore_index=True)
 else:
-    all_feature_df = gene_contig_df
+    more_feature_df = gene_contig_df
 
-all_feature_df['chunk_name'] = all_feature_df['chunk_name'].fillna("nochunk")
 
-chunk_grouped_df = all_feature_df.groupby(['contig', 'chunk_name'], dropna = False)
+## check for phrogs table and parse
+if os.path.isfile(phrogs_table) and os.path.getsize(phrogs_table) > 0:
+    phrogs_pyh_df = pd.read_csv(phrogs_table, sep = "\t")[['ORFquery', 'target']]
+
+    phrogs_pyh_df["gene_name"] = phrogs_pyh_df["ORFquery"]
+
+    phrogs_pyh_df["slash_pos"] = phrogs_pyh_df["target"].str.find("/")
+    phrogs_pyh_df["fdash_pos"] = phrogs_pyh_df["target"].str.find("-")
+
+
+    phrogs_pyh_df["evidence_acession"] = phrogs_pyh_df.apply(
+        lambda x: x["target"][x["slash_pos"]+1:x["fdash_pos"]], axis = 1)
+
+    phrogs_pyh_df["evidence_description"] = phrogs_pyh_df.apply(lambda x: x["target"][x["fdash_pos"]+1:], axis = 1)
+
+    phrogs_pyh_df = phrogs_pyh_df[['gene_name', 'evidence_acession', 'evidence_description']]
+
+    phrogs_pyh_df['Evidence_source'] = 'phrogs_hmm'
+
+else:
+    print("nope")
+    phrogs_pyh_df = pd.DataFrame()
+
+
+## combine gene+contig table and phrogs table, replacing gene annotations
+if not phrogs_pyh_df.empty:
+    merged_df = pd.merge(more_feature_df, phrogs_pyh_df, on = "gene_name", how = "left",
+                         suffixes = ("", "_y"))
+
+    merged_df['evidence_acession'] = np.where(merged_df['evidence_acession_y']
+                               .notnull(), merged_df['evidence_acession_y'], 
+                               merged_df['evidence_acession'])
+
+    merged_df['evidence_description'] = np.where(merged_df['evidence_description_y']
+                               .notnull(), merged_df['evidence_description_y'], 
+                               merged_df['evidence_description'])
+    
+    merged_df['Evidence_source'] = np.where(merged_df['Evidence_source_y']
+                               .notnull(), merged_df['Evidence_source_y'], 
+                               merged_df['Evidence_source'])
+    
+    merged_df = merged_df.drop(['evidence_acession_y', 'evidence_description_y', 
+                                'Evidence_source_y'], axis = 1)
+    
+else:
+    merged_df = gene_contig_df
+
+
+#merged_df = merged_df.astype({'gene_start': 'int32', 'gene_stop': 'int32', 'gene_stop': 'int32', 
+#                              'contig_length': 'int32', 'chunk_length': 'int32', 
+#                              'chunk_start': 'int32', 'chunk_stop': 'int32'}).dtypes
+
+## save genes to contigs annotation file to main run directory
+parentpath = Path(out_dir).parents[0]
+
+final_annotation_out = os.path.join(parentpath, "final_genes_to_contigs_annotation_summary.tsv")
+
+merged_df.to_csv(final_annotation_out, sep = "\t", index = False)
+
+
+## need a chunk value for all viruses to properly group
+merged_df['chunk_name'] = merged_df['chunk_name'].fillna("nochunk")
+
+chunk_grouped_df = merged_df.groupby(['contig', 'chunk_name'], dropna = False)
 
 
 ## coords in the right order for tbl files
@@ -93,7 +156,7 @@ for name, seq_group in chunk_grouped_df:
         first_c = tbl_first_second(row['gene_start'], row['gene_stop'], row['gene_orient'])[0]
         second_c = tbl_first_second(row['gene_start'], row['gene_stop'], row['gene_orient'])[1]
 
-        if row['Evidence_source'] == "hallmark_hmm" or row['Evidence_source'] == "common_virus_hmm": #my hmms
+        if row['Evidence_source'] in {'hallmark_hmm', 'common_virus_hmm', 'phrogs_hmm'}: #my hmms
             typeq = "CDS"
             tagstr = ("protein_id" + "\tlcl|" + row['gene_name'])
             productstr = re.sub("-", " ", row['evidence_description'])
@@ -124,18 +187,7 @@ for name, seq_group in chunk_grouped_df:
             productstr = "help"
             inferencestr = "help"        
         
-        #print(str(row['gene_start']) + "\t" + str(row['gene_stop']))
-        #print("\t\t\t" + tagstr )
-        #print("\t\t\tproduct" + "\t" + productstr )
-        #print("\t\t\t" + inferencestr )
-
-        #print(str(row['gene_start']) + "\t" + str(row['gene_stop']) + "\n" +\
-        #      "\t\t\t" + tagstr + "\n" +\
-        #        "\t\t\tproduct" + "\t" + productstr + "\n" +\
-        #            "\t\t\t" + inferencestr, file = open(tbl_output_file, "a"))
-        
         print(f"{first_c}\t{second_c}\t{typeq}\n\t\t\t{tagstr}\n\t\t\tproduct\t{productstr}\n\t\t\t{inferencestr}", 
               file = open(tbl_output_file, "a"))
-        #op_tbl = open(tbl_output_file, "a")
-        #op_tbl.write()
+
         
