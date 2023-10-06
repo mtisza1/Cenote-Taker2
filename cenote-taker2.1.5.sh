@@ -499,7 +499,7 @@ if [ ! -z "$CONTIGS_NON_CIRCULAR" ] ;then
 	else
 		MDYT=$( date +"%m-%d-%y---%T" )
 		echo "time update: running prodigal on linear contigs " $MDYT
-		echo "$CONTIGS_NON_CIRCULAR" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t prodigal -a {}.AA.fasta -i {}.fasta -p meta -q >/dev/null 2>&1
+		echo "$CONTIGS_NON_CIRCULAR" | grep -v ".AA.fasta" | sed 's/.fasta//g' | xargs -n 1 -I {} -P $CPU -t prodigal -a {}.AA.fasta -i {}.fasta -p meta -q >/dev/null 2>&1
 		for NO_END in $CONTIGS_NON_CIRCULAR ; do 
 			sed 's/ /@/g' ${NO_END%.fasta}.AA.fasta | bioawk -c fastx '{print}' | while read LINE ; do 
 				START_BASE=$( echo "$LINE" | cut -d "#" -f 2 | sed 's/@//g' ) ; 
