@@ -140,8 +140,7 @@ if is_tool("pileup.sh") :
 elif str(args.F_READS) == "no_reads" :
 	print ("pileup.sh will not be used")
 else:
-	print ("pileup.sh is not found. Exiting.")
-	quit()
+	print ("pileup.sh will not be used")
 if is_tool("tbl2asn") :
 	print ("tbl2asn found")
 else:
