@@ -38,7 +38,7 @@ if str(args.PROTEIN) == "True":
     isExist = os.path.exists(str(cenote_script_path) + '/blast_DBs')
     if not isExist:
         os.makedirs(str(cenote_script_path) + '/blast_DBs/', exist_ok=True)
-    subprocess.call(['wget', '--directory-prefix=' + str(cenote_script_path), 'https://zenodo.org/record/6525617/files/blast_DBs.tar.gz'])
+    subprocess.call(['wget', '--directory-prefix=' + str(cenote_script_path), 'https://zenodo.org/records/6525617/files/blast_DBs.tar.gz'])
     subprocess.call(['tar', '-xvf', 'blast_DBs.tar.gz'])
     subprocess.call(['rm', '-f', 'blast_DBs.tar.gz'])
 
@@ -48,7 +48,7 @@ if str(args.HMM_DB) == "True":
     isExist = os.path.exists(str(cenote_script_path) + '/hmmscan_DBs')
     if not isExist:
         os.makedirs(str(cenote_script_path) + '/hmmscan_DBs/', exist_ok=True)
-    subprocess.call(['wget', '--directory-prefix=' + str(cenote_script_path), 'https://zenodo.org/record/4966268/files/hmmscan_DBs.tgz'])
+    subprocess.call(['wget', '--directory-prefix=' + str(cenote_script_path), 'https://zenodo.org/records/4966268/files/hmmscan_DBs.tgz'])
     subprocess.call(['tar', '-xvf', 'hmmscan_DBs.tgz'])
     subprocess.call(['rm', '-f', 'hmmscan_DBs.tgz'])
 
@@ -78,7 +78,7 @@ if str(args.HHCDD) == "True":
     isExist = os.path.exists(str(cenote_script_path) + '/NCBI_CD')
     if not isExist:
         os.makedirs(str(cenote_script_path) + '/NCBI_CD/', exist_ok=True)
-    subprocess.call(['wget', '--directory-prefix=' + str(cenote_script_path), 'https://zenodo.org/record/3660537/files/NCBI_CD_hhsuite.tgz'])
+    subprocess.call(['wget', '--directory-prefix=' + str(cenote_script_path), 'https://zenodo.org/records/3660537/files/NCBI_CD_hhsuite.tgz'])
     subprocess.call(['tar', '-xvf', 'NCBI_CD_hhsuite.tgz'])
     subprocess.call(['rm', '-f', 'NCBI_CD_hhsuite.tgz'])
 
