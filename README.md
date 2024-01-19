@@ -1,3 +1,34 @@
+### _DEPRECATED_
+
+This repo is deprecated. 
+
+If you need help finishing a project using `Cenote-Taker 2`, I will still field questions/troubleshoot (open an issue).
+
+**Otherwise:**
+
+[Please use Cenote-Taker 3](https://github.com/mtisza1/Cenote-Taker3). It's great!!
+
+
+
+######### ######### ######### ######### ######### ######### ######### ######### #########
+
+######### ######### ######### ######### ######### ######### ######### ######### #########
+
+######### ######### ######### ######### ######### ######### ######### ######### #########
+
+######### ######### ######### ######### ######### ######### ######### ######### #########
+
+######### ######### ######### ######### ######### ######### ######### ######### #########
+
+######### ######### ######### ######### ######### ######### ######### ######### #########
+
+######### ######### ######### ######### ######### ######### ######### ######### #########
+
+######### ######### ######### ######### ######### ######### ######### ######### #########
+
+
+
+
 # Cenote-Taker 2
 Cenote-Taker 2 is a dual function bioinformatics tool. On the one hand, Cenote-Taker 2 can discover/predict virus sequences from any kind of genome or metagenomic assembly. On the other hand, virus sequences/genomes (perhaps predicted by another tool?) can be annotated with a variety of sequences features, genes, and taxonomy. Either the discovery or the the annotation module can be used independently.
 ```diff
